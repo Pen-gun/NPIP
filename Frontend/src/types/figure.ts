@@ -5,6 +5,7 @@ export type PersonProfile = {
   thumbnail: string
   extract: string
   pageId?: number | null
+  aliases?: string[]
 }
 
 export type NewsArticle = {
@@ -16,7 +17,7 @@ export type NewsArticle = {
   image: string
 }
 
-export type FigureResponse = {
+export type FigureIdentityResponse = {
   query: string
   person: PersonProfile | null
   candidates: Array<{
@@ -26,17 +27,13 @@ export type FigureResponse = {
     wikipediaUrl: string
   }>
   isDisambiguation: boolean
+}
+
+export type FigureNewsResponse = {
+  query: string
+  name: string
   recentActivities: Array<Pick<NewsArticle, 'title' | 'publishedAt' | 'source' | 'url'>>
   news: NewsArticle[]
-  videos: Array<{
-    id: string
-    title: string
-    description: string
-    publishedAt: string
-    channelTitle: string
-    thumbnail: string
-    url: string
-  }>
   metadata: {
     newsProvider: string
     warning: string | null
@@ -49,6 +46,24 @@ export type FigureResponse = {
         ok: boolean
         warning: string | null
       }
+    }
+  }
+}
+
+export type FigureVideosResponse = {
+  name: string
+  videos: Array<{
+    id: string
+    title: string
+    description: string
+    publishedAt: string
+    channelTitle: string
+    thumbnail: string
+    url: string
+  }>
+  metadata: {
+    warning: string | null
+    sources: {
       youtube: {
         ok: boolean
         warning: string | null
@@ -56,3 +71,7 @@ export type FigureResponse = {
     }
   }
 }
+
+export type FigureResponse = FigureIdentityResponse &
+  FigureNewsResponse &
+  FigureVideosResponse

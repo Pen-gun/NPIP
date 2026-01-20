@@ -1,7 +1,7 @@
-import type { FigureResponse } from '../types/figure'
+import type { FigureIdentityResponse } from '../types/figure'
 
 type DisambiguationListProps = {
-  data: FigureResponse
+  data: FigureIdentityResponse
   onSelect: (value: string) => void
 }
 

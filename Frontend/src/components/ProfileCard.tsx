@@ -1,7 +1,7 @@
-import type { FigureResponse } from '../types/figure'
+import type { FigureIdentityResponse } from '../types/figure'
 
 type ProfileCardProps = {
-  data: FigureResponse
+  data: FigureIdentityResponse
   title: string
 }
 

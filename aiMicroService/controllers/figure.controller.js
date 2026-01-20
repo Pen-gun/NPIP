@@ -13,6 +13,7 @@ const buildRecentActivities = (articles) => {
 };
 
 const normalizeTitle = (value) => value.toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
+const normalizeTokens = (value) => normalizeTitle(value).split(/\s+/).filter(Boolean);
 
 const dedupeArticles = (articles) => {
     const seenUrls = new Set();
@@ -52,13 +53,16 @@ const sortByDate = (articles) => {
     });
 };
 
-const filterRelevant = (articles, query, personName) => {
+const filterRelevant = (articles, query, personName, aliases = []) => {
     const target = (personName || query || '').toLowerCase().trim();
     if (!target) return articles;
 
-    const rawTokens = target.split(/\s+/).filter(Boolean);
-    const tokens = rawTokens.filter((token) => token.length >= 3);
-    const lastName = rawTokens.length > 1 ? rawTokens[rawTokens.length - 1] : rawTokens[0];
+    const baseTokens = normalizeTokens(target).filter((token) => token.length >= 3);
+    const aliasTokens = aliases
+        .flatMap((alias) => normalizeTokens(alias))
+        .filter((token) => token.length >= 3);
+    const tokens = Array.from(new Set([...baseTokens, ...aliasTokens]));
+    const lastName = baseTokens.length > 1 ? baseTokens[baseTokens.length - 1] : baseTokens[0];
     const hasStrongLastName = typeof lastName === 'string' && lastName.length >= 3;
     const minMatches = Math.min(2, tokens.length || 1);
 
@@ -89,14 +93,156 @@ const setCached = (key, value) => {
     cache.set(key, { value, createdAt: Date.now() });
 };
 
-export const searchFigure = async (req, res, next) => {
+const getQueryParam = (req, key) =>
+    typeof req.query?.[key] === 'string' ? req.query[key].trim() : '';
+
+export const getFigureIdentity = async (req, res, next) => {
     try {
-        const query = typeof req.query?.query === 'string' ? req.query.query.trim() : '';
+        const query = getQueryParam(req, 'query');
         if (!query) {
             return res.status(400).json({ error: 'Query is required' });
         }
 
-        const cached = getCached(query.toLowerCase());
+        const cacheKey = `identity:${query.toLowerCase()}`;
+        const cached = getCached(cacheKey);
+        if (cached) {
+            return res.json(cached);
+        }
+
+        const wikiPayload = await fetchWikiProfile(query);
+        const person = wikiPayload?.person || null;
+        const candidates = wikiPayload?.candidates || [];
+        const isDisambiguation = Boolean(wikiPayload?.isDisambiguation);
+
+        const responsePayload = {
+            query,
+            person,
+            candidates,
+            isDisambiguation,
+        };
+
+        setCached(cacheKey, responsePayload);
+        res.json(responsePayload);
+    } catch (err) {
+        next(err);
+    }
+};
+
+export const getFigureNews = async (req, res, next) => {
+    try {
+        const name = getQueryParam(req, 'name');
+        const query = getQueryParam(req, 'query') || name;
+        const aliasesRaw = getQueryParam(req, 'aliases');
+        const aliases = aliasesRaw ? aliasesRaw.split(',').map((value) => value.trim()).filter(Boolean) : [];
+
+        if (!name) {
+            return res.status(400).json({ error: 'Name is required' });
+        }
+
+        const cacheKey = `news:${name.toLowerCase()}`;
+        const cached = getCached(cacheKey);
+        if (cached) {
+            return res.json(cached);
+        }
+
+        const [newsResult, rssResult] = await Promise.allSettled([
+            fetchNews(query),
+            fetchRssNews(query),
+        ]);
+
+        const newsPayload = newsResult.status === 'fulfilled' ? newsResult.value : { articles: [], warning: null };
+        const rssArticles = rssResult.status === 'fulfilled' ? rssResult.value : [];
+
+        const gnewsArticles = newsPayload?.articles || [];
+        const combined = dedupeArticles([...gnewsArticles, ...rssArticles]);
+        const filtered = filterRelevant(combined, query, name, aliases);
+        const timeline = sortByDate(filtered);
+
+        const warnings = [
+            newsPayload?.warning,
+            newsResult.status === 'rejected' ? 'GNews request failed' : null,
+            rssResult.status === 'rejected' ? 'RSS request failed' : null,
+        ].filter(Boolean);
+
+        const responsePayload = {
+            query,
+            name,
+            recentActivities: buildRecentActivities(timeline),
+            news: timeline,
+            metadata: {
+                newsProvider: 'gnews+rss',
+                warning: warnings.length ? warnings.join(' | ') : null,
+                sources: {
+                    gnews: {
+                        ok: newsResult.status === 'fulfilled',
+                        warning:
+                            newsPayload?.warning ||
+                            (newsResult.status === 'rejected' ? 'GNews request failed' : null),
+                    },
+                    rss: {
+                        ok: rssResult.status === 'fulfilled',
+                        warning: rssResult.status === 'rejected' ? 'RSS request failed' : null,
+                    },
+                },
+            },
+        };
+
+        setCached(cacheKey, responsePayload);
+        res.json(responsePayload);
+    } catch (err) {
+        next(err);
+    }
+};
+
+export const getFigureVideos = async (req, res, next) => {
+    try {
+        const name = getQueryParam(req, 'name');
+        if (!name) {
+            return res.status(400).json({ error: 'Name is required' });
+        }
+
+        const cacheKey = `videos:${name.toLowerCase()}`;
+        const cached = getCached(cacheKey);
+        if (cached) {
+            return res.json(cached);
+        }
+
+        const youtubeResult = await Promise.allSettled([fetchYouTubeVideos(name)]);
+        const result = youtubeResult[0];
+        const youtubePayload =
+            result.status === 'fulfilled' && result.value
+                ? result.value
+                : { videos: [], warning: 'YouTube request failed' };
+
+        const responsePayload = {
+            name,
+            videos: youtubePayload?.videos || [],
+            metadata: {
+                warning: youtubePayload?.warning || null,
+                sources: {
+                    youtube: {
+                        ok: result.status === 'fulfilled',
+                        warning: youtubePayload?.warning || null,
+                    },
+                },
+            },
+        };
+
+        setCached(cacheKey, responsePayload);
+        res.json(responsePayload);
+    } catch (err) {
+        next(err);
+    }
+};
+
+export const searchFigure = async (req, res, next) => {
+    try {
+        const query = getQueryParam(req, 'query');
+        if (!query) {
+            return res.status(400).json({ error: 'Query is required' });
+        }
+
+        const cached = getCached(`search:${query.toLowerCase()}`);
         if (cached) {
             return res.json(cached);
         }
@@ -108,7 +254,7 @@ export const searchFigure = async (req, res, next) => {
         const isDisambiguation = Boolean(wikiPayload?.isDisambiguation);
 
         if (isDisambiguation) {
-            return res.json({
+            const responsePayload = {
                 query,
                 person,
                 candidates,
@@ -125,7 +271,10 @@ export const searchFigure = async (req, res, next) => {
                         youtube: { ok: false, warning: 'Select a person to load videos' },
                     },
                 },
-            });
+            };
+
+            setCached(`search:${query.toLowerCase()}`, responsePayload);
+            return res.json(responsePayload);
         }
 
         const [newsResult, rssResult, youtubeResult] = await Promise.allSettled([
@@ -143,7 +292,7 @@ export const searchFigure = async (req, res, next) => {
 
         const gnewsArticles = newsPayload?.articles || [];
         const combined = dedupeArticles([...gnewsArticles, ...rssArticles]);
-        const filtered = filterRelevant(combined, query, person?.name);
+        const filtered = filterRelevant(combined, query, person?.name, person?.aliases || []);
         const timeline = sortByDate(filtered);
         const videos = youtubePayload?.videos || [];
         const warnings = [
@@ -188,7 +337,7 @@ export const searchFigure = async (req, res, next) => {
             },
         };
 
-        setCached(query.toLowerCase(), responsePayload);
+        setCached(`search:${query.toLowerCase()}`, responsePayload);
         res.json(responsePayload);
     } catch (err) {
         next(err);

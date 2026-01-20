@@ -1,11 +1,13 @@
-import type { FigureResponse } from '../types/figure'
+import type { FigureVideosResponse } from '../types/figure'
 
 type VideosCardProps = {
-  data: FigureResponse
+  data: FigureVideosResponse
   formatDate: (value?: string) => string
+  isLoading?: boolean
+  errorMessage?: string
 }
 
-export default function VideosCard({ data, formatDate }: VideosCardProps) {
+export default function VideosCard({ data, formatDate, isLoading, errorMessage }: VideosCardProps) {
   const videoWarning = data.metadata.sources.youtube.warning
 
   return (
@@ -14,6 +16,8 @@ export default function VideosCard({ data, formatDate }: VideosCardProps) {
         <h3>Interviews & speeches</h3>
         <span className='chip'>YouTube</span>
       </div>
+      {isLoading && <p>Loading videos...</p>}
+      {errorMessage && <p className='warning'>{errorMessage}</p>}
       {data.videos.length === 0 && (
         <p>{videoWarning ? `Videos unavailable: ${videoWarning}` : 'No videos found yet.'}</p>
       )}

@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import './App.css'
-import { useFigureSearch } from './hooks/useFigureSearch'
+import { useFigureIdentity, useFigureNews, useFigureVideos } from './hooks/useFigureSearch'
 import { useDebouncedValue } from './hooks/useDebouncedValue'
 import SearchForm from './components/SearchForm'
 import SkeletonGrid from './components/SkeletonGrid'
@@ -52,11 +52,54 @@ export default function App() {
     }
   }, [debouncedQuery])
 
-  const { data, status, error, isFetching } = useFigureSearch(activeQuery)
+  const identityQuery = useFigureIdentity(activeQuery)
+  const identityData = identityQuery.data
+  const identityStatus = identityQuery.status
+  const identityError = identityQuery.error
+
+  const resolvedName = identityData?.person?.name || activeQuery
+  const aliases = identityData?.person?.aliases || []
+
+  const newsQuery = useFigureNews(
+    { name: resolvedName, query: activeQuery, aliases },
+    Boolean(identityData && !identityData.isDisambiguation && resolvedName),
+  )
+  const videosQuery = useFigureVideos(
+    resolvedName,
+    Boolean(identityData && !identityData.isDisambiguation && resolvedName),
+  )
+
+  const newsData =
+    newsQuery.data ?? {
+      query: activeQuery,
+      name: resolvedName,
+      recentActivities: [],
+      news: [],
+      metadata: {
+        newsProvider: 'gnews+rss',
+        warning: null,
+        sources: {
+          gnews: { ok: true, warning: null },
+          rss: { ok: true, warning: null },
+        },
+      },
+    }
+
+  const videosData =
+    videosQuery.data ?? {
+      name: resolvedName,
+      videos: [],
+      metadata: {
+        warning: null,
+        sources: {
+          youtube: { ok: true, warning: null },
+        },
+      },
+    }
 
   const personTitle = useMemo(
-    () => data?.person?.name || data?.query || activeQuery || query,
-    [data, activeQuery, query],
+    () => identityData?.person?.name || identityData?.query || activeQuery || query,
+    [identityData, activeQuery, query],
   )
 
   return (
@@ -82,8 +125,8 @@ export default function App() {
       <SearchForm
         query={query}
         inputError={inputError}
-        isFetching={isFetching}
-        status={status}
+        isFetching={identityQuery.isFetching}
+        status={identityStatus}
         onQueryChange={setQuery}
         onSubmit={() => runSearch(query)}
         onQuickSearch={(value) => {
@@ -93,18 +136,18 @@ export default function App() {
       />
 
       <section className='results'>
-        {activeQuery && status === 'pending' && <SkeletonGrid />}
+        {activeQuery && identityStatus === 'pending' && <SkeletonGrid />}
 
-        {status === 'error' && (
+        {identityStatus === 'error' && (
           <div className='card card--error'>
             <h3>We hit a snag</h3>
-            <p>{error instanceof Error ? error.message : 'Something went wrong.'}</p>
+            <p>{identityError instanceof Error ? identityError.message : 'Something went wrong.'}</p>
           </div>
         )}
 
-        {data && data.isDisambiguation && data.candidates.length > 1 && (
+        {identityData && identityData.isDisambiguation && identityData.candidates.length > 1 && (
           <DisambiguationList
-            data={data}
+            data={identityData}
             onSelect={(value) => {
               setQuery(value)
               runSearch(value)
@@ -112,32 +155,47 @@ export default function App() {
           />
         )}
 
-        {data && !data.isDisambiguation && (
+        {identityData && !identityData.isDisambiguation && (
           <div className='results__stack'>
             <div className='quick-info'>
               <div className='quick-info__main'>
-                <ProfileCard data={data} title={personTitle} />
+                <ProfileCard data={identityData} title={personTitle} />
               </div>
               <div className='quick-info__meta'>
                 <div className='card'>
                   <p className='eyebrow'>Quick signals</p>
                   <h3>Snapshot</h3>
                   <div className='quick-info__chips'>
-                    <span className='chip'>News: {data.news.length}</span>
-                    <span className='chip'>Activities: {data.recentActivities.length}</span>
-                    <span className='chip'>Videos: {data.videos.length}</span>
+                    <span className='chip'>News: {newsData.news.length}</span>
+                    <span className='chip'>Activities: {newsData.recentActivities.length}</span>
+                    <span className='chip'>Videos: {videosData.videos.length}</span>
                   </div>
                   <p className='description'>
-                    Sources: {data.metadata.newsProvider}. Updated on search.
+                    Sources: {newsData.metadata.newsProvider}. Updated on search.
                   </p>
                 </div>
               </div>
             </div>
 
             <div className='blog-flow'>
-              <ActivitiesCard data={data} formatDate={formatDate} />
-              <NewsCard data={data} formatDate={formatDate} />
-              <VideosCard data={data} formatDate={formatDate} />
+              <ActivitiesCard
+                data={newsData}
+                formatDate={formatDate}
+                isLoading={newsQuery.isFetching}
+                errorMessage={newsQuery.error ? 'News failed to load.' : undefined}
+              />
+              <NewsCard
+                data={newsData}
+                formatDate={formatDate}
+                isLoading={newsQuery.isFetching}
+                errorMessage={newsQuery.error ? 'News failed to load.' : undefined}
+              />
+              <VideosCard
+                data={videosData}
+                formatDate={formatDate}
+                isLoading={videosQuery.isFetching}
+                errorMessage={videosQuery.error ? 'Videos failed to load.' : undefined}
+              />
             </div>
           </div>
         )}

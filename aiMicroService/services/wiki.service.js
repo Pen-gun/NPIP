@@ -67,6 +67,9 @@ export const fetchWikiProfile = async (query, limit = 5) => {
             thumbnail: summaryData?.thumbnail?.source || '',
             extract,
             pageId: summaryData?.pageid || null,
+            aliases: summaryData?.titles
+                ? [summaryData?.titles?.normalized, summaryData?.titles?.canonical].filter(Boolean)
+                : [],
         },
         candidates,
         isDisambiguation,

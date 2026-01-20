@@ -1,11 +1,18 @@
-import type { FigureResponse } from '../types/figure'
+import type { FigureNewsResponse } from '../types/figure'
 
 type ActivitiesCardProps = {
-  data: FigureResponse
+  data: FigureNewsResponse
   formatDate: (value?: string) => string
+  isLoading?: boolean
+  errorMessage?: string
 }
 
-export default function ActivitiesCard({ data, formatDate }: ActivitiesCardProps) {
+export default function ActivitiesCard({
+  data,
+  formatDate,
+  isLoading,
+  errorMessage,
+}: ActivitiesCardProps) {
   const sourceIssues = [
     data.metadata.sources.gnews.warning,
     data.metadata.sources.rss.warning,
@@ -18,6 +25,8 @@ export default function ActivitiesCard({ data, formatDate }: ActivitiesCardProps
         <h3>Recent activities</h3>
         <span className='chip'>Timeline</span>
       </div>
+      {isLoading && <p>Loading activities...</p>}
+      {errorMessage && <p className='warning'>{errorMessage}</p>}
       {data.recentActivities.length === 0 && (
         <p>
           {allSourcesDown && sourceIssues.length

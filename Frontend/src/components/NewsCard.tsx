@@ -1,11 +1,13 @@
-import type { FigureResponse } from '../types/figure'
+import type { FigureNewsResponse } from '../types/figure'
 
 type NewsCardProps = {
-  data: FigureResponse
+  data: FigureNewsResponse
   formatDate: (value?: string) => string
+  isLoading?: boolean
+  errorMessage?: string
 }
 
-export default function NewsCard({ data, formatDate }: NewsCardProps) {
+export default function NewsCard({ data, formatDate, isLoading, errorMessage }: NewsCardProps) {
   const sourceIssues = [
     data.metadata.sources.gnews.warning,
     data.metadata.sources.rss.warning,
@@ -18,6 +20,8 @@ export default function NewsCard({ data, formatDate }: NewsCardProps) {
         <h3>Verified news</h3>
         <span className='chip'>Top sources</span>
       </div>
+      {isLoading && <p>Loading news...</p>}
+      {errorMessage && <p className='warning'>{errorMessage}</p>}
       {data.metadata.warning && (
         <p className='warning'>News feed is limited: {data.metadata.warning}</p>
       )}

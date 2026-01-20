@@ -9,6 +9,7 @@ import ProfileCard from './components/ProfileCard'
 import ActivitiesCard from './components/ActivitiesCard'
 import NewsCard from './components/NewsCard'
 import VideosCard from './components/VideosCard'
+import LocationsCard from './components/LocationsCard'
 
 const formatDate = (value?: string) => {
   if (!value) return 'Unknown date'
@@ -41,11 +42,6 @@ export default function App() {
     setActiveQuery(trimmed)
   }
 
-  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault()
-    runSearch(query)
-  }
-
   useEffect(() => {
     if (!debouncedQuery.trim()) {
       setInputError('')
@@ -74,6 +70,7 @@ export default function App() {
       query: activeQuery,
       name: resolvedName,
       recentActivities: [],
+      recentLocations: [],
       news: [],
       metadata: {
         newsProvider: 'gnews+rss',
@@ -178,6 +175,12 @@ export default function App() {
             </div>
 
             <div className='blog-flow'>
+              <LocationsCard
+                data={newsData}
+                formatDate={formatDate}
+                isLoading={newsQuery.isFetching}
+                errorMessage={newsQuery.error ? 'Locations failed to load.' : undefined}
+              />
               <ActivitiesCard
                 data={newsData}
                 formatDate={formatDate}

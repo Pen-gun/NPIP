@@ -33,6 +33,12 @@ export type FigureNewsResponse = {
   query: string
   name: string
   recentActivities: Array<Pick<NewsArticle, 'title' | 'publishedAt' | 'source' | 'url'>>
+  recentLocations: Array<{
+    name: string
+    source: string
+    publishedAt: string
+    url: string
+  }>
   news: NewsArticle[]
   metadata: {
     newsProvider: string

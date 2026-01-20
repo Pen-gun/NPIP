@@ -53,6 +53,42 @@ const sortByDate = (articles) => {
     });
 };
 
+const extractLocations = (articles, windowHours = 24) => {
+    const now = Date.now();
+    const cutoff = now - windowHours * 60 * 60 * 1000;
+    const pattern =
+        /\b(?:in|at|from|visited|arrived in|arrived at|met in|meeting in|rally in|speech in)\s+([A-Z][A-Za-z.\-]+(?:\s+[A-Z][A-Za-z.\-]+){0,3})/g;
+    const seen = new Set();
+    const locations = [];
+
+    for (const article of articles) {
+        const publishedAt = article.publishedAt || '';
+        const timestamp = Date.parse(publishedAt);
+        if (!timestamp || timestamp < cutoff) {
+            continue;
+        }
+
+        const text = `${article.title || ''} ${article.description || ''}`;
+        let match = pattern.exec(text);
+        while (match) {
+            const place = match[1].trim();
+            const key = place.toLowerCase();
+            if (!seen.has(key)) {
+                seen.add(key);
+                locations.push({
+                    name: place,
+                    source: article.source,
+                    publishedAt: article.publishedAt,
+                    url: article.url,
+                });
+            }
+            match = pattern.exec(text);
+        }
+    }
+
+    return locations.slice(0, 5);
+};
+
 const filterRelevant = (articles, query, personName, aliases = []) => {
     const target = (personName || query || '').toLowerCase().trim();
     if (!target) return articles;
@@ -168,6 +204,7 @@ export const getFigureNews = async (req, res, next) => {
             query,
             name,
             recentActivities: buildRecentActivities(timeline),
+            recentLocations: extractLocations(timeline),
             news: timeline,
             metadata: {
                 newsProvider: 'gnews+rss',
@@ -260,6 +297,7 @@ export const searchFigure = async (req, res, next) => {
                 candidates,
                 isDisambiguation,
                 recentActivities: [],
+                recentLocations: [],
                 news: [],
                 videos: [],
                 metadata: {
@@ -328,6 +366,7 @@ export const searchFigure = async (req, res, next) => {
             candidates,
             isDisambiguation,
             recentActivities: buildRecentActivities(timeline),
+            recentLocations: extractLocations(timeline),
             news: timeline,
             videos,
             metadata: {

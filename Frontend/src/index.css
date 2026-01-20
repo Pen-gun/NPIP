@@ -40,7 +40,7 @@
 body {
   margin: 0;
   font-family: var(--font-sans);
-  background: radial-gradient(circle at top, var(--surface) 0%, var(--background) 60%);
+  background: radial-gradient(circle at top left, var(--surface), var(--background) 55%, var(--background) 100%);
   color: var(--text);
   min-height: 100vh;
 }

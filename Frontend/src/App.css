@@ -257,6 +257,14 @@
   box-shadow: var(--shadow-soft);
 }
 
+.card.news,
+.card.videos,
+.card.profile,
+.card.activities {
+  max-height: 520px;
+  overflow-y: auto;
+}
+
 .card--loading,
 .card--error {
   display: flex;

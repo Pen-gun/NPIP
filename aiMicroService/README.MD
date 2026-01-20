@@ -1,33 +1,53 @@
-# AI Engine (simple)
+# NPIP Backend (MVP)
 
-1. Copy .env.example -> .env and set HF_API_KEY and HF_MODEL
-2. npm install
-3. npm start
-4. POST /generate { "topic": "Machine Learning" }
+Simple Express service for the Nepal Public Figure Intelligence Platform (NPIP).
 
-for testing you can send
-graph TD; A[Data]-->B[Model]; B-->C[Prediction]; A-->D[Features]; D-->B;
+## Setup
 
-ollama serve
-ollama run llama3.2:3b
-taskkill /IM  Ollama.exe /F
+1. `cp ai.env.example ai.env`
+2. Fill `GNEWS_API_KEY` (optional but recommended).
+3. `npm install`
+4. `npm run dev`
 
-how to use ollama going forward
-POST http://localhost:11434/api/generate
-POST http://localhost:11434/api/chat
+Backend runs on `http://localhost:8000` by default.
 
+## Configuration
 
-ai.env in aimicroservice root
-HF_API_KEY=
-HF_MODEL=deepseek-ai/DeepSeek-R1-0528:fastest #any model you want
-# "gpt-oss-20b"
-PORT=5000
-FRONTEND_URL=http://localhost:5173
-MONGODB_URL=
-ACCESS_TOKEN_SECRET=
-ACCESS_TOKEN_EXPIRY=
-REFRESH_TOKEN_SECRET=
-REFRESH_TOKEN_EXPIRY=
+- `GNEWS_API_KEY`: optional, enables verified news headlines
+- `NEWS_LIMIT`: optional, default 5
+- `WIKI_LIMIT`: optional, default 5
 
-OLLAMA_HOST=
-OLLAMA_MODEL=
+## Endpoints
+
+`GET /health`
+
+`GET /api/v1/figures/search?query=KP%20Oli`
+
+Response:
+
+```json
+{
+  "query": "KP Oli",
+  "person": {
+    "name": "K. P. Sharma Oli",
+    "description": "Prime Minister of Nepal",
+    "wikipediaUrl": "https://en.wikipedia.org/wiki/K._P._Sharma_Oli",
+    "thumbnail": "https://upload.wikimedia.org/...",
+    "extract": "Khadga Prasad Sharma Oli ...",
+    "pageId": 12345
+  },
+  "recentActivities": [
+    {
+      "title": "Headline...",
+      "publishedAt": "2025-01-01T00:00:00Z",
+      "source": "Source name",
+      "url": "https://..."
+    }
+  ],
+  "news": [],
+  "metadata": {
+    "newsProvider": "gnews",
+    "warning": null
+  }
+}
+```

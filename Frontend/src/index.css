@@ -1,82 +1,43 @@
-@import "tailwindcss";
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap');
 
 :root {
-  --background: #19191b;
-  --foreground: #ffffff;
-  --accent: #4f46e5;
-  --accent-foreground: #ffffff;
+  --font-body: 'Space Grotesk', 'Segoe UI', sans-serif;
+  --font-display: 'Fraunces', 'Georgia', serif;
+  --ink: #11181f;
+  --ink-muted: #4c5a67;
+  --paper: #f6f1e9;
+  --paper-strong: #fff8f0;
+  --accent: #d46945;
+  --accent-dark: #a6462b;
+  --teal: #2c6e6d;
+  --border-soft: rgba(17, 24, 31, 0.12);
+  --shadow-soft: 0 18px 40px rgba(17, 24, 31, 0.08);
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
 }
 
 body {
-  background-color: var(--background);
-  color: var(--foreground);
+  margin: 0;
+  font-family: var(--font-body);
+  background: radial-gradient(circle at top left, #f3e7d3, #e7f1ef 55%, #f6f1e9 100%);
+  color: var(--ink);
+  min-height: 100vh;
 }
 
-/* Custom Animations */
-@keyframes slide-in {
-  from {
-    transform: translateX(100%);
-    opacity: 0;
-  }
-  to {
-    transform: translateX(0);
-    opacity: 1;
-  }
+img {
+  max-width: 100%;
+  display: block;
 }
 
-@keyframes fade-in {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
+a {
+  color: inherit;
 }
 
-@keyframes scale-in {
-  from {
-    transform: scale(0.95);
-    opacity: 0;
-  }
-  to {
-    transform: scale(1);
-    opacity: 1;
-  }
-}
-
-.animate-slide-in {
-  animation: slide-in 0.3s ease-out;
-}
-
-.animate-fade-in {
-  animation: fade-in 0.2s ease-out;
-}
-
-.animate-scale-in {
-  animation: scale-in 0.2s ease-out;
-}
-
-/* Custom Scrollbar */
-::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
-}
-
-::-webkit-scrollbar-track {
-  background: rgba(255, 255, 255, 0.05);
-  border-radius: 10px;
-}
-
-::-webkit-scrollbar-thumb {
-  background: rgba(168, 85, 247, 0.3);
-  border-radius: 10px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: rgba(168, 85, 247, 0.5);
-}
-
-/* Smooth scroll behavior */
-html {
-  scroll-behavior: smooth;
+button,
+input {
+  font-family: inherit;
 }

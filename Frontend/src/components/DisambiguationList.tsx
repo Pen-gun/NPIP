@@ -15,21 +15,25 @@ export default function DisambiguationList({ data, onSelect }: DisambiguationLis
       <p className='description'>
         "{data.query}" matches multiple entries. Pick the right profile to continue.
       </p>
-      <div className='disambiguation__list'>
-        {data.candidates.slice(0, 6).map((candidate) => (
-          <button
-            key={candidate.wikipediaUrl || candidate.title}
-            type='button'
-            className='disambiguation__item'
-            onClick={() => onSelect(candidate.title)}
-          >
-            <div>
-              <p>{candidate.title}</p>
-              <span>{candidate.description || 'Wikipedia entry'}</span>
-            </div>
-          </button>
-        ))}
-      </div>
+      {data.candidates.length === 0 ? (
+        <p className='description'>No candidates found. Try a more specific query.</p>
+      ) : (
+        <div className='disambiguation__list'>
+          {data.candidates.slice(0, 6).map((candidate) => (
+            <button
+              key={candidate.wikipediaUrl || candidate.title}
+              type='button'
+              className='disambiguation__item'
+              onClick={() => onSelect(candidate.title)}
+            >
+              <div>
+                <p>{candidate.title}</p>
+                <span>{candidate.description || 'Wikipedia entry'}</span>
+              </div>
+            </button>
+          ))}
+        </div>
+      )}
     </div>
   )
 }

@@ -1,6 +1,7 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import './App.css'
 import { useFigureSearch } from './hooks/useFigureSearch'
+import { useDebouncedValue } from './hooks/useDebouncedValue'
 
 const quickSearches = ['KP Oli', 'Balen Shah', 'Sher Bahadur Deuba', 'Pradeep Gyawali']
 
@@ -18,10 +19,20 @@ const formatDate = (value?: string) => {
 export default function App() {
   const [query, setQuery] = useState('')
   const [activeQuery, setActiveQuery] = useState('')
+  const [inputError, setInputError] = useState('')
+  const debouncedQuery = useDebouncedValue(query, 400)
 
   const runSearch = (value: string) => {
     const trimmed = value.trim()
-    if (!trimmed) return
+    if (!trimmed) {
+      setInputError('Enter a name to search.')
+      return
+    }
+    if (trimmed.length < 2) {
+      setInputError('Search term is too short.')
+      return
+    }
+    setInputError('')
     setActiveQuery(trimmed)
   }
 
@@ -29,6 +40,12 @@ export default function App() {
     event.preventDefault()
     runSearch(query)
   }
+
+  useEffect(() => {
+    if (!debouncedQuery.trim()) {
+      setInputError('')
+    }
+  }, [debouncedQuery])
 
   const { data, status, error, isFetching } = useFigureSearch(activeQuery)
 
@@ -69,12 +86,23 @@ export default function App() {
               value={query}
               placeholder='e.g. KP Oli Nepali politician'
               onChange={(event) => setQuery(event.target.value)}
+              aria-invalid={Boolean(inputError)}
+              aria-describedby={inputError ? 'search-error' : undefined}
             />
-            <button type='submit'>Analyze</button>
+            <button type='submit' disabled={!query.trim()}>
+              Analyze
+            </button>
           </div>
         </form>
+        {inputError && (
+          <p id='search-error' className='search__status' role='alert'>
+            {inputError}
+          </p>
+        )}
         {isFetching && status !== 'pending' && (
-          <p className='search__status'>Refreshing latest signals...</p>
+          <p className='search__status' role='status' aria-live='polite'>
+            Refreshing latest signals...
+          </p>
         )}
         <div className='search__quick'>
           {quickSearches.map((item) => (

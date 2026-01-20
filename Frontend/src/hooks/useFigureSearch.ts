@@ -10,7 +10,7 @@ export const useFigureSearch = (query: string): UseQueryResult<FigureResponse, E
   return useQuery<FigureResponse, Error>({
     queryKey: ['figure-search', normalizedQuery],
     enabled: Boolean(normalizedQuery),
-    queryFn: () => fetchFigure(normalizedQuery),
+    queryFn: ({ signal }) => fetchFigure(normalizedQuery, signal),
     keepPreviousData: true,
   })
 }

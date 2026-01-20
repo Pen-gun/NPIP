@@ -138,6 +138,13 @@
   box-shadow: 0 10px 22px rgba(212, 105, 69, 0.25);
 }
 
+.search__input button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  box-shadow: none;
+  transform: none;
+}
+
 .search__quick {
   margin-top: 16px;
   display: flex;
@@ -149,6 +156,17 @@
   margin-top: 10px;
   color: var(--ink-muted);
   font-size: 0.9rem;
+}
+
+.button-inline {
+  border: none;
+  background: var(--accent);
+  color: white;
+  padding: 10px 16px;
+  border-radius: 10px;
+  font-weight: 600;
+  cursor: pointer;
+  margin-top: 12px;
 }
 
 .search__quick button {

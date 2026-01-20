@@ -1,36 +1,6 @@
 import { useMemo, useState } from 'react'
-import { useQuery } from '@tanstack/react-query'
-import axios from 'axios'
 import './App.css'
-
-type PersonProfile = {
-  name: string
-  description: string
-  wikipediaUrl: string
-  thumbnail: string
-  extract: string
-  pageId?: number | null
-}
-
-type NewsArticle = {
-  title: string
-  description: string
-  url: string
-  source: string
-  publishedAt: string
-  image: string
-}
-
-type FigureResponse = {
-  query: string
-  person: PersonProfile | null
-  recentActivities: Array<Pick<NewsArticle, 'title' | 'publishedAt' | 'source' | 'url'>>
-  news: NewsArticle[]
-  metadata: {
-    newsProvider: string
-    warning: string | null
-  }
-}
+import { useFigureSearch } from './hooks/useFigureSearch'
 
 const quickSearches = ['KP Oli', 'Balen Shah', 'Sher Bahadur Deuba', 'Pradeep Gyawali']
 
@@ -60,16 +30,7 @@ export default function App() {
     runSearch(query)
   }
 
-  const { data, status, error, isFetching } = useQuery({
-    queryKey: ['figure', activeQuery],
-    enabled: Boolean(activeQuery),
-    queryFn: async () => {
-      const response = await axios.get<FigureResponse>('/api/v1/figures/search', {
-        params: { query: activeQuery },
-      })
-      return response.data
-    },
-  })
+  const { data, status, error, isFetching } = useFigureSearch(activeQuery)
 
   const personTitle = useMemo(
     () => data?.person?.name || data?.query || activeQuery || query,

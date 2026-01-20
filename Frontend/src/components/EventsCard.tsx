@@ -9,33 +9,33 @@ type EventsCardProps = {
 
 export default function EventsCard({ data, formatDate, isLoading, errorMessage }: EventsCardProps) {
   return (
-    <article className='rounded-2xl border border-[color:var(--border)] bg-[color:var(--surface-base)] p-6 shadow-[var(--shadow)] max-h-[520px] overflow-y-auto'>
+    <article className='rounded-2xl border border-(--border) bg-(--surface-base) p-6 shadow-(--shadow) max-h-130 overflow-y-auto'>
       <div className='flex items-center justify-between'>
         <h3 className='text-lg font-semibold'>Key events</h3>
-        <span className='rounded-full border border-[color:var(--border)] bg-[color:var(--surface-muted)] px-3 py-1 text-xs font-semibold'>
+        <span className='rounded-full border border-(--border) bg-(--surface-muted) px-3 py-1 text-xs font-semibold'>
           Grouped
         </span>
       </div>
-      {isLoading && <p className='mt-3 text-sm text-[color:var(--text-muted)]'>Loading events...</p>}
-      {errorMessage && <p className='mt-3 text-sm text-[color:var(--state-error)]'>{errorMessage}</p>}
+      {isLoading && <p className='mt-3 text-sm text-(--text-muted)'>Loading events...</p>}
+      {errorMessage && <p className='mt-3 text-sm text-(--state-error)'>{errorMessage}</p>}
       {data.events.length === 0 && (
-        <p className='mt-3 text-sm text-[color:var(--text-muted)]'>No grouped events yet.</p>
+        <p className='mt-3 text-sm text-(--text-muted)'>No grouped events yet.</p>
       )}
       <ul className='mt-4 space-y-4 text-sm'>
         {data.events.map((event) => (
           <li key={event.url} className='space-y-1'>
-            <span className='text-xs text-[color:var(--text-muted)]'>
+            <span className='text-xs text-(--text-muted)'>
               {formatDate(event.latestPublishedAt)}
             </span>
             <a
               href={event.url}
               target='_blank'
               rel='noreferrer'
-              className='block font-semibold text-[color:var(--text-primary)] hover:text-[color:var(--brand-accent)]'
+              className='block font-semibold text-(--text-primary) hover:text-(--brand-accent)'
             >
               {event.title}
             </a>
-            <small className='text-xs text-[color:var(--text-muted)]'>
+            <small className='text-xs text-(--text-muted)'>
               {event.sources.join(', ')} • {event.count} source{event.count > 1 ? 's' : ''}
             </small>
           </li>
@@ -44,3 +44,5 @@ export default function EventsCard({ data, formatDate, isLoading, errorMessage }
     </article>
   )
 }
+
+

@@ -11,17 +11,17 @@ export default function VideosCard({ data, formatDate, isLoading, errorMessage }
   const videoWarning = data.metadata.sources.youtube.warning
 
   return (
-    <article className='rounded-2xl border border-[color:var(--border)] bg-[color:var(--surface-base)] p-6 shadow-[var(--shadow)] max-h-[520px] overflow-y-auto'>
+    <article className='rounded-2xl border border-(--border) bg-(--surface-base) p-6 shadow-(--shadow) max-h-130 overflow-y-auto'>
       <div className='flex items-center justify-between'>
         <h3 className='text-lg font-semibold'>Interviews & speeches</h3>
-        <span className='rounded-full border border-[color:var(--border)] bg-[color:var(--surface-muted)] px-3 py-1 text-xs font-semibold'>
+        <span className='rounded-full border border-(--border) bg-(--surface-muted) px-3 py-1 text-xs font-semibold'>
           YouTube
         </span>
       </div>
-      {isLoading && <p className='mt-3 text-sm text-[color:var(--text-muted)]'>Loading videos...</p>}
-      {errorMessage && <p className='mt-3 text-sm text-[color:var(--state-error)]'>{errorMessage}</p>}
+      {isLoading && <p className='mt-3 text-sm text-(--text-muted)'>Loading videos...</p>}
+      {errorMessage && <p className='mt-3 text-sm text-(--state-error)'>{errorMessage}</p>}
       {data.videos.length === 0 && (
-        <p className='mt-3 text-sm text-[color:var(--text-muted)]'>
+        <p className='mt-3 text-sm text-(--text-muted)'>
           {videoWarning ? `Videos unavailable: ${videoWarning}` : 'No videos found yet.'}
         </p>
       )}
@@ -29,7 +29,7 @@ export default function VideosCard({ data, formatDate, isLoading, errorMessage }
         {data.videos.map((video) => (
           <div
             key={video.url || video.id}
-            className='grid gap-3 rounded-xl border border-transparent p-3 transition hover:border-[color:var(--brand-accent)] hover:bg-[color:var(--surface-muted)] sm:grid-cols-[96px_1fr]'
+            className='grid gap-3 rounded-xl border border-transparent p-3 transition hover:border-(--brand-accent) hover:bg-(--surface-muted) sm:grid-cols-[96px_1fr]'
           >
             {video.thumbnail ? (
               <img
@@ -43,15 +43,15 @@ export default function VideosCard({ data, formatDate, isLoading, errorMessage }
                 href={video.url}
                 target='_blank'
                 rel='noreferrer'
-                className='block text-sm font-semibold text-[color:var(--text-primary)] hover:text-[color:var(--brand-accent)]'
+                className='block text-sm font-semibold text-(--text-primary) hover:text-(--brand-accent)'
               >
                 {video.title}
               </a>
-              <span className='text-xs text-[color:var(--text-muted)]'>
+              <span className='text-xs text-(--text-muted)'>
                 {video.channelTitle} • {formatDate(video.publishedAt)}
               </span>
               {video.transcriptPreview && video.transcriptPreview.length > 0 && (
-                <details className='text-xs text-[color:var(--text-muted)]'>
+                <details className='text-xs text-(--text-muted)'>
                   <summary className='cursor-pointer font-semibold'>Transcript preview</summary>
                   <p className='mt-1'>{video.transcriptPreview.join(' ')}</p>
                 </details>
@@ -63,3 +63,4 @@ export default function VideosCard({ data, formatDate, isLoading, errorMessage }
     </article>
   )
 }
+

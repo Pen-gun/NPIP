@@ -123,28 +123,28 @@ export default function App() {
   ).slice(0, 6)
 
   return (
-    <div className='min-h-screen text-[color:var(--text-primary)]'>
+    <div className='min-h-screen text-(--text-primary)'>
       <div className='mx-auto flex w-full max-w-6xl flex-col gap-10 px-6 py-12'>
         <header className='grid items-center gap-8 lg:grid-cols-[1.2fr_0.8fr]'>
           <div>
-            <p className='text-xs font-semibold uppercase tracking-[0.3em] text-[color:var(--brand-accent)]'>
+            <p className='text-xs font-semibold uppercase tracking-[0.3em] text-(--brand-accent)'>
               Nepal Public Figure Intelligence Platform
             </p>
-            <h1 className='mt-3 font-[var(--font-display)] text-3xl font-semibold leading-tight sm:text-4xl lg:text-5xl'>
+            <h1 className='mt-3 font-display text-3xl font-semibold leading-tight sm:text-4xl lg:text-5xl'>
               Real-time clarity on Nepal&apos;s public figures.
             </h1>
-            <p className='mt-4 max-w-xl text-base text-[color:var(--text-muted)] sm:text-lg'>
+            <p className='mt-4 max-w-xl text-base text-(--text-muted) sm:text-lg'>
               Search any leader or public voice and get verified identity, context, and the latest
               activity highlights in one scan.
             </p>
           </div>
           <div className='w-full max-w-sm justify-self-start lg:justify-self-end'>
-            <div className='rounded-2xl border border-[color:var(--border)] bg-[color:var(--info-bg)] p-6 shadow-[var(--shadow)]'>
-              <p className='text-sm font-semibold text-[color:var(--info-text)]'>Live Signal</p>
-              <p className='mt-2 text-lg font-semibold text-[color:var(--text-primary)]'>
+            <div className='rounded-2xl border border-(--border) bg-(--info-bg) p-6 shadow-(--shadow)'>
+              <p className='text-sm font-semibold text-(--info-text)'>Live Signal</p>
+              <p className='mt-2 text-lg font-semibold text-(--text-primary)'>
                 Verified news + public data
               </p>
-              <p className='mt-3 text-sm text-[color:var(--info-text)]'>
+              <p className='mt-3 text-sm text-(--info-text)'>
                 Built for journalists, researchers, and policy teams.
               </p>
             </div>
@@ -168,9 +168,9 @@ export default function App() {
           {activeQuery && identityStatus === 'pending' && <SkeletonGrid />}
 
           {identityStatus === 'error' && (
-            <div className='rounded-2xl border border-[color:var(--border)] bg-[color:var(--surface-base)] p-6 shadow-[var(--shadow)]'>
+            <div className='rounded-2xl border border-(--border) bg-(--surface-base) p-6 shadow-(--shadow)'>
               <h3 className='text-lg font-semibold'>We hit a snag</h3>
-              <p className='mt-2 text-sm text-[color:var(--text-muted)]'>
+              <p className='mt-2 text-sm text-(--text-muted)'>
                 {identityError instanceof Error ? identityError.message : 'Something went wrong.'}
               </p>
             </div>
@@ -190,23 +190,23 @@ export default function App() {
             <div className='flex flex-col gap-6'>
               <div className='grid gap-6 lg:grid-cols-[1.3fr_0.7fr]'>
                 <ProfileCard data={identityData} title={personTitle} />
-                <div className='rounded-2xl border border-[color:var(--border)] bg-[color:var(--surface-base)] p-6 shadow-[var(--shadow)]'>
-                  <p className='text-xs font-semibold uppercase tracking-[0.24em] text-[color:var(--brand-accent)]'>
+                <div className='rounded-2xl border border-(--border) bg-(--surface-base) p-6 shadow-(--shadow)'>
+                  <p className='text-xs font-semibold uppercase tracking-[0.24em] text-(--brand-accent)'>
                     Quick signals
                   </p>
                   <h3 className='mt-2 text-lg font-semibold'>Snapshot</h3>
                   <div className='mt-4 flex flex-wrap gap-2'>
-                    <span className='rounded-full border border-[color:var(--border)] bg-[color:var(--surface-muted)] px-3 py-1 text-xs font-semibold'>
+                    <span className='rounded-full border border-(--border) bg-(--surface-muted) px-3 py-1 text-xs font-semibold'>
                       News: {newsData.news.length}
                     </span>
-                    <span className='rounded-full border border-[color:var(--border)] bg-[color:var(--surface-muted)] px-3 py-1 text-xs font-semibold'>
+                    <span className='rounded-full border border-(--border) bg-(--surface-muted) px-3 py-1 text-xs font-semibold'>
                       Activities: {newsData.recentActivities.length}
                     </span>
-                    <span className='rounded-full border border-[color:var(--border)] bg-[color:var(--surface-muted)] px-3 py-1 text-xs font-semibold'>
+                    <span className='rounded-full border border-(--border) bg-(--surface-muted) px-3 py-1 text-xs font-semibold'>
                       Videos: {videosData.videos.length}
                     </span>
                   </div>
-                  <p className='mt-4 text-sm text-[color:var(--text-muted)]'>
+                  <p className='mt-4 text-sm text-(--text-muted)'>
                     Sources: {newsData.metadata.newsProvider}. Updated on search.
                   </p>
                 </div>
@@ -239,8 +239,8 @@ export default function App() {
                   isLoading={newsQuery.isFetching}
                   errorMessage={newsQuery.error ? 'News failed to load.' : undefined}
                 />
-                <details className='rounded-2xl border border-[color:var(--border)] bg-[color:var(--surface-base)] p-6 shadow-[var(--shadow)]'>
-                  <summary className='cursor-pointer text-lg font-semibold text-[color:var(--text-primary)]'>
+                <details className='rounded-2xl border border-(--border) bg-(--surface-base) p-6 shadow-(--shadow)'>
+                  <summary className='cursor-pointer text-lg font-semibold text-(--text-primary)'>
                     Interviews & speeches
                   </summary>
                   <div className='mt-4'>
@@ -257,7 +257,7 @@ export default function App() {
           )}
         </section>
 
-        <footer className='text-center text-xs text-[color:var(--text-muted)]'>
+        <footer className='text-center text-xs text-(--text-muted)'>
           Data sources: Wikipedia + GNews + RSS + YouTube. NPIP surfaces public information only and
           flags missing sources.
         </footer>
@@ -265,3 +265,4 @@ export default function App() {
     </div>
   )
 }
+

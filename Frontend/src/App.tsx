@@ -2,8 +2,12 @@ import { useEffect, useMemo, useState } from 'react'
 import './App.css'
 import { useFigureSearch } from './hooks/useFigureSearch'
 import { useDebouncedValue } from './hooks/useDebouncedValue'
-
-const quickSearches = ['KP Oli', 'Balen Shah', 'Sher Bahadur Deuba', 'Pradeep Gyawali']
+import SearchForm from './components/SearchForm'
+import SkeletonGrid from './components/SkeletonGrid'
+import DisambiguationList from './components/DisambiguationList'
+import ProfileCard from './components/ProfileCard'
+import ActivitiesCard from './components/ActivitiesCard'
+import NewsCard from './components/NewsCard'
 
 const formatDate = (value?: string) => {
   if (!value) return 'Unknown date'
@@ -74,59 +78,21 @@ export default function App() {
         </div>
       </div>
 
-      <section className='search'>
-        <form className='search__form' onSubmit={handleSubmit}>
-          <label className='search__label' htmlFor='query'>
-            Search a public figure
-          </label>
-          <div className='search__input'>
-            <input
-              id='query'
-              type='text'
-              value={query}
-              placeholder='e.g. KP Oli Nepali politician'
-              onChange={(event) => setQuery(event.target.value)}
-              aria-invalid={Boolean(inputError)}
-              aria-describedby={inputError ? 'search-error' : undefined}
-            />
-            <button type='submit' disabled={!query.trim()}>
-              Analyze
-            </button>
-          </div>
-        </form>
-        {inputError && (
-          <p id='search-error' className='search__status' role='alert'>
-            {inputError}
-          </p>
-        )}
-        {isFetching && status !== 'pending' && (
-          <p className='search__status' role='status' aria-live='polite'>
-            Refreshing latest signals...
-          </p>
-        )}
-        <div className='search__quick'>
-          {quickSearches.map((item) => (
-            <button
-              key={item}
-              type='button'
-              onClick={() => {
-                setQuery(item)
-                runSearch(item)
-              }}
-            >
-              {item}
-            </button>
-          ))}
-        </div>
-      </section>
+      <SearchForm
+        query={query}
+        inputError={inputError}
+        isFetching={isFetching}
+        status={status}
+        onQueryChange={setQuery}
+        onSubmit={() => runSearch(query)}
+        onQuickSearch={(value) => {
+          setQuery(value)
+          runSearch(value)
+        }}
+      />
 
       <section className='results'>
-        {activeQuery && status === 'pending' && (
-          <div className='card card--loading'>
-            <div className='spinner' />
-            <p>Collecting verified signals for {activeQuery || 'your search'}...</p>
-          </div>
-        )}
+        {activeQuery && status === 'pending' && <SkeletonGrid />}
 
         {status === 'error' && (
           <div className='card card--error'>
@@ -136,99 +102,20 @@ export default function App() {
         )}
 
         {data && data.isDisambiguation && data.candidates.length > 1 && (
-          <div className='card disambiguation'>
-            <div className='card__header'>
-              <h3>Choose the right person</h3>
-              <span className='chip'>Disambiguation</span>
-            </div>
-            <p className='description'>
-              "{data.query}" matches multiple entries. Pick the right profile to continue.
-            </p>
-            <div className='disambiguation__list'>
-              {data.candidates.slice(0, 6).map((candidate) => (
-                <button
-                  key={candidate.wikipediaUrl || candidate.title}
-                  type='button'
-                  className='disambiguation__item'
-                  onClick={() => {
-                    setQuery(candidate.title)
-                    runSearch(candidate.title)
-                  }}
-                >
-                  <div>
-                    <p>{candidate.title}</p>
-                    <span>{candidate.description || 'Wikipedia entry'}</span>
-                  </div>
-                </button>
-              ))}
-            </div>
-          </div>
+          <DisambiguationList
+            data={data}
+            onSelect={(value) => {
+              setQuery(value)
+              runSearch(value)
+            }}
+          />
         )}
 
         {data && !data.isDisambiguation && (
           <div className='results__grid'>
-            <article className='card profile'>
-              <div className='profile__header'>
-                {data.person?.thumbnail ? (
-                  <img src={data.person.thumbnail} alt={personTitle} />
-                ) : (
-                  <div className='profile__placeholder'>{personTitle?.slice(0, 2) || 'NP'}</div>
-                )}
-                <div>
-                  <p className='eyebrow'>Identity</p>
-                  <h2>{personTitle || 'Unknown figure'}</h2>
-                  <p className='description'>{data.person?.description || 'No description found.'}</p>
-                </div>
-              </div>
-              <p className='summary'>{data.person?.extract || 'No verified biography available yet.'}</p>
-              {data.person?.wikipediaUrl && (
-                <a className='link' href={data.person.wikipediaUrl} target='_blank' rel='noreferrer'>
-                  View Wikipedia profile
-                </a>
-              )}
-            </article>
-
-            <article className='card'>
-              <div className='card__header'>
-                <h3>Recent activities</h3>
-                <span className='chip'>Timeline</span>
-              </div>
-              {data.recentActivities.length === 0 && <p>No recent activity found.</p>}
-              <ul className='timeline'>
-                {data.recentActivities.map((activity) => (
-                  <li key={activity.url}>
-                    <span>{formatDate(activity.publishedAt)}</span>
-                    <a href={activity.url} target='_blank' rel='noreferrer'>
-                      {activity.title}
-                    </a>
-                    <small>{activity.source}</small>
-                  </li>
-                ))}
-              </ul>
-            </article>
-
-            <article className='card news'>
-              <div className='card__header'>
-                <h3>Verified news</h3>
-                <span className='chip'>Top sources</span>
-              </div>
-              {data.metadata.warning && (
-                <p className='warning'>News feed is limited: {data.metadata.warning}</p>
-              )}
-              {data.news.length === 0 && <p>No headlines found yet.</p>}
-              <div className='news__list'>
-                {data.news.map((article) => (
-                  <a key={article.url} className='news__item' href={article.url} target='_blank' rel='noreferrer'>
-                    <div>
-                      <p>{article.title}</p>
-                      <span>
-                        {article.source} • {formatDate(article.publishedAt)}
-                      </span>
-                    </div>
-                  </a>
-                ))}
-              </div>
-            </article>
+            <ProfileCard data={data} title={personTitle} />
+            <ActivitiesCard data={data} formatDate={formatDate} />
+            <NewsCard data={data} formatDate={formatDate} />
           </div>
         )}
       </section>

@@ -113,11 +113,32 @@ export default function App() {
         )}
 
         {data && !data.isDisambiguation && (
-          <div className='results__grid'>
-            <ProfileCard data={data} title={personTitle} />
-            <ActivitiesCard data={data} formatDate={formatDate} />
-            <NewsCard data={data} formatDate={formatDate} />
-            <VideosCard data={data} formatDate={formatDate} />
+          <div className='results__stack'>
+            <div className='quick-info'>
+              <div className='quick-info__main'>
+                <ProfileCard data={data} title={personTitle} />
+              </div>
+              <div className='quick-info__meta'>
+                <div className='card'>
+                  <p className='eyebrow'>Quick signals</p>
+                  <h3>Snapshot</h3>
+                  <div className='quick-info__chips'>
+                    <span className='chip'>News: {data.news.length}</span>
+                    <span className='chip'>Activities: {data.recentActivities.length}</span>
+                    <span className='chip'>Videos: {data.videos.length}</span>
+                  </div>
+                  <p className='description'>
+                    Sources: {data.metadata.newsProvider}. Updated on search.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div className='blog-flow'>
+              <ActivitiesCard data={data} formatDate={formatDate} />
+              <NewsCard data={data} formatDate={formatDate} />
+              <VideosCard data={data} formatDate={formatDate} />
+            </div>
           </div>
         )}
       </section>

@@ -7,18 +7,18 @@ type DisambiguationListProps = {
 
 export default function DisambiguationList({ data, onSelect }: DisambiguationListProps) {
   return (
-    <div className='rounded-2xl border border-[color:var(--border)] bg-[color:var(--surface)] p-6 shadow-[var(--shadow)]'>
+    <div className='rounded-2xl border border-[color:var(--border)] bg-[color:var(--surface-base)] p-6 shadow-[var(--shadow)]'>
       <div className='flex items-center justify-between'>
         <h3 className='text-lg font-semibold'>Choose the right person</h3>
-        <span className='rounded-full border border-[color:var(--border)] bg-[color:var(--background)] px-3 py-1 text-xs font-semibold'>
+        <span className='rounded-full border border-[color:var(--border)] bg-[color:var(--surface-muted)] px-3 py-1 text-xs font-semibold'>
           Disambiguation
         </span>
       </div>
-      <p className='mt-2 text-sm text-[color:var(--muted)]'>
+      <p className='mt-2 text-sm text-[color:var(--text-muted)]'>
         "{data.query}" matches multiple entries. Pick the right profile to continue.
       </p>
       {data.candidates.length === 0 ? (
-        <p className='mt-3 text-sm text-[color:var(--muted)]'>
+        <p className='mt-3 text-sm text-[color:var(--text-muted)]'>
           No candidates found. Try a more specific query.
         </p>
       ) : (
@@ -27,12 +27,14 @@ export default function DisambiguationList({ data, onSelect }: DisambiguationLis
             <button
               key={candidate.wikipediaUrl || candidate.title}
               type='button'
-              className='rounded-xl border border-[color:var(--border)] bg-[color:var(--background)] p-4 text-left transition hover:-translate-y-0.5 hover:border-[color:var(--accent)] hover:shadow-md'
+              className='rounded-xl border border-[color:var(--border)] bg-[color:var(--surface-muted)] p-4 text-left transition hover:-translate-y-0.5 hover:border-[color:var(--brand-accent)] hover:shadow-md'
               onClick={() => onSelect(candidate.title)}
             >
               <div>
-                <p className='text-sm font-semibold text-[color:var(--text)]'>{candidate.title}</p>
-                <span className='text-xs text-[color:var(--muted)]'>
+                <p className='text-sm font-semibold text-[color:var(--text-primary)]'>
+                  {candidate.title}
+                </p>
+                <span className='text-xs text-[color:var(--text-muted)]'>
                   {candidate.description || 'Wikipedia entry'}
                 </span>
               </div>

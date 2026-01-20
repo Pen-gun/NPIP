@@ -1,33 +1,70 @@
 @import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,600;700&display=swap');
-@import "tailwindcss/base";
-@import "tailwindcss/components";
-@import "tailwindcss/utilities";
+@import "tailwindcss";
 
 :root {
-  --primary: #2a5b5b;
-  --secondary: #c9a26a;
-  --accent: #d66a3d;
-  --background: #f6f2ec;
-  --surface: #ffffff;
-  --text: #1a1f24;
-  --muted: #5a6772;
-  --border: rgba(26, 31, 36, 0.12);
-  --shadow: 0 16px 40px rgba(26, 31, 36, 0.08);
+  --brand-primary: #1f4b7f;
+  --brand-secondary: #6b7280;
+  --brand-accent: #2f6ea5;
+
+  --surface-background: #f4f6f9;
+  --surface-base: #ffffff;
+  --surface-muted: #eef2f6;
+
+  --text-primary: #0f172a;
+  --text-secondary: #1f2937;
+  --text-muted: #475569;
+  --text-inverse: #ffffff;
+
+  --state-success: #1f7a58;
+  --state-warning: #b45309;
+  --state-error: #b42318;
+  --state-info: #1d4ed8;
+  --info: #1d4ed8;
+  --info-bg: #e7f0ff;
+  --info-text: #0b2c5a;
+
+  --border: rgba(15, 23, 42, 0.12);
+  --divider: rgba(15, 23, 42, 0.08);
+  --shadow: 0 18px 40px rgba(15, 23, 42, 0.08);
+
+  --bg-1: #f6f8fb;
+  --bg-2: #eef3f8;
+  --bg-3: #f4f6f9;
+
   --font-sans: 'Manrope', 'Segoe UI', sans-serif;
   --font-display: 'Newsreader', 'Georgia', serif;
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --primary: #6fd0c1;
-    --secondary: #ddb77a;
-    --accent: #f29a5b;
-    --background: #0f1419;
-    --surface: #141c22;
-    --text: #f3f6f9;
-    --muted: #a7b2bc;
-    --border: rgba(243, 246, 249, 0.12);
-    --shadow: 0 16px 40px rgba(0, 0, 0, 0.35);
+    --brand-primary: #8ab4f8;
+    --brand-secondary: #9aa5b1;
+    --brand-accent: #5ba4e6;
+
+    --surface-background: #0c1118;
+    --surface-base: #121826;
+    --surface-muted: #1a2232;
+
+    --text-primary: #f8fafc;
+    --text-secondary: #d5dee8;
+    --text-muted: #9aa5b1;
+    --text-inverse: #0b1220;
+
+    --state-success: #4fd1a1;
+    --state-warning: #fbbf24;
+    --state-error: #f87171;
+    --state-info: #8ab4f8;
+    --info: #8ab4f8;
+    --info-bg: #132442;
+    --info-text: #dbeafe;
+
+    --border: rgba(248, 250, 252, 0.12);
+    --divider: rgba(248, 250, 252, 0.08);
+    --shadow: 0 18px 40px rgba(0, 0, 0, 0.35);
+
+    --bg-1: #0f1624;
+    --bg-2: #0b1220;
+    --bg-3: #0c1118;
   }
 }
 
@@ -40,8 +77,8 @@
 body {
   margin: 0;
   font-family: var(--font-sans);
-  background: radial-gradient(circle at top left, var(--surface), var(--background) 55%, var(--background) 100%);
-  color: var(--text);
+  background: radial-gradient(circle at top left, var(--bg-1), var(--bg-2) 55%, var(--bg-3) 100%);
+  color: var(--text-primary);
   min-height: 100vh;
 }
 

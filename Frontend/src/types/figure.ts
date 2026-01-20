@@ -47,6 +47,11 @@ export type FigureNewsResponse = {
     count: number
     url: string
   }>
+  insights: {
+    topics: Array<{ topic: string; count: number }>
+    quotes: string[]
+    locations: Array<{ name: string; count: number }>
+  }
   metadata: {
     newsProvider: string
     warning: string | null
@@ -73,7 +78,13 @@ export type FigureVideosResponse = {
     channelTitle: string
     thumbnail: string
     url: string
+    transcriptPreview?: string[]
   }>
+  insights: {
+    topics: Array<{ topic: string; count: number }>
+    quotes: string[]
+    locations: Array<{ name: string; count: number }>
+  }
   metadata: {
     warning: string | null
     sources: {

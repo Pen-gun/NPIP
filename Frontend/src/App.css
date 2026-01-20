@@ -1,3 +1,7 @@
+@import "tailwindcss/base";
+@import "tailwindcss/components";
+@import "tailwindcss/utilities";
+
 .app {
   max-width: 1200px;
   margin: 0 auto;
@@ -424,7 +428,6 @@
   display: grid;
   grid-template-columns: 96px 1fr;
   gap: 12px;
-  text-decoration: none;
   padding: 12px;
   border-radius: 14px;
   border: 1px solid transparent;
@@ -434,6 +437,12 @@
 .videos__item:hover {
   border-color: rgba(44, 110, 109, 0.3);
   background: #eef7f6;
+}
+
+.videos__item a {
+  color: var(--ink);
+  text-decoration: none;
+  font-weight: 600;
 }
 
 .videos__item img {
@@ -446,6 +455,31 @@
 .videos__item span {
   color: var(--ink-muted);
   font-size: 0.85rem;
+}
+
+.transcript {
+  margin-top: 8px;
+  color: var(--ink-muted);
+  font-size: 0.85rem;
+}
+
+.transcript summary {
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.topic-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.quote-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  gap: 12px;
 }
 
 .warning {

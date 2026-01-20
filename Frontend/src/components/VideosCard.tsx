@@ -23,15 +23,23 @@ export default function VideosCard({ data, formatDate, isLoading, errorMessage }
       )}
       <div className='videos__list'>
         {data.videos.map((video) => (
-          <a key={video.url || video.id} className='videos__item' href={video.url} target='_blank' rel='noreferrer'>
+          <div key={video.url || video.id} className='videos__item'>
             {video.thumbnail ? <img src={video.thumbnail} alt={video.title} /> : null}
             <div>
-              <p>{video.title}</p>
+              <a href={video.url} target='_blank' rel='noreferrer'>
+                {video.title}
+              </a>
               <span>
                 {video.channelTitle} • {formatDate(video.publishedAt)}
               </span>
+              {video.transcriptPreview && video.transcriptPreview.length > 0 && (
+                <details className='transcript'>
+                  <summary>Transcript preview</summary>
+                  <p>{video.transcriptPreview.join(' ')}</p>
+                </details>
+              )}
             </div>
-          </a>
+          </div>
         ))}
       </div>
     </article>

@@ -2,6 +2,8 @@ import { fetchWikiProfile } from '../services/wiki.service.js';
 import { fetchNews } from '../services/news.service.js';
 import { fetchRssNews } from '../services/rss.service.js';
 import { fetchYouTubeVideos } from '../services/youtube.service.js';
+import { fetchTranscriptPreview } from '../services/youtube-transcript.service.js';
+import { extractLocations, extractQuotes, extractTopics } from '../services/text-insights.service.js';
 
 const buildRecentActivities = (articles) => {
     return articles.slice(0, 3).map((article) => ({
@@ -143,7 +145,7 @@ const buildEventGroups = (articles) => {
         .slice(0, 6);
 };
 
-const extractLocations = (articles, windowHours = 24) => {
+const extractLocationsFromArticles = (articles, windowHours = 24) => {
     const now = Date.now();
     const cutoff = now - windowHours * 60 * 60 * 1000;
     const pattern =
@@ -177,6 +179,15 @@ const extractLocations = (articles, windowHours = 24) => {
     }
 
     return locations.slice(0, 5);
+};
+
+const buildInsightText = (articles, transcripts = []) => {
+    const articleText = articles
+        .map((article) => `${article.title || ''} ${article.description || ''}`.trim())
+        .filter(Boolean)
+        .join(' ');
+    const transcriptText = transcripts.flat().join(' ');
+    return `${articleText} ${transcriptText}`.trim();
 };
 
 const filterRelevant = (articles, query, personName, aliases = []) => {
@@ -283,6 +294,10 @@ export const getFigureNews = async (req, res, next) => {
         const combined = dedupeArticles([...gnewsArticles, ...rssArticles]);
         const filtered = filterRelevant(combined, query, name, aliases);
         const timeline = sortByDate(filtered);
+        const combinedText = buildInsightText(timeline);
+        const topics = extractTopics(combinedText);
+        const quotes = extractQuotes(combinedText);
+        const locations = extractLocations(combinedText);
 
         const warnings = [
             newsPayload?.warning,
@@ -294,9 +309,14 @@ export const getFigureNews = async (req, res, next) => {
             query,
             name,
             recentActivities: buildRecentActivities(timeline),
-            recentLocations: extractLocations(timeline),
+            recentLocations: extractLocationsFromArticles(timeline),
             news: timeline,
             events: buildEventGroups(timeline),
+            insights: {
+                topics,
+                quotes,
+                locations,
+            },
             metadata: {
                 newsProvider: 'gnews+rss',
                 warning: warnings.length ? warnings.join(' | ') : null,
@@ -342,9 +362,28 @@ export const getFigureVideos = async (req, res, next) => {
                 ? result.value
                 : { videos: [], warning: 'YouTube request failed' };
 
+        const transcriptPreviews = await Promise.all(
+            (youtubePayload?.videos || []).map((video) => fetchTranscriptPreview(video.id))
+        );
+
+        const videosWithTranscripts = (youtubePayload?.videos || []).map((video, index) => ({
+            ...video,
+            transcriptPreview: transcriptPreviews[index] || [],
+        }));
+
+        const combinedText = buildInsightText([], transcriptPreviews);
+        const topics = extractTopics(combinedText);
+        const quotes = extractQuotes(combinedText);
+        const locations = extractLocations(combinedText);
+
         const responsePayload = {
             name,
-            videos: youtubePayload?.videos || [],
+            videos: videosWithTranscripts,
+            insights: {
+                topics,
+                quotes,
+                locations,
+            },
             metadata: {
                 warning: youtubePayload?.warning || null,
                 sources: {
@@ -390,7 +429,13 @@ export const searchFigure = async (req, res, next) => {
                 recentActivities: [],
                 recentLocations: [],
                 news: [],
+                events: [],
                 videos: [],
+                insights: {
+                    topics: [],
+                    quotes: [],
+                    locations: [],
+                },
                 metadata: {
                     newsProvider: 'gnews',
                     warning: 'Select the correct person to load news',
@@ -424,6 +469,10 @@ export const searchFigure = async (req, res, next) => {
         const filtered = filterRelevant(combined, query, person?.name, person?.aliases || []);
         const timeline = sortByDate(filtered);
         const videos = youtubePayload?.videos || [];
+        const combinedText = buildInsightText(timeline);
+        const topics = extractTopics(combinedText);
+        const quotes = extractQuotes(combinedText);
+        const locations = extractLocations(combinedText);
         const warnings = [
             newsPayload?.warning,
             youtubePayload?.warning,
@@ -457,10 +506,15 @@ export const searchFigure = async (req, res, next) => {
             candidates,
             isDisambiguation,
             recentActivities: buildRecentActivities(timeline),
-            recentLocations: extractLocations(timeline),
+            recentLocations: extractLocationsFromArticles(timeline),
             news: timeline,
             events: buildEventGroups(timeline),
             videos,
+            insights: {
+                topics,
+                quotes,
+                locations,
+            },
             metadata: {
                 newsProvider: 'gnews+rss',
                 warning: warnings.length ? warnings.join(' | ') : null,

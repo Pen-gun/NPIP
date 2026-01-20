@@ -10,6 +10,8 @@ import ActivitiesCard from './components/ActivitiesCard'
 import NewsCard from './components/NewsCard'
 import VideosCard from './components/VideosCard'
 import EventsCard from './components/EventsCard'
+import TopicsCard from './components/TopicsCard'
+import QuotesCard from './components/QuotesCard'
 
 const formatDate = (value?: string) => {
   if (!value) return 'Unknown date'
@@ -20,6 +22,20 @@ const formatDate = (value?: string) => {
     day: 'numeric',
     year: 'numeric',
   })
+}
+
+const mergeTopics = (
+  primary: Array<{ topic: string; count: number }>,
+  secondary: Array<{ topic: string; count: number }>,
+) => {
+  const map = new Map<string, number>()
+  for (const item of [...primary, ...secondary]) {
+    map.set(item.topic, (map.get(item.topic) || 0) + item.count)
+  }
+  return Array.from(map.entries())
+    .map(([topic, count]) => ({ topic, count }))
+    .sort((a, b) => b.count - a.count)
+    .slice(0, 8)
 }
 
 export default function App() {
@@ -68,6 +84,11 @@ export default function App() {
       recentLocations: [],
       news: [],
       events: [],
+      insights: {
+        topics: [],
+        quotes: [],
+        locations: [],
+      },
       metadata: {
         newsProvider: 'gnews+rss',
         warning: null,
@@ -82,6 +103,11 @@ export default function App() {
     videosQuery.data ?? {
       name: resolvedName,
       videos: [],
+      insights: {
+        topics: [],
+        quotes: [],
+        locations: [],
+      },
       metadata: {
         warning: null,
         sources: {
@@ -94,6 +120,11 @@ export default function App() {
     () => identityData?.person?.name || identityData?.query || activeQuery || query,
     [identityData, activeQuery, query],
   )
+
+  const combinedTopics = mergeTopics(newsData.insights.topics, videosData.insights.topics)
+  const combinedQuotes = Array.from(
+    new Set([...newsData.insights.quotes, ...videosData.insights.quotes]),
+  ).slice(0, 6)
 
   return (
     <div className='app'>
@@ -171,6 +202,8 @@ export default function App() {
             </div>
 
             <div className='blog-flow'>
+              <TopicsCard topics={combinedTopics} />
+              <QuotesCard quotes={combinedQuotes} />
               <EventsCard
                 data={newsData}
                 formatDate={formatDate}

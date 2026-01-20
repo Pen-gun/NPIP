@@ -1,20 +1,23 @@
 # Nepal Public Figure Intelligence Platform (NPIP)
 
-NPIP is an intelligence console that delivers verified, real-time context on Nepali public figures. 
-Search a name and get identity confirmation, latest activities, verified news, and a clean timeline.
+NPIP is a public-figure intelligence console for Nepal. Search a person and get verified identity,
+deduplicated timelines, trusted news, interviews, and quick signals.
 
-## MVP Features
+## What This Does Today
 
-- Public figure search (Wikipedia identity resolution)
-- Latest news feed (GNews API)
-- Activity highlights and timeline view
-- Simple, fast UI for researchers and journalists
+- Identity confirmation via Wikipedia (with disambiguation support)
+- Multi-source news aggregation (GNews + RSS)
+- Timeline deduplication + relevance filtering
+- Recent activity highlights
+- YouTube interviews/speeches
+- Location signals from the last 24 hours (heuristic from headlines)
+- Progressive loading: identity first, then news/videos
 
 ## Tech Stack
 
 - Backend: Node.js + Express
-- Frontend: React + Vite
-- Data: Wikipedia REST API, GNews API
+- Frontend: React + Vite + React Query
+- Data: Wikipedia REST API, GNews API, RSS feeds, YouTube Data API
 
 ## Quick Start
 
@@ -34,11 +37,29 @@ npm run dev
 Frontend: `http://localhost:5173`  
 Backend: `http://localhost:8000`
 
-## API
+## Configuration
 
-`GET /api/v1/figures/search?query=KP%20Oli`
+Set API keys in `aiMicroService/ai.env`:
 
-Returns:
+- `GNEWS_API_KEY` (optional but recommended)
+- `YOUTUBE_API_KEY` (optional)
+- `CACHE_TTL_MS` (default 600000)
+
+## API Overview
+
+Identity first, then load sections progressively:
+
+- `GET /api/v1/figures/identity?query=KP%20Oli`
+- `GET /api/v1/figures/news?name=K.%20P.%20Sharma%20Oli&query=KP%20Oli&aliases=K.%20P.%20Sharma%20Oli`
+- `GET /api/v1/figures/videos?name=K.%20P.%20Sharma%20Oli`
+
+Legacy combined endpoint (still supported):
+
+- `GET /api/v1/figures/search?query=KP%20Oli`
+
+## Response Shapes (Short)
+
+Identity:
 
 ```json
 {
@@ -49,14 +70,34 @@ Returns:
     "wikipediaUrl": "https://en.wikipedia.org/wiki/K._P._Sharma_Oli",
     "thumbnail": "https://upload.wikimedia.org/...",
     "extract": "Khadga Prasad Sharma Oli ...",
-    "pageId": 12345
+    "pageId": 12345,
+    "aliases": ["K. P. Sharma Oli"]
   },
+  "candidates": [],
+  "isDisambiguation": false
+}
+```
+
+News:
+
+```json
+{
+  "query": "KP Oli",
+  "name": "K. P. Sharma Oli",
   "recentActivities": [],
+  "recentLocations": [],
   "news": [],
-  "metadata": {
-    "newsProvider": "gnews",
-    "warning": null
-  }
+  "metadata": { "newsProvider": "gnews+rss", "warning": null }
+}
+```
+
+Videos:
+
+```json
+{
+  "name": "K. P. Sharma Oli",
+  "videos": [],
+  "metadata": { "warning": null }
 }
 ```
 
@@ -74,8 +115,11 @@ NPIP/
 
 ## Roadmap
 
-- Intermediate: disambiguation flows, multi-source aggregation, timeline deduplication, sentiment
-- Advanced: microservices, queues, Redis cache, elastic search, role-based dashboards
+- Better entity matching (aliases + exact phrase match)
+- Named entity extraction for locations + events
+- Source confidence scoring
+- Scheduled background refreshes + storage
+- Role-based dashboards and alerts
 
 ## Ethics & Compliance
 

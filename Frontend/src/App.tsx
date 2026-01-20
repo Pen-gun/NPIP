@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useMemo, useState } from 'react'
 import './App.css'
 import { useFigureIdentity, useFigureNews, useFigureVideos } from './hooks/useFigureSearch'
 import { useDebouncedValue } from './hooks/useDebouncedValue'
@@ -25,28 +25,23 @@ const formatDate = (value?: string) => {
 export default function App() {
   const [query, setQuery] = useState('')
   const [activeQuery, setActiveQuery] = useState('')
-  const [inputError, setInputError] = useState('')
   const debouncedQuery = useDebouncedValue(query, 400)
 
   const runSearch = (value: string) => {
     const trimmed = value.trim()
     if (!trimmed) {
-      setInputError('Enter a name to search.')
       return
     }
     if (trimmed.length < 2) {
-      setInputError('Search term is too short.')
       return
     }
-    setInputError('')
     setActiveQuery(trimmed)
   }
 
-  useEffect(() => {
-    if (!debouncedQuery.trim()) {
-      setInputError('')
-    }
-  }, [debouncedQuery])
+  const inputError =
+    !debouncedQuery.trim() || debouncedQuery.trim().length >= 2
+      ? ''
+      : 'Search term is too short.'
 
   const identityQuery = useFigureIdentity(activeQuery)
   const identityData = identityQuery.data

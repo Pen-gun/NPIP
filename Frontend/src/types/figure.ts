@@ -28,6 +28,15 @@ export type FigureResponse = {
   isDisambiguation: boolean
   recentActivities: Array<Pick<NewsArticle, 'title' | 'publishedAt' | 'source' | 'url'>>
   news: NewsArticle[]
+  videos: Array<{
+    id: string
+    title: string
+    description: string
+    publishedAt: string
+    channelTitle: string
+    thumbnail: string
+    url: string
+  }>
   metadata: {
     newsProvider: string
     warning: string | null

@@ -8,6 +8,7 @@ import DisambiguationList from './components/DisambiguationList'
 import ProfileCard from './components/ProfileCard'
 import ActivitiesCard from './components/ActivitiesCard'
 import NewsCard from './components/NewsCard'
+import VideosCard from './components/VideosCard'
 
 const formatDate = (value?: string) => {
   if (!value) return 'Unknown date'
@@ -116,6 +117,7 @@ export default function App() {
             <ProfileCard data={data} title={personTitle} />
             <ActivitiesCard data={data} formatDate={formatDate} />
             <NewsCard data={data} formatDate={formatDate} />
+            <VideosCard data={data} formatDate={formatDate} />
           </div>
         )}
       </section>

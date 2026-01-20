@@ -18,6 +18,14 @@ const RSS_FEEDS = [
         name: 'Onlinekhabar',
         url: 'https://english.onlinekhabar.com/feed',
     },
+    {
+        name: 'Nepali Times',
+        url: 'https://www.nepalitimes.com/feed/',
+    },
+    {
+        name: 'Setopati',
+        url: 'https://en.setopati.com/rss',
+    },
 ];
 
 const parser = new XMLParser({

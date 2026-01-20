@@ -373,6 +373,39 @@
   font-size: 0.85rem;
 }
 
+.videos__list {
+  display: grid;
+  gap: 12px;
+}
+
+.videos__item {
+  display: grid;
+  grid-template-columns: 96px 1fr;
+  gap: 12px;
+  text-decoration: none;
+  padding: 12px;
+  border-radius: 14px;
+  border: 1px solid transparent;
+  transition: border 0.2s ease, background 0.2s ease;
+}
+
+.videos__item:hover {
+  border-color: rgba(44, 110, 109, 0.3);
+  background: #eef7f6;
+}
+
+.videos__item img {
+  width: 96px;
+  height: 64px;
+  object-fit: cover;
+  border-radius: 10px;
+}
+
+.videos__item span {
+  color: var(--ink-muted);
+  font-size: 0.85rem;
+}
+
 .warning {
   background: #fff0e7;
   padding: 10px 12px;

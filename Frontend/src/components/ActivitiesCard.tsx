@@ -20,7 +20,7 @@ export default function ActivitiesCard({
   const allSourcesDown = !data.metadata.sources.gnews.ok && !data.metadata.sources.rss.ok
 
   return (
-    <article className='rounded-2xl border border-[color:var(--border)] bg-[color:var(--surface-base)] p-6 shadow-[var(--shadow)]'>
+    <article className='rounded-2xl border border-[color:var(--border)] bg-[color:var(--surface-base)] p-6 shadow-[var(--shadow)] max-h-[520px] overflow-y-auto'>
       <div className='flex items-center justify-between'>
         <h3 className='text-lg font-semibold'>Recent activities</h3>
         <span className='rounded-full border border-[color:var(--border)] bg-[color:var(--surface-muted)] px-3 py-1 text-xs font-semibold'>

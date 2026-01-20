@@ -40,6 +40,13 @@ export type FigureNewsResponse = {
     url: string
   }>
   news: NewsArticle[]
+  events: Array<{
+    title: string
+    latestPublishedAt: string
+    sources: string[]
+    count: number
+    url: string
+  }>
   metadata: {
     newsProvider: string
     warning: string | null

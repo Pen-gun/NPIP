@@ -53,6 +53,96 @@ const sortByDate = (articles) => {
     });
 };
 
+const STOPWORDS = new Set([
+    'the',
+    'a',
+    'an',
+    'and',
+    'or',
+    'of',
+    'to',
+    'in',
+    'for',
+    'on',
+    'with',
+    'from',
+    'by',
+    'at',
+    'as',
+    'is',
+    'are',
+    'was',
+    'were',
+    'will',
+    'says',
+    'said',
+    'after',
+    'before',
+    'over',
+    'into',
+    'about',
+    'amid',
+    'against',
+    'near',
+    'up',
+    'out',
+    'new',
+]);
+
+const buildEventSignature = (title) => {
+    if (!title) return '';
+    const tokens = normalizeTitle(title)
+        .split(' ')
+        .filter((token) => token.length >= 3 && !STOPWORDS.has(token));
+    return tokens.slice(0, 6).join(' ');
+};
+
+const buildEventGroups = (articles) => {
+    const groups = new Map();
+    for (const article of articles) {
+        const signature = buildEventSignature(article.title);
+        const key = signature || normalizeTitle(article.title || '');
+        if (!key) {
+            continue;
+        }
+        if (!groups.has(key)) {
+            groups.set(key, {
+                title: article.title,
+                latestPublishedAt: article.publishedAt,
+                sources: new Set([article.source]),
+                count: 1,
+                url: article.url,
+            });
+        } else {
+            const group = groups.get(key);
+            group.count += 1;
+            group.sources.add(article.source);
+            const currentTime = Date.parse(article.publishedAt || '') || 0;
+            const groupTime = Date.parse(group.latestPublishedAt || '') || 0;
+            if (currentTime > groupTime) {
+                group.latestPublishedAt = article.publishedAt;
+                group.url = article.url;
+                group.title = article.title;
+            }
+        }
+    }
+
+    return Array.from(groups.values())
+        .map((group) => ({
+            title: group.title,
+            latestPublishedAt: group.latestPublishedAt,
+            sources: Array.from(group.sources).filter(Boolean),
+            count: group.count,
+            url: group.url,
+        }))
+        .sort((a, b) => {
+            const aTime = Date.parse(a.latestPublishedAt || '') || 0;
+            const bTime = Date.parse(b.latestPublishedAt || '') || 0;
+            return bTime - aTime;
+        })
+        .slice(0, 6);
+};
+
 const extractLocations = (articles, windowHours = 24) => {
     const now = Date.now();
     const cutoff = now - windowHours * 60 * 60 * 1000;
@@ -206,6 +296,7 @@ export const getFigureNews = async (req, res, next) => {
             recentActivities: buildRecentActivities(timeline),
             recentLocations: extractLocations(timeline),
             news: timeline,
+            events: buildEventGroups(timeline),
             metadata: {
                 newsProvider: 'gnews+rss',
                 warning: warnings.length ? warnings.join(' | ') : null,
@@ -368,6 +459,7 @@ export const searchFigure = async (req, res, next) => {
             recentActivities: buildRecentActivities(timeline),
             recentLocations: extractLocations(timeline),
             news: timeline,
+            events: buildEventGroups(timeline),
             videos,
             metadata: {
                 newsProvider: 'gnews+rss',

@@ -9,6 +9,7 @@ import ProfileCard from './components/ProfileCard'
 import ActivitiesCard from './components/ActivitiesCard'
 import NewsCard from './components/NewsCard'
 import VideosCard from './components/VideosCard'
+import EventsCard from './components/EventsCard'
 
 const formatDate = (value?: string) => {
   if (!value) return 'Unknown date'
@@ -66,6 +67,7 @@ export default function App() {
       recentActivities: [],
       recentLocations: [],
       news: [],
+      events: [],
       metadata: {
         newsProvider: 'gnews+rss',
         warning: null,
@@ -169,6 +171,12 @@ export default function App() {
             </div>
 
             <div className='blog-flow'>
+              <EventsCard
+                data={newsData}
+                formatDate={formatDate}
+                isLoading={newsQuery.isFetching}
+                errorMessage={newsQuery.error ? 'Events failed to load.' : undefined}
+              />
               <ActivitiesCard
                 data={newsData}
                 formatDate={formatDate}

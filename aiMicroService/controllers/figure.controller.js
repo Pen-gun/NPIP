@@ -17,16 +17,21 @@ export const searchFigure = async (req, res, next) => {
             return res.status(400).json({ error: 'Query is required' });
         }
 
-        const [person, newsPayload] = await Promise.all([
+        const [wikiPayload, newsPayload] = await Promise.all([
             fetchWikiProfile(query),
             fetchNews(query),
         ]);
 
+        const person = wikiPayload?.person || null;
+        const candidates = wikiPayload?.candidates || [];
+        const isDisambiguation = Boolean(wikiPayload?.isDisambiguation);
         const articles = newsPayload?.articles || [];
 
         res.json({
             query,
             person,
+            candidates,
+            isDisambiguation,
             recentActivities: buildRecentActivities(articles),
             news: articles,
             metadata: {

@@ -4,6 +4,14 @@ const WIKI_SEARCH_URL = 'https://en.wikipedia.org/w/rest.php/v1/search/title';
 const WIKI_SUMMARY_URL = 'https://en.wikipedia.org/api/rest_v1/page/summary/';
 
 const normalizeTitle = (title) => encodeURIComponent(title.replace(/ /g, '_'));
+const getPageUrl = (title) => `https://en.wikipedia.org/wiki/${normalizeTitle(title)}`;
+
+const mapCandidate = (page) => ({
+    title: page?.title || '',
+    description: page?.description || '',
+    thumbnail: page?.thumbnail?.url || '',
+    wikipediaUrl: page?.content_urls?.desktop?.page || getPageUrl(page?.title || ''),
+});
 
 export const fetchWikiProfile = async (query, limit = 5) => {
     const resolvedLimit = Number(process.env.WIKI_LIMIT) || limit;
@@ -15,10 +23,12 @@ export const fetchWikiProfile = async (query, limit = 5) => {
     }
 
     const searchData = await searchResponse.json();
-    const bestMatch = searchData?.pages?.[0];
+    const pages = Array.isArray(searchData?.pages) ? searchData.pages : [];
+    const bestMatch = pages[0];
+    const candidates = pages.map(mapCandidate);
 
     if (!bestMatch?.title) {
-        return null;
+        return { person: null, candidates: [] };
     }
 
     const summaryUrl = `${WIKI_SUMMARY_URL}${normalizeTitle(bestMatch.title)}`;
@@ -26,22 +36,39 @@ export const fetchWikiProfile = async (query, limit = 5) => {
 
     if (!summaryResponse.ok) {
         return {
-            name: bestMatch.title,
-            description: bestMatch.description || '',
-            wikipediaUrl: bestMatch?.content_urls?.desktop?.page || '',
-            thumbnail: bestMatch?.thumbnail?.url || '',
-            extract: '',
+            person: {
+                name: bestMatch.title,
+                description: bestMatch.description || '',
+                wikipediaUrl: bestMatch?.content_urls?.desktop?.page || '',
+                thumbnail: bestMatch?.thumbnail?.url || '',
+                extract: '',
+                pageId: null,
+            },
+            candidates,
+            isDisambiguation: false,
         };
     }
 
     const summaryData = await summaryResponse.json();
 
+    const description = summaryData?.description || bestMatch.description || '';
+    const extract = summaryData?.extract || '';
+    const summaryType = summaryData?.type || '';
+    const isDisambiguation =
+        summaryType === 'disambiguation' ||
+        description.toLowerCase().includes('disambiguation') ||
+        extract.toLowerCase().includes('may refer to');
+
     return {
-        name: summaryData?.title || bestMatch.title,
-        description: summaryData?.description || bestMatch.description || '',
-        wikipediaUrl: summaryData?.content_urls?.desktop?.page || '',
-        thumbnail: summaryData?.thumbnail?.source || '',
-        extract: summaryData?.extract || '',
-        pageId: summaryData?.pageid || null,
+        person: {
+            name: summaryData?.title || bestMatch.title,
+            description,
+            wikipediaUrl: summaryData?.content_urls?.desktop?.page || '',
+            thumbnail: summaryData?.thumbnail?.source || '',
+            extract,
+            pageId: summaryData?.pageid || null,
+        },
+        candidates,
+        isDisambiguation,
     };
 };

@@ -135,7 +135,37 @@ export default function App() {
           </div>
         )}
 
-        {data && (
+        {data && data.isDisambiguation && data.candidates.length > 1 && (
+          <div className='card disambiguation'>
+            <div className='card__header'>
+              <h3>Choose the right person</h3>
+              <span className='chip'>Disambiguation</span>
+            </div>
+            <p className='description'>
+              "{data.query}" matches multiple entries. Pick the right profile to continue.
+            </p>
+            <div className='disambiguation__list'>
+              {data.candidates.slice(0, 6).map((candidate) => (
+                <button
+                  key={candidate.wikipediaUrl || candidate.title}
+                  type='button'
+                  className='disambiguation__item'
+                  onClick={() => {
+                    setQuery(candidate.title)
+                    runSearch(candidate.title)
+                  }}
+                >
+                  <div>
+                    <p>{candidate.title}</p>
+                    <span>{candidate.description || 'Wikipedia entry'}</span>
+                  </div>
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {data && !data.isDisambiguation && (
           <div className='results__grid'>
             <article className='card profile'>
               <div className='profile__header'>

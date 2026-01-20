@@ -19,6 +19,13 @@ export type NewsArticle = {
 export type FigureResponse = {
   query: string
   person: PersonProfile | null
+  candidates: Array<{
+    title: string
+    description: string
+    thumbnail: string
+    wikipediaUrl: string
+  }>
+  isDisambiguation: boolean
   recentActivities: Array<Pick<NewsArticle, 'title' | 'publishedAt' | 'source' | 'url'>>
   news: NewsArticle[]
   metadata: {

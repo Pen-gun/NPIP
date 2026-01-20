@@ -232,19 +232,26 @@ export default function App() {
                 />
               </div>
 
-              <div className='grid gap-6 lg:grid-cols-2'>
+              <div className='grid gap-6'>
                 <NewsCard
                   data={newsData}
                   formatDate={formatDate}
                   isLoading={newsQuery.isFetching}
                   errorMessage={newsQuery.error ? 'News failed to load.' : undefined}
                 />
-                <VideosCard
-                  data={videosData}
-                  formatDate={formatDate}
-                  isLoading={videosQuery.isFetching}
-                  errorMessage={videosQuery.error ? 'Videos failed to load.' : undefined}
-                />
+                <details className='rounded-2xl border border-[color:var(--border)] bg-[color:var(--surface-base)] p-6 shadow-[var(--shadow)]'>
+                  <summary className='cursor-pointer text-lg font-semibold text-[color:var(--text-primary)]'>
+                    Interviews & speeches
+                  </summary>
+                  <div className='mt-4'>
+                    <VideosCard
+                      data={videosData}
+                      formatDate={formatDate}
+                      isLoading={videosQuery.isFetching}
+                      errorMessage={videosQuery.error ? 'Videos failed to load.' : undefined}
+                    />
+                  </div>
+                </details>
               </div>
             </div>
           )}

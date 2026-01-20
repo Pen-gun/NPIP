@@ -1,4 +1,6 @@
 import { useMemo, useState } from 'react'
+import { useQuery } from '@tanstack/react-query'
+import axios from 'axios'
 import './App.css'
 
 type PersonProfile = {
@@ -45,29 +47,12 @@ const formatDate = (value?: string) => {
 
 export default function App() {
   const [query, setQuery] = useState('')
-  const [result, setResult] = useState<FigureResponse | null>(null)
-  const [status, setStatus] = useState<'idle' | 'loading' | 'error'>('idle')
-  const [error, setError] = useState<string | null>(null)
+  const [activeQuery, setActiveQuery] = useState('')
 
-  const runSearch = async (value: string) => {
+  const runSearch = (value: string) => {
     const trimmed = value.trim()
     if (!trimmed) return
-    setStatus('loading')
-    setError(null)
-    setResult(null)
-
-    try {
-      const response = await fetch(`/api/v1/figures/search?query=${encodeURIComponent(trimmed)}`)
-      if (!response.ok) {
-        throw new Error('Search failed. Try again in a moment.')
-      }
-      const data = (await response.json()) as FigureResponse
-      setResult(data)
-      setStatus('idle')
-    } catch (err) {
-      setStatus('error')
-      setError(err instanceof Error ? err.message : 'Something went wrong.')
-    }
+    setActiveQuery(trimmed)
   }
 
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
@@ -75,7 +60,21 @@ export default function App() {
     runSearch(query)
   }
 
-  const personTitle = useMemo(() => result?.person?.name || result?.query || query, [result, query])
+  const { data, status, error, isFetching } = useQuery({
+    queryKey: ['figure', activeQuery],
+    enabled: Boolean(activeQuery),
+    queryFn: async () => {
+      const response = await axios.get<FigureResponse>('/api/v1/figures/search', {
+        params: { query: activeQuery },
+      })
+      return response.data
+    },
+  })
+
+  const personTitle = useMemo(
+    () => data?.person?.name || data?.query || activeQuery || query,
+    [data, activeQuery, query],
+  )
 
   return (
     <div className='app'>
@@ -113,9 +112,19 @@ export default function App() {
             <button type='submit'>Analyze</button>
           </div>
         </form>
+        {isFetching && status !== 'pending' && (
+          <p className='search__status'>Refreshing latest signals...</p>
+        )}
         <div className='search__quick'>
           {quickSearches.map((item) => (
-            <button key={item} type='button' onClick={() => runSearch(item)}>
+            <button
+              key={item}
+              type='button'
+              onClick={() => {
+                setQuery(item)
+                runSearch(item)
+              }}
+            >
               {item}
             </button>
           ))}
@@ -123,38 +132,38 @@ export default function App() {
       </section>
 
       <section className='results'>
-        {status === 'loading' && (
+        {activeQuery && status === 'pending' && (
           <div className='card card--loading'>
             <div className='spinner' />
-            <p>Collecting verified signals for {query || 'your search'}...</p>
+            <p>Collecting verified signals for {activeQuery || 'your search'}...</p>
           </div>
         )}
 
         {status === 'error' && (
           <div className='card card--error'>
             <h3>We hit a snag</h3>
-            <p>{error}</p>
+            <p>{error instanceof Error ? error.message : 'Something went wrong.'}</p>
           </div>
         )}
 
-        {result && (
+        {data && (
           <div className='results__grid'>
             <article className='card profile'>
               <div className='profile__header'>
-                {result.person?.thumbnail ? (
-                  <img src={result.person.thumbnail} alt={personTitle} />
+                {data.person?.thumbnail ? (
+                  <img src={data.person.thumbnail} alt={personTitle} />
                 ) : (
                   <div className='profile__placeholder'>{personTitle?.slice(0, 2) || 'NP'}</div>
                 )}
                 <div>
                   <p className='eyebrow'>Identity</p>
                   <h2>{personTitle || 'Unknown figure'}</h2>
-                  <p className='description'>{result.person?.description || 'No description found.'}</p>
+                  <p className='description'>{data.person?.description || 'No description found.'}</p>
                 </div>
               </div>
-              <p className='summary'>{result.person?.extract || 'No verified biography available yet.'}</p>
-              {result.person?.wikipediaUrl && (
-                <a className='link' href={result.person.wikipediaUrl} target='_blank' rel='noreferrer'>
+              <p className='summary'>{data.person?.extract || 'No verified biography available yet.'}</p>
+              {data.person?.wikipediaUrl && (
+                <a className='link' href={data.person.wikipediaUrl} target='_blank' rel='noreferrer'>
                   View Wikipedia profile
                 </a>
               )}
@@ -165,9 +174,9 @@ export default function App() {
                 <h3>Recent activities</h3>
                 <span className='chip'>Timeline</span>
               </div>
-              {result.recentActivities.length === 0 && <p>No recent activity found.</p>}
+              {data.recentActivities.length === 0 && <p>No recent activity found.</p>}
               <ul className='timeline'>
-                {result.recentActivities.map((activity) => (
+                {data.recentActivities.map((activity) => (
                   <li key={activity.url}>
                     <span>{formatDate(activity.publishedAt)}</span>
                     <a href={activity.url} target='_blank' rel='noreferrer'>
@@ -184,12 +193,12 @@ export default function App() {
                 <h3>Verified news</h3>
                 <span className='chip'>Top sources</span>
               </div>
-              {result.metadata.warning && (
-                <p className='warning'>News feed is limited: {result.metadata.warning}</p>
+              {data.metadata.warning && (
+                <p className='warning'>News feed is limited: {data.metadata.warning}</p>
               )}
-              {result.news.length === 0 && <p>No headlines found yet.</p>}
+              {data.news.length === 0 && <p>No headlines found yet.</p>}
               <div className='news__list'>
-                {result.news.map((article) => (
+                {data.news.map((article) => (
                   <a key={article.url} className='news__item' href={article.url} target='_blank' rel='noreferrer'>
                     <div>
                       <p>{article.title}</p>

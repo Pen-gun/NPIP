@@ -145,6 +145,12 @@
   gap: 10px;
 }
 
+.search__status {
+  margin-top: 10px;
+  color: var(--ink-muted);
+  font-size: 0.9rem;
+}
+
 .search__quick button {
   border: 1px solid var(--border-soft);
   background: #fff;

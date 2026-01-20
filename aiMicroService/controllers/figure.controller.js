@@ -115,9 +115,15 @@ export const searchFigure = async (req, res, next) => {
                 isDisambiguation,
                 recentActivities: [],
                 news: [],
+                videos: [],
                 metadata: {
                     newsProvider: 'gnews',
                     warning: 'Select the correct person to load news',
+                    sources: {
+                        gnews: { ok: false, warning: 'Select a person to load news' },
+                        rss: { ok: false, warning: 'Select a person to load news' },
+                        youtube: { ok: false, warning: 'Select a person to load videos' },
+                    },
                 },
             });
         }
@@ -128,10 +134,12 @@ export const searchFigure = async (req, res, next) => {
             fetchYouTubeVideos(query),
         ]);
 
-        const newsPayload = newsResult.status === 'fulfilled' ? newsResult.value : { articles: [] };
+        const newsPayload = newsResult.status === 'fulfilled' ? newsResult.value : { articles: [], warning: null };
         const rssArticles = rssResult.status === 'fulfilled' ? rssResult.value : [];
         const youtubePayload =
-            youtubeResult.status === 'fulfilled' ? youtubeResult.value : { videos: [], warning: null };
+            youtubeResult.status === 'fulfilled'
+                ? youtubeResult.value
+                : { videos: [], warning: 'YouTube request failed' };
 
         const gnewsArticles = newsPayload?.articles || [];
         const combined = dedupeArticles([...gnewsArticles, ...rssArticles]);
@@ -146,6 +154,25 @@ export const searchFigure = async (req, res, next) => {
             youtubeResult.status === 'rejected' ? 'YouTube request failed' : null,
         ].filter(Boolean);
 
+        const sources = {
+            gnews: {
+                ok: newsResult.status === 'fulfilled',
+                warning:
+                    newsPayload?.warning ||
+                    (newsResult.status === 'rejected' ? 'GNews request failed' : null),
+            },
+            rss: {
+                ok: rssResult.status === 'fulfilled',
+                warning: rssResult.status === 'rejected' ? 'RSS request failed' : null,
+            },
+            youtube: {
+                ok: youtubeResult.status === 'fulfilled',
+                warning:
+                    youtubePayload?.warning ||
+                    (youtubeResult.status === 'rejected' ? 'YouTube request failed' : null),
+            },
+        };
+
         const responsePayload = {
             query,
             person,
@@ -157,6 +184,7 @@ export const searchFigure = async (req, res, next) => {
             metadata: {
                 newsProvider: 'gnews+rss',
                 warning: warnings.length ? warnings.join(' | ') : null,
+                sources,
             },
         };
 

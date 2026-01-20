@@ -40,5 +40,19 @@ export type FigureResponse = {
   metadata: {
     newsProvider: string
     warning: string | null
+    sources: {
+      gnews: {
+        ok: boolean
+        warning: string | null
+      }
+      rss: {
+        ok: boolean
+        warning: string | null
+      }
+      youtube: {
+        ok: boolean
+        warning: string | null
+      }
+    }
   }
 }

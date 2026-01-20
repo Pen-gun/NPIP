@@ -4,15 +4,22 @@ type TopicsCardProps = {
 
 export default function TopicsCard({ topics }: TopicsCardProps) {
   return (
-    <article className='card'>
-      <div className='card__header'>
-        <h3>Key topics</h3>
-        <span className='chip'>Signals</span>
+    <article className='rounded-2xl border border-[color:var(--border)] bg-[color:var(--surface)] p-6 shadow-[var(--shadow)]'>
+      <div className='flex items-center justify-between'>
+        <h3 className='text-lg font-semibold'>Key topics</h3>
+        <span className='rounded-full border border-[color:var(--border)] bg-[color:var(--background)] px-3 py-1 text-xs font-semibold'>
+          Signals
+        </span>
       </div>
-      {topics.length === 0 && <p>No topics extracted yet.</p>}
-      <div className='topic-list'>
+      {topics.length === 0 && (
+        <p className='mt-3 text-sm text-[color:var(--muted)]'>No topics extracted yet.</p>
+      )}
+      <div className='mt-4 flex flex-wrap gap-2'>
         {topics.map((item) => (
-          <span key={item.topic} className='chip'>
+          <span
+            key={item.topic}
+            className='rounded-full border border-[color:var(--border)] bg-[color:var(--background)] px-3 py-1 text-xs font-semibold'
+          >
             {item.topic} ({item.count})
           </span>
         ))}

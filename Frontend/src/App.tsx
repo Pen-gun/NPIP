@@ -1,5 +1,4 @@
 import { useMemo, useState } from 'react'
-import './App.css'
 import { useFigureIdentity, useFigureNews, useFigureVideos } from './hooks/useFigureSearch'
 import { useDebouncedValue } from './hooks/useDebouncedValue'
 import SearchForm from './components/SearchForm'
@@ -45,10 +44,7 @@ export default function App() {
 
   const runSearch = (value: string) => {
     const trimmed = value.trim()
-    if (!trimmed) {
-      return
-    }
-    if (trimmed.length < 2) {
+    if (!trimmed || trimmed.length < 2) {
       return
     }
     setActiveQuery(trimmed)
@@ -127,118 +123,138 @@ export default function App() {
   ).slice(0, 6)
 
   return (
-    <div className='app'>
-      <div className='hero'>
-        <div className='hero__copy'>
-          <p className='eyebrow'>Nepal Public Figure Intelligence Platform</p>
-          <h1>Real-time clarity on Nepal&apos;s public figures.</h1>
-          <p className='subtitle'>
-            Search any leader or public voice and get verified identity, context, and the latest
-            activity highlights in one scan.
-          </p>
-        </div>
-        <div className='hero__panel'>
-          <div className='signal-card'>
-            <p className='signal-title'>Live Signal</p>
-            <p className='signal-value'>Verified news + public data</p>
-            <p className='signal-meta'>Built for journalists, researchers, and policy teams.</p>
+    <div className='min-h-screen text-[color:var(--text)]'>
+      <div className='mx-auto flex w-full max-w-6xl flex-col gap-10 px-6 py-12'>
+        <header className='grid items-center gap-8 lg:grid-cols-[1.2fr_0.8fr]'>
+          <div>
+            <p className='text-xs font-semibold uppercase tracking-[0.3em] text-[color:var(--accent)]'>
+              Nepal Public Figure Intelligence Platform
+            </p>
+            <h1 className='mt-3 font-[var(--font-display)] text-3xl font-semibold leading-tight sm:text-4xl lg:text-5xl'>
+              Real-time clarity on Nepal&apos;s public figures.
+            </h1>
+            <p className='mt-4 max-w-xl text-base text-[color:var(--muted)] sm:text-lg'>
+              Search any leader or public voice and get verified identity, context, and the latest
+              activity highlights in one scan.
+            </p>
           </div>
-        </div>
-      </div>
-
-      <SearchForm
-        query={query}
-        inputError={inputError}
-        isFetching={identityQuery.isFetching}
-        status={identityStatus}
-        onQueryChange={setQuery}
-        onSubmit={() => runSearch(query)}
-        onQuickSearch={(value) => {
-          setQuery(value)
-          runSearch(value)
-        }}
-      />
-
-      <section className='results'>
-        {activeQuery && identityStatus === 'pending' && <SkeletonGrid />}
-
-        {identityStatus === 'error' && (
-          <div className='card card--error'>
-            <h3>We hit a snag</h3>
-            <p>{identityError instanceof Error ? identityError.message : 'Something went wrong.'}</p>
+          <div className='w-full max-w-sm justify-self-start lg:justify-self-end'>
+            <div className='rounded-2xl border border-[color:var(--border)] bg-[color:var(--surface)] p-6 shadow-[var(--shadow)]'>
+              <p className='text-sm font-semibold text-[color:var(--primary)]'>Live Signal</p>
+              <p className='mt-2 text-lg font-semibold text-[color:var(--text)]'>
+                Verified news + public data
+              </p>
+              <p className='mt-3 text-sm text-[color:var(--muted)]'>
+                Built for journalists, researchers, and policy teams.
+              </p>
+            </div>
           </div>
-        )}
+        </header>
 
-        {identityData && identityData.isDisambiguation && identityData.candidates.length > 1 && (
-          <DisambiguationList
-            data={identityData}
-            onSelect={(value) => {
-              setQuery(value)
-              runSearch(value)
-            }}
-          />
-        )}
+        <SearchForm
+          query={query}
+          inputError={inputError}
+          isFetching={identityQuery.isFetching}
+          status={identityStatus}
+          onQueryChange={setQuery}
+          onSubmit={() => runSearch(query)}
+          onQuickSearch={(value) => {
+            setQuery(value)
+            runSearch(value)
+          }}
+        />
 
-        {identityData && !identityData.isDisambiguation && (
-          <div className='results__stack'>
-            <div className='quick-info'>
-              <div className='quick-info__main'>
+        <section className='flex flex-col gap-6'>
+          {activeQuery && identityStatus === 'pending' && <SkeletonGrid />}
+
+          {identityStatus === 'error' && (
+            <div className='rounded-2xl border border-[color:var(--border)] bg-[color:var(--surface)] p-6 shadow-[var(--shadow)]'>
+              <h3 className='text-lg font-semibold'>We hit a snag</h3>
+              <p className='mt-2 text-sm text-[color:var(--muted)]'>
+                {identityError instanceof Error ? identityError.message : 'Something went wrong.'}
+              </p>
+            </div>
+          )}
+
+          {identityData && identityData.isDisambiguation && identityData.candidates.length > 1 && (
+            <DisambiguationList
+              data={identityData}
+              onSelect={(value) => {
+                setQuery(value)
+                runSearch(value)
+              }}
+            />
+          )}
+
+          {identityData && !identityData.isDisambiguation && (
+            <div className='flex flex-col gap-6'>
+              <div className='grid gap-6 lg:grid-cols-[1.3fr_0.7fr]'>
                 <ProfileCard data={identityData} title={personTitle} />
-              </div>
-              <div className='quick-info__meta'>
-                <div className='card'>
-                  <p className='eyebrow'>Quick signals</p>
-                  <h3>Snapshot</h3>
-                  <div className='quick-info__chips'>
-                    <span className='chip'>News: {newsData.news.length}</span>
-                    <span className='chip'>Activities: {newsData.recentActivities.length}</span>
-                    <span className='chip'>Videos: {videosData.videos.length}</span>
+                <div className='rounded-2xl border border-[color:var(--border)] bg-[color:var(--surface)] p-6 shadow-[var(--shadow)]'>
+                  <p className='text-xs font-semibold uppercase tracking-[0.24em] text-[color:var(--accent)]'>
+                    Quick signals
+                  </p>
+                  <h3 className='mt-2 text-lg font-semibold'>Snapshot</h3>
+                  <div className='mt-4 flex flex-wrap gap-2'>
+                    <span className='rounded-full border border-[color:var(--border)] bg-[color:var(--background)] px-3 py-1 text-xs font-semibold'>
+                      News: {newsData.news.length}
+                    </span>
+                    <span className='rounded-full border border-[color:var(--border)] bg-[color:var(--background)] px-3 py-1 text-xs font-semibold'>
+                      Activities: {newsData.recentActivities.length}
+                    </span>
+                    <span className='rounded-full border border-[color:var(--border)] bg-[color:var(--background)] px-3 py-1 text-xs font-semibold'>
+                      Videos: {videosData.videos.length}
+                    </span>
                   </div>
-                  <p className='description'>
+                  <p className='mt-4 text-sm text-[color:var(--muted)]'>
                     Sources: {newsData.metadata.newsProvider}. Updated on search.
                   </p>
                 </div>
               </div>
-            </div>
 
-            <div className='blog-flow'>
-              <TopicsCard topics={combinedTopics} />
-              <QuotesCard quotes={combinedQuotes} />
-              <EventsCard
-                data={newsData}
-                formatDate={formatDate}
-                isLoading={newsQuery.isFetching}
-                errorMessage={newsQuery.error ? 'Events failed to load.' : undefined}
-              />
-              <ActivitiesCard
-                data={newsData}
-                formatDate={formatDate}
-                isLoading={newsQuery.isFetching}
-                errorMessage={newsQuery.error ? 'News failed to load.' : undefined}
-              />
-              <NewsCard
-                data={newsData}
-                formatDate={formatDate}
-                isLoading={newsQuery.isFetching}
-                errorMessage={newsQuery.error ? 'News failed to load.' : undefined}
-              />
-              <VideosCard
-                data={videosData}
-                formatDate={formatDate}
-                isLoading={videosQuery.isFetching}
-                errorMessage={videosQuery.error ? 'Videos failed to load.' : undefined}
-              />
-            </div>
-          </div>
-        )}
-      </section>
+              <div className='grid gap-6 lg:grid-cols-2'>
+                <TopicsCard topics={combinedTopics} />
+                <QuotesCard quotes={combinedQuotes} />
+              </div>
 
-      <footer className='footer'>
-        <p>
-          Data sources: Wikipedia + GNews. NPIP surfaces public information only and flags missing
-          sources.
-        </p>
-      </footer>
+              <div className='grid gap-6 lg:grid-cols-2'>
+                <EventsCard
+                  data={newsData}
+                  formatDate={formatDate}
+                  isLoading={newsQuery.isFetching}
+                  errorMessage={newsQuery.error ? 'Events failed to load.' : undefined}
+                />
+                <ActivitiesCard
+                  data={newsData}
+                  formatDate={formatDate}
+                  isLoading={newsQuery.isFetching}
+                  errorMessage={newsQuery.error ? 'Activities failed to load.' : undefined}
+                />
+              </div>
+
+              <div className='grid gap-6 lg:grid-cols-2'>
+                <NewsCard
+                  data={newsData}
+                  formatDate={formatDate}
+                  isLoading={newsQuery.isFetching}
+                  errorMessage={newsQuery.error ? 'News failed to load.' : undefined}
+                />
+                <VideosCard
+                  data={videosData}
+                  formatDate={formatDate}
+                  isLoading={videosQuery.isFetching}
+                  errorMessage={videosQuery.error ? 'Videos failed to load.' : undefined}
+                />
+              </div>
+            </div>
+          )}
+        </section>
+
+        <footer className='text-center text-xs text-[color:var(--muted)]'>
+          Data sources: Wikipedia + GNews + RSS + YouTube. NPIP surfaces public information only and
+          flags missing sources.
+        </footer>
+      </div>
     </div>
   )
 }

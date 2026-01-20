@@ -4,15 +4,19 @@ type QuotesCardProps = {
 
 export default function QuotesCard({ quotes }: QuotesCardProps) {
   return (
-    <article className='card'>
-      <div className='card__header'>
-        <h3>Notable quotes</h3>
-        <span className='chip'>Extracted</span>
+    <article className='rounded-2xl border border-[color:var(--border)] bg-[color:var(--surface)] p-6 shadow-[var(--shadow)]'>
+      <div className='flex items-center justify-between'>
+        <h3 className='text-lg font-semibold'>Notable quotes</h3>
+        <span className='rounded-full border border-[color:var(--border)] bg-[color:var(--background)] px-3 py-1 text-xs font-semibold'>
+          Extracted
+        </span>
       </div>
-      {quotes.length === 0 && <p>No quotes found yet.</p>}
-      <ul className='quote-list'>
+      {quotes.length === 0 && (
+        <p className='mt-3 text-sm text-[color:var(--muted)]'>No quotes found yet.</p>
+      )}
+      <ul className='mt-4 space-y-3 text-sm text-[color:var(--text)]'>
         {quotes.map((quote) => (
-          <li key={quote}>
+          <li key={quote} className='rounded-xl border border-[color:var(--border)] p-3'>
             <p>"{quote}"</p>
           </li>
         ))}

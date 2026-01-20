@@ -33,11 +33,15 @@ export default class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBo
     }
 
     return (
-      <div className='app'>
-        <div className='card card--error'>
-          <h3>Something went wrong</h3>
-          <p>{this.state.message}</p>
-          <button className='button-inline' type='button' onClick={this.handleReload}>
+      <div className='min-h-screen px-6 py-12 text-[color:var(--text)]'>
+        <div className='mx-auto max-w-lg rounded-2xl border border-[color:var(--border)] bg-[color:var(--surface)] p-6 shadow-[var(--shadow)]'>
+          <h3 className='text-lg font-semibold'>Something went wrong</h3>
+          <p className='mt-2 text-sm text-[color:var(--muted)]'>{this.state.message}</p>
+          <button
+            className='mt-4 rounded-xl bg-[color:var(--accent)] px-4 py-2 text-sm font-semibold text-[color:var(--surface)] transition hover:-translate-y-0.5 hover:shadow-lg'
+            type='button'
+            onClick={this.handleReload}
+          >
             Reload
           </button>
         </div>

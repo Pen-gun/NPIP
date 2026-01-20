@@ -20,28 +20,37 @@ export default function ActivitiesCard({
   const allSourcesDown = !data.metadata.sources.gnews.ok && !data.metadata.sources.rss.ok
 
   return (
-    <article className='card'>
-      <div className='card__header'>
-        <h3>Recent activities</h3>
-        <span className='chip'>Timeline</span>
+    <article className='rounded-2xl border border-[color:var(--border)] bg-[color:var(--surface)] p-6 shadow-[var(--shadow)]'>
+      <div className='flex items-center justify-between'>
+        <h3 className='text-lg font-semibold'>Recent activities</h3>
+        <span className='rounded-full border border-[color:var(--border)] bg-[color:var(--background)] px-3 py-1 text-xs font-semibold'>
+          Timeline
+        </span>
       </div>
-      {isLoading && <p>Loading activities...</p>}
-      {errorMessage && <p className='warning'>{errorMessage}</p>}
+      {isLoading && <p className='mt-3 text-sm text-[color:var(--muted)]'>Loading activities...</p>}
+      {errorMessage && <p className='mt-3 text-sm text-[color:var(--accent)]'>{errorMessage}</p>}
       {data.recentActivities.length === 0 && (
-        <p>
+        <p className='mt-3 text-sm text-[color:var(--muted)]'>
           {allSourcesDown && sourceIssues.length
             ? `Activities unavailable: ${sourceIssues.join(' | ')}`
             : 'No recent activity found.'}
         </p>
       )}
-      <ul className='timeline'>
+      <ul className='mt-4 space-y-4 text-sm'>
         {data.recentActivities.map((activity) => (
-          <li key={activity.url}>
-            <span>{formatDate(activity.publishedAt)}</span>
-            <a href={activity.url} target='_blank' rel='noreferrer'>
+          <li key={activity.url} className='space-y-1'>
+            <span className='text-xs text-[color:var(--muted)]'>
+              {formatDate(activity.publishedAt)}
+            </span>
+            <a
+              href={activity.url}
+              target='_blank'
+              rel='noreferrer'
+              className='block font-semibold text-[color:var(--text)] hover:text-[color:var(--accent)]'
+            >
               {activity.title}
             </a>
-            <small>{activity.source}</small>
+            <small className='text-xs text-[color:var(--muted)]'>{activity.source}</small>
           </li>
         ))}
       </ul>

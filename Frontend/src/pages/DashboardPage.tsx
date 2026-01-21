@@ -31,9 +31,15 @@ import type { ProjectFormState, DashboardFilters } from '../components/dashboard
 const SOCKET_URL = import.meta.env.VITE_SOCKET_URL || undefined
 const ALERTS_LIMIT = 100
 
+const getDefaultDateRange = () => {
+  const now = new Date()
+  const to = now.toISOString().split('T')[0]
+  const from = new Date(now.setDate(now.getDate() - 7)).toISOString().split('T')[0]
+  return { from, to }
+}
+
 const INITIAL_FILTERS: DashboardFilters = Object.freeze({
-  from: '',
-  to: '',
+  ...getDefaultDateRange(),
   source: '',
   sentiment: '',
 })

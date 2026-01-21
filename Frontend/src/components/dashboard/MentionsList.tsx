@@ -12,6 +12,26 @@ const DATE_FORMAT_OPTIONS: Intl.DateTimeFormatOptions = Object.freeze({
   year: 'numeric',
 })
 
+// Map BERT star ratings to human-readable sentiment labels
+const SENTIMENT_LABELS: Record<string, string> = {
+  '1 star': 'Very Negative',
+  '2 stars': 'Negative',
+  '3 stars': 'Neutral',
+  '4 stars': 'Positive',
+  '5 stars': 'Very Positive',
+  '1': 'Very Negative',
+  '2': 'Negative',
+  '3': 'Neutral',
+  '4': 'Positive',
+  '5': 'Very Positive',
+  positive: 'Positive',
+  neutral: 'Neutral',
+  negative: 'Negative',
+}
+
+const formatSentimentLabel = (label?: string): string =>
+  SENTIMENT_LABELS[label?.toLowerCase() ?? ''] || SENTIMENT_LABELS[label ?? ''] || label || 'Unknown'
+
 const formatDate = (value?: string | Date | null): string => {
   if (!value) return 'Unknown'
   const date = new Date(value)
@@ -35,7 +55,7 @@ function MentionCard({ mention }: { mention: Mention }) {
         {mention.url ? 'Open source' : 'No source link'}
       </div>
       <div className='mt-3 flex flex-wrap gap-2 text-xs text-(--text-muted)'>
-        <span>Sentiment: {mention.sentiment?.label}</span>
+        <span>Sentiment: {formatSentimentLabel(mention.sentiment?.label)}</span>
         <span>Reach: {mention.reachEstimate || 0}</span>
       </div>
     </>

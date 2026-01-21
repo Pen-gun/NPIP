@@ -8,7 +8,21 @@ interface MetricsChartsProps {
 
 const SKELETON_CHART_COUNT = 3
 
+// Map BERT star ratings to human-readable sentiment labels
 const SENTIMENT_LABELS: Record<string, string> = {
+  // Star ratings from multilingual BERT model
+  '1 star': 'Very Negative',
+  '2 stars': 'Negative',
+  '3 stars': 'Neutral',
+  '4 stars': 'Positive',
+  '5 stars': 'Very Positive',
+  // Alternative formats
+  '1': 'Very Negative',
+  '2': 'Negative',
+  '3': 'Neutral',
+  '4': 'Positive',
+  '5': 'Very Positive',
+  // Standard labels (fallback)
   positive: 'Positive',
   neutral: 'Neutral',
   negative: 'Negative',
@@ -16,7 +30,7 @@ const SENTIMENT_LABELS: Record<string, string> = {
 }
 
 const formatSentimentLabel = (label: string): string =>
-  SENTIMENT_LABELS[label?.toLowerCase()] || label || 'Unknown'
+  SENTIMENT_LABELS[label?.toLowerCase()] || SENTIMENT_LABELS[label] || label || 'Unknown'
 
 export default function MetricsCharts({ metrics, loading }: MetricsChartsProps) {
   const volumeLabels = metrics?.volume.map((item) => `${item._id.month}/${item._id.day}`) || []

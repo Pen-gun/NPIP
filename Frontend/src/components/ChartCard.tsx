@@ -12,13 +12,15 @@ interface ChartCardProps {
 }
 
 const CHART_PALETTE = Object.freeze([
-  '#1f4b7f', '#2f6ea5', '#8aa6c7', '#e0b84a', '#c96b3a', '#8b3a3a',
+  '#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899',
 ])
 
 const TICK_COLOR = '#64748b'
-const LINE_BG_COLOR = 'rgba(31, 75, 127, 0.2)'
-const TENSION = 0.35
+const LINE_BG_COLOR = 'rgba(59, 130, 246, 0.15)'
+const LINE_BORDER_COLOR = '#3b82f6'
+const TENSION = 0.4
 const BORDER_WIDTH = 2
+const FONT_SIZE = 11
 
 const createChartConfig = (type: ChartType, title: string, labels: string[], data: number[]) => ({
   type,
@@ -28,27 +30,53 @@ const createChartConfig = (type: ChartType, title: string, labels: string[], dat
       {
         label: title,
         data,
-        borderColor: CHART_PALETTE[0],
+        borderColor: type === 'doughnut' ? CHART_PALETTE : LINE_BORDER_COLOR,
         backgroundColor: type === 'doughnut' ? CHART_PALETTE : LINE_BG_COLOR,
         tension: TENSION,
         borderWidth: BORDER_WIDTH,
+        fill: type === 'line',
+        pointRadius: type === 'line' ? 3 : undefined,
+        pointHoverRadius: type === 'line' ? 5 : undefined,
       },
     ],
   },
   options: {
     responsive: true,
     maintainAspectRatio: false,
+    layout: {
+      padding: type === 'doughnut' ? { bottom: 8 } : 0,
+    },
     plugins: {
       legend: {
-        display: type !== 'line',
-        position: 'bottom' as const,
+        display: type === 'doughnut',
+        position: 'right' as const,
+        labels: {
+          boxWidth: 12,
+          padding: 8,
+          font: { size: FONT_SIZE },
+          usePointStyle: true,
+        },
+      },
+      tooltip: {
+        backgroundColor: 'rgba(15, 23, 42, 0.9)',
+        titleFont: { size: 12 },
+        bodyFont: { size: 11 },
+        padding: 10,
+        cornerRadius: 8,
       },
     },
     scales:
       type === 'line' || type === 'bar'
         ? {
-            x: { ticks: { color: TICK_COLOR } },
-            y: { ticks: { color: TICK_COLOR } },
+            x: {
+              ticks: { color: TICK_COLOR, font: { size: FONT_SIZE }, maxRotation: 45, minRotation: 0 },
+              grid: { display: false },
+            },
+            y: {
+              ticks: { color: TICK_COLOR, font: { size: FONT_SIZE } },
+              grid: { color: 'rgba(100, 116, 139, 0.1)' },
+              beginAtZero: true,
+            },
           }
         : undefined,
   },
@@ -69,11 +97,11 @@ export default function ChartCard({ title, description, type, labels, data }: Ch
 
   return (
     <div className='flex flex-col rounded-2xl border border-(--border) bg-(--surface-muted) p-4'>
-      <div>
+      <div className='mb-3'>
         <h4 className='text-sm font-semibold'>{title}</h4>
         <p className='text-xs text-(--text-muted)'>{description}</p>
       </div>
-      <div className='mt-3 h-40'>
+      <div className='relative min-h-[160px] flex-1'>
         <canvas ref={canvasRef} />
       </div>
     </div>

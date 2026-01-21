@@ -1,8 +1,8 @@
 import jwt from 'jsonwebtoken';
-import { User } from '../models/user.model.js';
-import apiError from '../utils/ApiError.js';
+import { User } from '../model/user.model.js';
+import apiError from '../utils/apiError.js';
 import asyncHandler from '../utils/asyncHandler.js';
-import apiResponse from '../utils/ApiResponse.js';
+import apiResponse from '../utils/apiResponse.js';
 
 const generateRefreshAndAccessToken = async (userid) => {
     try {

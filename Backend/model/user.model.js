@@ -27,6 +27,18 @@ const userSchema = new Schema({
     avatar: {
         type: String,
     },
+    plan: {
+        type: String,
+        default: 'individual',
+    },
+    stripeCustomerId: {
+        type: String,
+        default: '',
+    },
+    stripeSubscriptionId: {
+        type: String,
+        default: '',
+    },
     password: {
         type: String,
         required: [true, 'Password is required'],

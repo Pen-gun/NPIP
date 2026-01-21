@@ -6,7 +6,7 @@
       "type": "shell",
       "command": "npm run dev",
       "options": {
-        "cwd": "${workspaceFolder}/aiMicroService"
+        "cwd": "${workspaceFolder}/Backend"
       },
       "presentation": {
         "group": "dev-group",

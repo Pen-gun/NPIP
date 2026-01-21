@@ -1,1 +1,1 @@
-export const DB_NAME = 'SoftechAI';
+export const DB_NAME = 'NPIP';

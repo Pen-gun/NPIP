@@ -18,11 +18,14 @@ const SOURCE_FILTER_OPTIONS = Object.freeze([
   { value: 'x', label: 'X' },
 ])
 
+// Values match BERT model output stored in DB (lowercase)
 const SENTIMENT_FILTER_OPTIONS = Object.freeze([
-  { value: '', label: 'All sentiment' },
-  { value: 'positive', label: 'Positive' },
-  { value: 'neutral', label: 'Neutral' },
-  { value: 'negative', label: 'Negative' },
+  { value: '', label: 'All ratings' },
+  { value: '5 stars', label: 'Very Positive' },
+  { value: '4 stars', label: 'Positive' },
+  { value: '3 stars', label: 'Neutral' },
+  { value: '2 stars', label: 'Negative' },
+  { value: '1 star', label: 'Very Negative' },
 ])
 
 const INPUT_CLASS = 'rounded-xl border border-(--border) bg-(--surface-muted) px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-(--brand-primary)/20'

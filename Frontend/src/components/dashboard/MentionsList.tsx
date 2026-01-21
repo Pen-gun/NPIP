@@ -12,18 +12,13 @@ const DATE_FORMAT_OPTIONS: Intl.DateTimeFormatOptions = Object.freeze({
   year: 'numeric',
 })
 
-// Map BERT star ratings to human-readable sentiment labels
+// Format star ratings for display
 const SENTIMENT_LABELS: Record<string, string> = {
   '1 star': 'Very Negative',
   '2 stars': 'Negative',
   '3 stars': 'Neutral',
   '4 stars': 'Positive',
   '5 stars': 'Very Positive',
-  '1': 'Very Negative',
-  '2': 'Negative',
-  '3': 'Neutral',
-  '4': 'Positive',
-  '5': 'Very Positive',
   positive: 'Positive',
   neutral: 'Neutral',
   negative: 'Negative',

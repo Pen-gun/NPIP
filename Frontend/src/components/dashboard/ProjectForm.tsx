@@ -30,34 +30,36 @@ const SOURCE_OPTIONS: readonly SourceConfig[] = Object.freeze([
   { id: 'viber', label: 'Viber (bot-only)' },
 ])
 
+const INPUT_CLASS = 'w-full rounded-xl border border-(--border) bg-(--surface-muted) px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-(--brand-primary)/20'
+
 export default function ProjectForm({ formState, onFormChange, onSubmit }: ProjectFormProps) {
   return (
-    <div className='rounded-[28px] border border-(--border) bg-(--surface-base) p-6 shadow-(--shadow)'>
-      <h2 className='text-lg font-semibold'>Create project</h2>
-      <p className='mt-2 text-sm text-(--text-muted)'>
+    <div className='rounded-[20px] border border-(--border) bg-(--surface-base) p-4 shadow-(--shadow) sm:rounded-[28px] sm:p-6'>
+      <h2 className='text-base font-semibold sm:text-lg'>Create project</h2>
+      <p className='mt-1 text-xs text-(--text-muted) sm:mt-2 sm:text-sm'>
         Define keywords and sources. Boolean query supports AND/OR/NOT + parentheses.
       </p>
-      <form className='mt-4 space-y-3' onSubmit={onSubmit}>
+      <form className='mt-3 space-y-3 sm:mt-4' onSubmit={onSubmit}>
         <input
           value={formState.name}
           onChange={(event) => onFormChange((prev) => ({ ...prev, name: event.target.value }))}
           placeholder='Project name'
-          className='w-full rounded-xl border border-(--border) bg-(--surface-muted) px-4 py-2 text-sm'
+          className={INPUT_CLASS}
           required
         />
         <input
           value={formState.keywords}
           onChange={(event) => onFormChange((prev) => ({ ...prev, keywords: event.target.value }))}
           placeholder='Keywords (comma separated)'
-          className='w-full rounded-xl border border-(--border) bg-(--surface-muted) px-4 py-2 text-sm'
+          className={INPUT_CLASS}
         />
         <input
           value={formState.booleanQuery}
           onChange={(event) => onFormChange((prev) => ({ ...prev, booleanQuery: event.target.value }))}
           placeholder='Boolean query (optional)'
-          className='w-full rounded-xl border border-(--border) bg-(--surface-muted) px-4 py-2 text-sm'
+          className={INPUT_CLASS}
         />
-        <div className='grid gap-3 md:grid-cols-2'>
+        <div className='grid gap-3 sm:grid-cols-2'>
           <input
             type='number'
             min={5}
@@ -66,15 +68,17 @@ export default function ProjectForm({ formState, onFormChange, onSubmit }: Proje
             onChange={(event) =>
               onFormChange((prev) => ({ ...prev, scheduleMinutes: Number(event.target.value) }))
             }
-            className='w-full rounded-xl border border-(--border) bg-(--surface-muted) px-4 py-2 text-sm'
+            className={INPUT_CLASS}
+            placeholder='Schedule (minutes)'
           />
           <input
             value={formState.geoFocus}
             onChange={(event) => onFormChange((prev) => ({ ...prev, geoFocus: event.target.value }))}
-            className='w-full rounded-xl border border-(--border) bg-(--surface-muted) px-4 py-2 text-sm'
+            className={INPUT_CLASS}
+            placeholder='Geo focus'
           />
         </div>
-        <div className='grid gap-2 text-sm text-(--text-muted) md:grid-cols-2'>
+        <div className='grid gap-2 text-xs text-(--text-muted) sm:grid-cols-2 sm:text-sm'>
           {SOURCE_OPTIONS.map((source) => (
             <label key={source.id} className='flex items-center gap-2'>
               <input
@@ -95,7 +99,7 @@ export default function ProjectForm({ formState, onFormChange, onSubmit }: Proje
           ))}
         </div>
         <button
-          className='w-full rounded-xl bg-(--brand-primary) px-4 py-2 text-sm font-semibold text-(--text-inverse)'
+          className='w-full rounded-xl bg-(--brand-primary) px-4 py-2.5 text-sm font-semibold text-(--text-inverse) transition hover:opacity-90 active:scale-[0.98]'
           type='submit'
         >
           Create project

@@ -78,9 +78,9 @@ function MentionSkeleton() {
 
 export default function MentionsList({ mentions, loading }: MentionsListProps) {
   return (
-    <div className='rounded-[28px] border border-(--border) bg-(--surface-base) p-6 shadow-(--shadow)'>
-      <h3 className='text-lg font-semibold'>Mentions</h3>
-      <div className='mt-4 grid max-h-130 gap-4 overflow-y-auto pr-2'>
+    <div className='rounded-[20px] border border-(--border) bg-(--surface-base) p-4 shadow-(--shadow) sm:rounded-[28px] sm:p-6'>
+      <h3 className='text-base font-semibold sm:text-lg'>Mentions</h3>
+      <div className='mt-3 grid max-h-96 gap-3 overflow-y-auto pr-1 sm:mt-4 sm:max-h-130 sm:gap-4 sm:pr-2'>
         {loading &&
           Array.from({ length: SKELETON_COUNT }).map((_, index) => (
             <MentionSkeleton key={`mention-skeleton-${index}`} />

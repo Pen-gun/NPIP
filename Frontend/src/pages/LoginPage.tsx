@@ -57,53 +57,53 @@ export default function LoginPage() {
 
   return (
     <div className='min-h-screen bg-(--surface-background) text-(--text-primary)'>
-      <div className='mx-auto flex min-h-screen w-full max-w-6xl flex-col gap-10 px-6 py-10'>
+      <div className='mx-auto flex min-h-screen w-full max-w-6xl flex-col gap-6 px-4 py-6 sm:gap-10 sm:px-6 sm:py-10'>
         <header className='flex items-center justify-between'>
           <BrandLogo />
-          <Link to='/' className='text-xs font-semibold uppercase tracking-[0.3em] text-(--text-muted)'>
+          <Link to='/' className='text-xs font-semibold uppercase tracking-[0.2em] text-(--text-muted) transition hover:text-(--text-primary) sm:tracking-[0.3em]'>
             Back to site
           </Link>
         </header>
 
-        <main className='grid items-center gap-8 lg:grid-cols-[1.1fr_0.9fr]'>
-          <section className='rounded-[28px] border border-(--border) bg-(--surface-base) p-8 shadow-(--shadow)'>
-            <p className='text-xs font-semibold uppercase tracking-[0.3em] text-(--brand-accent)'>
+        <main className='flex flex-1 flex-col items-center justify-center gap-6 lg:flex-row lg:items-stretch lg:gap-8'>
+          <section className='w-full max-w-md rounded-[28px] border border-(--border) bg-(--surface-base) p-6 shadow-(--shadow) sm:p-8 lg:max-w-none lg:flex-1'>
+            <p className='text-xs font-semibold uppercase tracking-[0.2em] text-(--brand-accent) sm:tracking-[0.3em]'>
               Welcome
             </p>
-            <h1 className='mt-3 font-display text-3xl font-semibold'>
+            <h1 className='mt-2 font-display text-2xl font-semibold sm:mt-3 sm:text-3xl'>
               {isLogin ? 'Sign in to your workspace' : 'Create your monitoring workspace'}
             </h1>
-            <p className='mt-3 text-sm text-(--text-muted)'>
+            <p className='mt-2 text-xs text-(--text-muted) sm:mt-3 sm:text-sm'>
               Access real-time alerts, sentiment tracking, and project dashboards in one place.
             </p>
 
-            <form className='mt-6 space-y-4' onSubmit={handleSubmit}>
+            <form className='mt-5 space-y-3 sm:mt-6 sm:space-y-4' onSubmit={handleSubmit}>
               {!isLogin && (
                 <input
                   name='fullName'
                   placeholder='Full name'
-                  className='w-full rounded-xl border border-(--border) bg-(--surface-muted) px-4 py-2 text-sm'
+                  className='w-full rounded-xl border border-(--border) bg-(--surface-muted) px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-(--brand-primary)/20'
                   required
                 />
               )}
               <input
                 name='username'
                 placeholder='Username'
-                className='w-full rounded-xl border border-(--border) bg-(--surface-muted) px-4 py-2 text-sm'
+                className='w-full rounded-xl border border-(--border) bg-(--surface-muted) px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-(--brand-primary)/20'
                 required
               />
               <input
                 name='email'
                 type='email'
                 placeholder='Email'
-                className='w-full rounded-xl border border-(--border) bg-(--surface-muted) px-4 py-2 text-sm'
+                className='w-full rounded-xl border border-(--border) bg-(--surface-muted) px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-(--brand-primary)/20'
                 required
               />
               <input
                 name='password'
                 type='password'
                 placeholder='Password'
-                className='w-full rounded-xl border border-(--border) bg-(--surface-muted) px-4 py-2 text-sm'
+                className='w-full rounded-xl border border-(--border) bg-(--surface-muted) px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-(--brand-primary)/20'
                 required
               />
               {error && <p className='text-xs text-(--state-error)'>{error}</p>}
@@ -113,17 +113,20 @@ export default function LoginPage() {
             <button
               type='button'
               onClick={toggleMode}
-              className='mt-4 text-xs font-semibold uppercase tracking-[0.3em] text-(--text-muted)'
+              className='mt-4 text-xs font-semibold uppercase tracking-[0.2em] text-(--text-muted) transition hover:text-(--text-primary) sm:tracking-[0.3em]'
             >
               {isLogin ? 'Need an account?' : 'Already have an account?'}
             </button>
           </section>
 
-          <aside className='rounded-[28px] border border-(--border) bg-(--surface-base) p-8 shadow-(--shadow)'>
+          <aside className='hidden w-full max-w-md rounded-[28px] border border-(--border) bg-(--surface-base) p-6 shadow-(--shadow) sm:p-8 lg:block lg:max-w-none lg:flex-1'>
             <h2 className='text-lg font-semibold'>What you get</h2>
             <ul className='mt-4 space-y-3 text-sm text-(--text-muted)'>
               {FEATURES.map((feature) => (
-                <li key={feature}>{feature}</li>
+                <li key={feature} className='flex items-start gap-2'>
+                  <span className='mt-1 h-1.5 w-1.5 shrink-0 rounded-full bg-(--brand-accent)' />
+                  {feature}
+                </li>
               ))}
             </ul>
             <div className='mt-6 rounded-2xl bg-(--surface-muted) p-4 text-xs text-(--text-muted)'>

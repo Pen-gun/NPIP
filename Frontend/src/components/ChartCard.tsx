@@ -101,7 +101,7 @@ export default function ChartCard({ title, description, type, labels, data }: Ch
         <h4 className='text-sm font-semibold'>{title}</h4>
         <p className='text-xs text-(--text-muted)'>{description}</p>
       </div>
-      <div className='relative min-h-[160px] flex-1'>
+      <div className='relative min-h-40 flex-1'>
         <canvas ref={canvasRef} />
       </div>
     </div>

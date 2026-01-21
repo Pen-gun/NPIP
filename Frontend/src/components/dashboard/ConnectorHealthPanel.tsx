@@ -30,9 +30,9 @@ function HealthSkeleton() {
 
 export default function ConnectorHealthPanel({ health, loading }: ConnectorHealthPanelProps) {
   return (
-    <div className='rounded-[28px] border border-(--border) bg-(--surface-base) p-6 shadow-(--shadow)'>
-      <h3 className='text-lg font-semibold'>Connector health</h3>
-      <div className='mt-4 space-y-2 text-sm text-(--text-muted)'>
+    <div className='rounded-[20px] border border-(--border) bg-(--surface-base) p-4 shadow-(--shadow) sm:rounded-[28px] sm:p-6'>
+      <h3 className='text-base font-semibold sm:text-lg'>Connector health</h3>
+      <div className='mt-3 space-y-2 text-xs text-(--text-muted) sm:mt-4 sm:text-sm'>
         {loading &&
           Array.from({ length: SKELETON_COUNT }).map((_, index) => (
             <HealthSkeleton key={`health-skeleton-${index}`} />

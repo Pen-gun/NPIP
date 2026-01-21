@@ -86,20 +86,26 @@ export default function DashboardPage() {
 
   useEffect(() => {
     if (!user) return
+    let cancelled = false
     setLoadingProjects(true)
     listProjects()
       .then((data) => {
+        if (cancelled) return
         setProjects(data)
         if (data.length && !activeProjectId) {
           setActiveProjectId(data[0]._id)
         }
       })
       .catch(() => null)
-      .finally(() => setLoadingProjects(false))
+      .finally(() => {
+        if (!cancelled) setLoadingProjects(false)
+      })
+    return () => { cancelled = true }
   }, [user, activeProjectId])
 
   useEffect(() => {
     if (!user || !activeProjectId) return
+    let cancelled = false
     setLoadingDashboard(true)
     Promise.all([
       fetchProjectMetrics(activeProjectId, filters.from, filters.to),
@@ -108,12 +114,16 @@ export default function DashboardPage() {
       fetchProjectHealth(activeProjectId),
     ])
       .then(([metricData, mentionData, alertData, healthData]) => {
+        if (cancelled) return
         setMetrics(metricData)
         setMentions(mentionData)
         setAlerts(alertData)
         setHealth(healthData)
       })
-      .finally(() => setLoadingDashboard(false))
+      .finally(() => {
+        if (!cancelled) setLoadingDashboard(false)
+      })
+    return () => { cancelled = true }
   }, [user, activeProjectId, filters])
 
   useEffect(() => {
@@ -187,10 +197,10 @@ export default function DashboardPage() {
 
   return (
     <div className='min-h-screen text-(--text-primary)'>
-      <div className='mx-auto flex w-full max-w-6xl flex-col gap-10 px-6 py-10'>
+      <div className='flex w-full flex-col gap-6 px-4 py-6 sm:gap-8 sm:px-6 sm:py-8 lg:gap-10 lg:px-10 lg:py-10'>
         <DashboardHeader userName={user?.fullName} onLogout={handleLogout} />
 
-        <section className='grid gap-6 lg:grid-cols-[1.1fr_0.9fr]'>
+        <section className='grid gap-4 sm:gap-6 lg:grid-cols-[1.1fr_0.9fr]'>
           <ProjectForm
             formState={projectForm}
             onFormChange={setProjectForm}
@@ -208,16 +218,16 @@ export default function DashboardPage() {
           />
         </section>
 
-        <section className='grid gap-6 lg:grid-cols-[2fr_1fr]'>
-          <div className='space-y-6'>
-            <div className='rounded-[28px] border border-(--border) bg-(--surface-base) p-6 shadow-(--shadow)'>
+        <section className='grid gap-4 sm:gap-6 xl:grid-cols-[2fr_1fr]'>
+          <div className='space-y-4 sm:space-y-6'>
+            <div className='rounded-[20px] border border-(--border) bg-(--surface-base) p-4 shadow-(--shadow) sm:rounded-[28px] sm:p-6'>
               <DashboardFiltersBar filters={filters} onFiltersChange={setFilters} />
               <MetricsCharts metrics={metrics} loading={loadingDashboard} />
             </div>
             <MentionsList mentions={mentions} loading={loadingDashboard} />
           </div>
 
-          <aside className='space-y-6'>
+          <aside className='space-y-4 sm:space-y-6'>
             <AlertsPanel
               alerts={alerts}
               loading={loadingDashboard}

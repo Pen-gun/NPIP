@@ -55,7 +55,7 @@ export default function VideosCard({ data, formatDate, isLoading, errorMessage }
               <span className='text-xs text-(--text-muted)'>
                 {video.channelTitle} • {formatDate(video.publishedAt)}
               </span>
-              {hasTranscript(video) && (
+              {hasTranscript(video) && video.transcriptPreview && (
                 <details className='text-xs text-(--text-muted)'>
                   <summary className='cursor-pointer font-semibold'>Transcript preview</summary>
                   <p className='mt-1'>{video.transcriptPreview.join(' ')}</p>

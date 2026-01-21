@@ -5,6 +5,7 @@ interface ProjectListProps {
   activeProjectId: string
   activeProject: Project | null
   loading: boolean
+  actionLoading?: string | null
   onSelectProject: (projectId: string) => void
   onRunIngestion: () => void
   onDownloadReport: () => void
@@ -19,6 +20,7 @@ export default function ProjectList({
   activeProjectId,
   activeProject,
   loading,
+  actionLoading,
   onSelectProject,
   onRunIngestion,
   onDownloadReport,
@@ -58,18 +60,29 @@ export default function ProjectList({
             <span>Schedule: {activeProject.scheduleMinutes} min</span>
           </div>
           <div className='flex flex-wrap gap-2 pt-2'>
-            <button className={ACTION_BTN_CLASS} onClick={onRunIngestion} type='button'>
-              Run now
-            </button>
-            <button className={ACTION_BTN_CLASS} onClick={onDownloadReport} type='button'>
-              Download PDF
+            <button
+              className={`${ACTION_BTN_CLASS} disabled:cursor-not-allowed disabled:opacity-60`}
+              onClick={onRunIngestion}
+              type='button'
+              disabled={!!actionLoading}
+            >
+              {actionLoading === 'ingestion' ? 'Running...' : 'Run now'}
             </button>
             <button
-              className={`${ACTION_BTN_CLASS} text-(--state-error)`}
+              className={`${ACTION_BTN_CLASS} disabled:cursor-not-allowed disabled:opacity-60`}
+              onClick={onDownloadReport}
+              type='button'
+              disabled={!!actionLoading}
+            >
+              {actionLoading === 'report' ? 'Downloading...' : 'Download PDF'}
+            </button>
+            <button
+              className={`${ACTION_BTN_CLASS} text-(--state-error) disabled:cursor-not-allowed disabled:opacity-60`}
               onClick={() => onDeleteProject(activeProject._id)}
               type='button'
+              disabled={!!actionLoading}
             >
-              Delete
+              {actionLoading === `delete-${activeProject._id}` ? 'Deleting...' : 'Delete'}
             </button>
           </div>
         </div>

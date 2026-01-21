@@ -82,6 +82,7 @@ export default function LoginPage() {
                 <input
                   name='fullName'
                   placeholder='Full name'
+                  autoComplete='name'
                   className='w-full rounded-xl border border-(--border) bg-(--surface-muted) px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-(--brand-primary)/20'
                   required
                 />
@@ -89,6 +90,7 @@ export default function LoginPage() {
               <input
                 name='username'
                 placeholder='Username'
+                autoComplete='username'
                 className='w-full rounded-xl border border-(--border) bg-(--surface-muted) px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-(--brand-primary)/20'
                 required
               />
@@ -96,6 +98,7 @@ export default function LoginPage() {
                 name='email'
                 type='email'
                 placeholder='Email'
+                autoComplete='email'
                 className='w-full rounded-xl border border-(--border) bg-(--surface-muted) px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-(--brand-primary)/20'
                 required
               />
@@ -103,6 +106,7 @@ export default function LoginPage() {
                 name='password'
                 type='password'
                 placeholder='Password'
+                autoComplete={isLogin ? 'current-password' : 'new-password'}
                 className='w-full rounded-xl border border-(--border) bg-(--surface-muted) px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-(--brand-primary)/20'
                 required
               />

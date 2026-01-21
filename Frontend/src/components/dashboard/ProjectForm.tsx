@@ -18,6 +18,7 @@ interface ProjectFormProps {
   formState: ProjectFormState
   onFormChange: (updater: (prev: ProjectFormState) => ProjectFormState) => void
   onSubmit: (event: FormEvent<HTMLFormElement>) => void
+  submitting?: boolean
 }
 
 const SOURCE_OPTIONS: readonly SourceConfig[] = Object.freeze([
@@ -32,7 +33,7 @@ const SOURCE_OPTIONS: readonly SourceConfig[] = Object.freeze([
 
 const INPUT_CLASS = 'w-full rounded-xl border border-(--border) bg-(--surface-muted) px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-(--brand-primary)/20'
 
-export default function ProjectForm({ formState, onFormChange, onSubmit }: ProjectFormProps) {
+export default function ProjectForm({ formState, onFormChange, onSubmit, submitting }: ProjectFormProps) {
   return (
     <div className='rounded-[20px] border border-(--border) bg-(--surface-base) p-4 shadow-(--shadow) sm:rounded-[28px] sm:p-6'>
       <h2 className='text-base font-semibold sm:text-lg'>Create project</h2>
@@ -99,10 +100,11 @@ export default function ProjectForm({ formState, onFormChange, onSubmit }: Proje
           ))}
         </div>
         <button
-          className='w-full rounded-xl bg-(--brand-primary) px-4 py-2.5 text-sm font-semibold text-(--text-inverse) transition hover:opacity-90 active:scale-[0.98]'
+          className='w-full rounded-xl bg-(--brand-primary) px-4 py-2.5 text-sm font-semibold text-(--text-inverse) transition hover:opacity-90 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60'
           type='submit'
+          disabled={submitting}
         >
-          Create project
+          {submitting ? 'Creating...' : 'Create project'}
         </button>
       </form>
     </div>

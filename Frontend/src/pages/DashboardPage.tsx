@@ -72,6 +72,9 @@ export default function DashboardPage() {
   const [health, setHealth] = useState<ConnectorHealth[]>([])
   const [loadingDashboard, setLoadingDashboard] = useState(false)
   const [loadingProjects, setLoadingProjects] = useState(false)
+  const [actionLoading, setActionLoading] = useState<string | null>(null)
+  const [error, setError] = useState<string | null>(null)
+  const [socketConnected, setSocketConnected] = useState(false)
   const [filters, setFilters] = useState<DashboardFilters>({ ...INITIAL_FILTERS })
   const [projectForm, setProjectForm] = useState<ProjectFormState>({
     ...INITIAL_PROJECT_FORM,
@@ -81,13 +84,20 @@ export default function DashboardPage() {
   useEffect(() => {
     getCurrentUser()
       .then(setUser)
-      .catch(() => navigate('/login'))
+      .catch((err) => {
+        if (err.message?.includes('401') || err.message?.includes('token')) {
+          navigate('/login')
+        } else {
+          setError('Failed to load user session. Please try again.')
+        }
+      })
   }, [navigate])
 
   useEffect(() => {
     if (!user) return
     let cancelled = false
     setLoadingProjects(true)
+    setError(null)
     listProjects()
       .then((data) => {
         if (cancelled) return
@@ -96,7 +106,9 @@ export default function DashboardPage() {
           setActiveProjectId(data[0]._id)
         }
       })
-      .catch(() => null)
+      .catch((err) => {
+        if (!cancelled) setError(err.message || 'Failed to load projects')
+      })
       .finally(() => {
         if (!cancelled) setLoadingProjects(false)
       })
@@ -107,6 +119,7 @@ export default function DashboardPage() {
     if (!user || !activeProjectId) return
     let cancelled = false
     setLoadingDashboard(true)
+    setError(null)
     Promise.all([
       fetchProjectMetrics(activeProjectId, filters.from, filters.to),
       fetchMentions(activeProjectId, filters),
@@ -120,6 +133,9 @@ export default function DashboardPage() {
         setAlerts(alertData)
         setHealth(healthData)
       })
+      .catch((err) => {
+        if (!cancelled) setError(err.message || 'Failed to load dashboard data')
+      })
       .finally(() => {
         if (!cancelled) setLoadingDashboard(false)
       })
@@ -130,12 +146,33 @@ export default function DashboardPage() {
     if (!user) return
     const socket: Socket = io(SOCKET_URL || window.location.origin, {
       withCredentials: true,
+      reconnection: true,
+      reconnectionAttempts: 5,
+      reconnectionDelay: 1000,
     })
-    socket.emit('join', { userId: user._id, projectId: activeProjectId })
+
+    socket.on('connect', () => {
+      setSocketConnected(true)
+      socket.emit('join', { userId: user._id, projectId: activeProjectId })
+    })
+
+    socket.on('disconnect', () => {
+      setSocketConnected(false)
+    })
+
+    socket.on('connect_error', () => {
+      setSocketConnected(false)
+    })
+
     socket.on('alert', (alert: AlertItem) => {
       setAlerts((prev) => [alert, ...prev].slice(0, ALERTS_LIMIT))
     })
+
     return () => {
+      socket.off('connect')
+      socket.off('disconnect')
+      socket.off('connect_error')
+      socket.off('alert')
       socket.disconnect()
     }
   }, [user, activeProjectId])
@@ -152,51 +189,108 @@ export default function DashboardPage() {
 
   const handleProjectSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
-    if (!user) return
-    const payload = {
-      name: projectForm.name,
-      keywords: parseKeywords(projectForm.keywords),
-      booleanQuery: projectForm.booleanQuery,
-      scheduleMinutes: Number(projectForm.scheduleMinutes),
-      geoFocus: projectForm.geoFocus,
-      sources: projectForm.sources,
+    if (!user || actionLoading) return
+    setActionLoading('create')
+    setError(null)
+    try {
+      const payload = {
+        name: projectForm.name,
+        keywords: parseKeywords(projectForm.keywords),
+        booleanQuery: projectForm.booleanQuery,
+        scheduleMinutes: Number(projectForm.scheduleMinutes),
+        geoFocus: projectForm.geoFocus,
+        sources: projectForm.sources,
+      }
+      const created = await createProject(payload)
+      setProjects((prev) => [created, ...prev])
+      setActiveProjectId(created._id)
+      setProjectForm((prev) => ({
+        ...prev,
+        name: '',
+        keywords: '',
+        booleanQuery: '',
+      }))
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to create project')
+    } finally {
+      setActionLoading(null)
     }
-    const created = await createProject(payload)
-    setProjects((prev) => [created, ...prev])
-    setActiveProjectId(created._id)
-    setProjectForm((prev) => ({
-      ...prev,
-      name: '',
-      keywords: '',
-      booleanQuery: '',
-    }))
   }
 
   const handleRunIngestion = async () => {
-    if (!activeProjectId) return
-    await runProjectIngestion(activeProjectId)
+    if (!activeProjectId || actionLoading) return
+    setActionLoading('ingestion')
+    setError(null)
+    try {
+      await runProjectIngestion(activeProjectId)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to run ingestion')
+    } finally {
+      setActionLoading(null)
+    }
   }
 
   const handleDownloadReport = async () => {
-    if (!activeProjectId) return
-    await downloadReport(activeProjectId)
+    if (!activeProjectId || actionLoading) return
+    setActionLoading('report')
+    setError(null)
+    try {
+      await downloadReport(activeProjectId)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to download report')
+    } finally {
+      setActionLoading(null)
+    }
   }
 
   const handleDeleteProject = async (projectId: string) => {
-    await deleteProject(projectId)
-    setProjects((prev) => prev.filter((project) => project._id !== projectId))
-    if (activeProjectId === projectId) {
-      setActiveProjectId('')
+    if (actionLoading) return
+    setActionLoading(`delete-${projectId}`)
+    setError(null)
+    try {
+      await deleteProject(projectId)
+      setProjects((prev) => prev.filter((project) => project._id !== projectId))
+      if (activeProjectId === projectId) {
+        setActiveProjectId('')
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to delete project')
+    } finally {
+      setActionLoading(null)
     }
   }
 
   const handleMarkAlertRead = async (alertId: string) => {
-    const updated = await markAlertRead(alertId)
-    setAlerts((prev) => prev.map((item) => (item._id === updated._id ? updated : item)))
+    try {
+      const updated = await markAlertRead(alertId)
+      setAlerts((prev) => prev.map((item) => (item._id === updated._id ? updated : item)))
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to mark alert as read')
+    }
   }
+
+  const dismissError = () => setError(null)
 
   return (
     <div className='min-h-screen text-(--text-primary)'>
+      {error && (
+        <div className='sticky top-0 z-50 flex items-center justify-between gap-4 bg-(--state-error) px-4 py-3 text-sm text-white'>
+          <span>{error}</span>
+          <button
+            type='button'
+            onClick={dismissError}
+            className='rounded-lg px-3 py-1 text-xs font-semibold hover:bg-white/20'
+            aria-label='Dismiss error'
+          >
+            Dismiss
+          </button>
+        </div>
+      )}
+      {!socketConnected && user && (
+        <div className='sticky top-0 z-40 bg-(--state-warning) px-4 py-2 text-center text-xs text-(--text-primary)'>
+          Real-time updates disconnected. Reconnecting...
+        </div>
+      )}
       <div className='flex w-full flex-col gap-6 px-4 py-6 sm:gap-8 sm:px-6 sm:py-8 lg:gap-10 lg:px-10 lg:py-10'>
         <DashboardHeader userName={user?.fullName} onLogout={handleLogout} />
 
@@ -205,12 +299,14 @@ export default function DashboardPage() {
             formState={projectForm}
             onFormChange={setProjectForm}
             onSubmit={handleProjectSubmit}
+            submitting={actionLoading === 'create'}
           />
           <ProjectList
             projects={projects}
             activeProjectId={activeProjectId}
             activeProject={activeProject}
             loading={loadingProjects}
+            actionLoading={actionLoading}
             onSelectProject={setActiveProjectId}
             onRunIngestion={handleRunIngestion}
             onDownloadReport={handleDownloadReport}

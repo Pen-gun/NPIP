@@ -1,16 +1,16 @@
-@import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,600;700&family=Space+Grotesk:wght@500;600;700&display=swap');
 @import "tailwindcss";
 
 :root {
-  --brand-primary: #1f4b7f;
-  --brand-secondary: #6b7280;
-  --brand-accent: #2f6ea5;
+  --brand-primary: #0f3b5f;
+  --brand-secondary: #94a3b8;
+  --brand-accent: #d86b2c;
 
-  --surface-background: #f4f6f9;
+  --surface-background: #f2f5f8;
   --surface-base: #ffffff;
   --surface-muted: #eef2f6;
 
-  --text-primary: #0f172a;
+  --text-primary: #0c1324;
   --text-secondary: #1f2937;
   --text-muted: #475569;
   --text-inverse: #ffffff;
@@ -27,12 +27,13 @@
   --divider: rgba(15, 23, 42, 0.08);
   --shadow: 0 18px 40px rgba(15, 23, 42, 0.08);
 
-  --bg-1: #f6f8fb;
-  --bg-2: #eef3f8;
-  --bg-3: #f4f6f9;
+  --bg-1: #f6f4f0;
+  --bg-2: #eaf1f6;
+  --bg-3: #f0f4f8;
 
   --font-sans: 'Manrope', 'Segoe UI', sans-serif;
   --font-display: 'Newsreader', 'Georgia', serif;
+  --font-headline: 'Space Grotesk', 'Segoe UI', sans-serif;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -80,6 +81,12 @@ body {
   background: radial-gradient(circle at top left, var(--bg-1), var(--bg-2) 55%, var(--bg-3) 100%);
   color: var(--text-primary);
   min-height: 100vh;
+}
+
+h1,
+h2,
+h3 {
+  font-family: var(--font-headline);
 }
 
 html {

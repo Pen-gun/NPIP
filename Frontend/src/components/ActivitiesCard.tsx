@@ -1,11 +1,17 @@
 import type { FigureNewsResponse } from '../types/figure'
 
-type ActivitiesCardProps = {
+interface ActivitiesCardProps {
   data: FigureNewsResponse
   formatDate: (value?: string) => string
   isLoading?: boolean
   errorMessage?: string
 }
+
+const collectSourceWarnings = (sources: FigureNewsResponse['metadata']['sources']) =>
+  [sources.gnews.warning, sources.rss.warning].filter(Boolean)
+
+const areAllSourcesDown = (sources: FigureNewsResponse['metadata']['sources']) =>
+  !sources.gnews.ok && !sources.rss.ok
 
 export default function ActivitiesCard({
   data,
@@ -13,11 +19,8 @@ export default function ActivitiesCard({
   isLoading,
   errorMessage,
 }: ActivitiesCardProps) {
-  const sourceIssues = [
-    data.metadata.sources.gnews.warning,
-    data.metadata.sources.rss.warning,
-  ].filter(Boolean)
-  const allSourcesDown = !data.metadata.sources.gnews.ok && !data.metadata.sources.rss.ok
+  const sourceIssues = collectSourceWarnings(data.metadata.sources)
+  const allSourcesDown = areAllSourcesDown(data.metadata.sources)
 
   return (
     <article className='rounded-2xl border border-(--border) bg-(--surface-base) p-6 shadow-(--shadow) max-h-130 overflow-y-auto'>
@@ -27,12 +30,10 @@ export default function ActivitiesCard({
           Timeline
         </span>
       </div>
-      {isLoading && (
-        <p className='mt-3 text-sm text-(--text-muted)'>Loading activities...</p>
-      )}
-      {errorMessage && (
-        <p className='mt-3 text-sm text-(--state-error)'>{errorMessage}</p>
-      )}
+
+      {isLoading && <p className='mt-3 text-sm text-(--text-muted)'>Loading activities...</p>}
+      {errorMessage && <p className='mt-3 text-sm text-(--state-error)'>{errorMessage}</p>}
+
       {data.recentActivities.length === 0 && (
         <p className='mt-3 text-sm text-(--text-muted)'>
           {allSourcesDown && sourceIssues.length
@@ -40,12 +41,11 @@ export default function ActivitiesCard({
             : 'No recent activity found.'}
         </p>
       )}
+
       <ul className='mt-4 space-y-4 text-sm'>
         {data.recentActivities.map((activity) => (
           <li key={activity.url} className='space-y-1'>
-            <span className='text-xs text-(--text-muted)'>
-              {formatDate(activity.publishedAt)}
-            </span>
+            <span className='text-xs text-(--text-muted)'>{formatDate(activity.publishedAt)}</span>
             <a
               href={activity.url}
               target='_blank'

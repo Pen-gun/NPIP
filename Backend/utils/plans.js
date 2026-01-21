@@ -1,4 +1,4 @@
-export const PLAN_LIMITS = {
+export const PLAN_LIMITS = Object.freeze({
     individual: {
         keywords: 3,
         mentionsPerMonth: 3000,
@@ -14,6 +14,9 @@ export const PLAN_LIMITS = {
         mentionsPerMonth: 100000,
         minIntervalMinutes: 5,
     },
-};
+});
 
 export const DEFAULT_PLAN = 'individual';
+
+export const getPlanLimits = (planName) =>
+    PLAN_LIMITS[planName] || PLAN_LIMITS[DEFAULT_PLAN];

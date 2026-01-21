@@ -1,19 +1,35 @@
 import { Link, useNavigate } from 'react-router-dom'
 import { useState } from 'react'
+import type { FormEvent } from 'react'
 import BrandLogo from '../components/BrandLogo'
 import PrimaryButton from '../components/PrimaryButton'
 import { loginUser, registerUser } from '../api/auth'
 
+type AuthMode = 'login' | 'register'
+
+const DEFAULT_ERROR_MESSAGE = 'Unable to authenticate'
+
+const FEATURES = Object.freeze([
+  'Private project dashboards with filters.',
+  'Connector health, alerts, and exportable reports.',
+  'Real-time Socket.io updates for spikes.',
+  'Plan-aware usage safeguards built-in.',
+])
+
 export default function LoginPage() {
-  const [mode, setMode] = useState<'login' | 'register'>('login')
+  const navigate = useNavigate()
+  const [mode, setMode] = useState<AuthMode>('login')
   const [error, setError] = useState('')
   const [busy, setBusy] = useState(false)
-  const navigate = useNavigate()
 
-  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+  const isLogin = mode === 'login'
+  const toggleMode = () => setMode(isLogin ? 'register' : 'login')
+
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
     setError('')
     setBusy(true)
+
     const form = new FormData(event.currentTarget)
     const payload = {
       fullName: String(form.get('fullName') || ''),
@@ -21,8 +37,9 @@ export default function LoginPage() {
       email: String(form.get('email') || ''),
       password: String(form.get('password') || ''),
     }
+
     try {
-      if (mode === 'register') {
+      if (!isLogin) {
         await registerUser(payload)
       }
       await loginUser({
@@ -32,7 +49,7 @@ export default function LoginPage() {
       })
       navigate('/app')
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Unable to authenticate')
+      setError(err instanceof Error ? err.message : DEFAULT_ERROR_MESSAGE)
     } finally {
       setBusy(false)
     }
@@ -54,14 +71,14 @@ export default function LoginPage() {
               Welcome
             </p>
             <h1 className='mt-3 font-display text-3xl font-semibold'>
-              {mode === 'login' ? 'Sign in to your workspace' : 'Create your monitoring workspace'}
+              {isLogin ? 'Sign in to your workspace' : 'Create your monitoring workspace'}
             </h1>
             <p className='mt-3 text-sm text-(--text-muted)'>
               Access real-time alerts, sentiment tracking, and project dashboards in one place.
             </p>
 
             <form className='mt-6 space-y-4' onSubmit={handleSubmit}>
-              {mode === 'register' && (
+              {!isLogin && (
                 <input
                   name='fullName'
                   placeholder='Full name'
@@ -90,25 +107,24 @@ export default function LoginPage() {
                 required
               />
               {error && <p className='text-xs text-(--state-error)'>{error}</p>}
-              <PrimaryButton label={mode === 'login' ? 'Sign in' : 'Create account'} type='submit' disabled={busy} />
+              <PrimaryButton label={isLogin ? 'Sign in' : 'Create account'} type='submit' disabled={busy} />
             </form>
 
             <button
               type='button'
-              onClick={() => setMode(mode === 'login' ? 'register' : 'login')}
+              onClick={toggleMode}
               className='mt-4 text-xs font-semibold uppercase tracking-[0.3em] text-(--text-muted)'
             >
-              {mode === 'login' ? 'Need an account?' : 'Already have an account?'}
+              {isLogin ? 'Need an account?' : 'Already have an account?'}
             </button>
           </section>
 
           <aside className='rounded-[28px] border border-(--border) bg-(--surface-base) p-8 shadow-(--shadow)'>
             <h2 className='text-lg font-semibold'>What you get</h2>
             <ul className='mt-4 space-y-3 text-sm text-(--text-muted)'>
-              <li>Private project dashboards with filters.</li>
-              <li>Connector health, alerts, and exportable reports.</li>
-              <li>Real-time Socket.io updates for spikes.</li>
-              <li>Plan-aware usage safeguards built-in.</li>
+              {FEATURES.map((feature) => (
+                <li key={feature}>{feature}</li>
+              ))}
             </ul>
             <div className='mt-6 rounded-2xl bg-(--surface-muted) p-4 text-xs text-(--text-muted)'>
               Tip: Use boolean queries like <strong>brand AND (nepal OR kathmandu)</strong> to

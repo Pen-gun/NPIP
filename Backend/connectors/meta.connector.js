@@ -11,9 +11,8 @@ const metaConnector = {
     },
     async run() {
         const accessToken = process.env.META_ACCESS_TOKEN;
-        if (!accessToken) {
-            throw new Error('Missing META_ACCESS_TOKEN');
-        }
+        if (!accessToken) throw new Error('Missing META_ACCESS_TOKEN');
+
         FacebookAdsApi.init(accessToken);
         return [];
     },

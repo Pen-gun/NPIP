@@ -2,39 +2,20 @@ import fetch from 'node-fetch';
 import { XMLParser } from 'fast-xml-parser';
 
 const RSS_FEEDS = [
-    {
-        name: 'The Kathmandu Post',
-        url: 'https://kathmandupost.com/rss',
-    },
-    {
-        name: 'The Himalayan Times',
-        url: 'https://thehimalayantimes.com/feed',
-    },
-    {
-        name: 'Republica',
-        url: 'https://myrepublica.nagariknetwork.com/rss',
-    },
-    {
-        name: 'Onlinekhabar',
-        url: 'https://english.onlinekhabar.com/feed',
-    },
-    {
-        name: 'Nepali Times',
-        url: 'https://www.nepalitimes.com/feed/',
-    },
-    {
-        name: 'Setopati',
-        url: 'https://en.setopati.com/rss',
-    },
+    { name: 'The Kathmandu Post', url: 'https://kathmandupost.com/rss' },
+    { name: 'The Himalayan Times', url: 'https://thehimalayantimes.com/feed' },
+    { name: 'Republica', url: 'https://myrepublica.nagariknetwork.com/rss' },
+    { name: 'Onlinekhabar', url: 'https://english.onlinekhabar.com/feed' },
+    { name: 'Nepali Times', url: 'https://www.nepalitimes.com/feed/' },
+    { name: 'Setopati', url: 'https://en.setopati.com/rss' },
 ];
 
-const parser = new XMLParser({
-    ignoreAttributes: false,
-});
+const parser = new XMLParser({ ignoreAttributes: false });
 
 const normalizeItems = (items, sourceName) => {
     if (!items) return [];
     const list = Array.isArray(items) ? items : [items];
+
     return list.map((item) => ({
         title: item?.title || '',
         description: item?.description || item?.summary || '',
@@ -45,25 +26,24 @@ const normalizeItems = (items, sourceName) => {
     }));
 };
 
-export const fetchRssNews = async (query) => {
-    const results = await Promise.all(
-        RSS_FEEDS.map(async (feed) => {
-            try {
-                const response = await fetch(feed.url);
-                if (!response.ok) {
-                    return [];
-                }
-                const xml = await response.text();
-                const parsed = parser.parse(xml);
-                const channel = parsed?.rss?.channel || parsed?.feed;
-                const items = channel?.item || channel?.entry;
-                return normalizeItems(items, feed.name);
-            } catch (err) {
-                return [];
-            }
-        })
-    );
+const fetchFeed = async (feed) => {
+    try {
+        const response = await fetch(feed.url);
+        if (!response.ok) return [];
 
+        const xml = await response.text();
+        const parsed = parser.parse(xml);
+        const channel = parsed?.rss?.channel || parsed?.feed;
+        const items = channel?.item || channel?.entry;
+
+        return normalizeItems(items, feed.name);
+    } catch {
+        return [];
+    }
+};
+
+export const fetchRssNews = async (query) => {
+    const results = await Promise.all(RSS_FEEDS.map(fetchFeed));
     const flattened = results.flat();
     const loweredQuery = query.toLowerCase();
 

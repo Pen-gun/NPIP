@@ -1,28 +1,30 @@
-const OPERATORS = {
+const OPERATORS = Object.freeze({
     NOT: { precedence: 3, arity: 1 },
     AND: { precedence: 2, arity: 2 },
     OR: { precedence: 1, arity: 2 },
-};
+});
 
-const tokenize = (input = '') => {
-    return input
+const isOperator = (token) => token in OPERATORS;
+const isParenthesis = (token) => token === '(' || token === ')';
+
+const tokenize = (input = '') =>
+    input
         .replace(/[()]/g, (match) => ` ${match} `)
         .trim()
         .split(/\s+/)
         .filter(Boolean)
-        .map((token) => token.toUpperCase() in OPERATORS || token === '(' || token === ')' ? token.toUpperCase() : token);
-};
+        .map((token) => (isOperator(token.toUpperCase()) || isParenthesis(token) ? token.toUpperCase() : token));
 
 const toPostfix = (tokens) => {
     const output = [];
     const stack = [];
 
     for (const token of tokens) {
-        if (token in OPERATORS) {
+        if (isOperator(token)) {
             const { precedence } = OPERATORS[token];
             while (stack.length) {
                 const top = stack[stack.length - 1];
-                if (top in OPERATORS && OPERATORS[top].precedence >= precedence) {
+                if (isOperator(top) && OPERATORS[top].precedence >= precedence) {
                     output.push(stack.pop());
                 } else {
                     break;
@@ -50,14 +52,16 @@ const toPostfix = (tokens) => {
 
 export const evaluateBooleanQuery = (query, text) => {
     if (!query) return true;
+
     const tokens = tokenize(query);
     if (!tokens.length) return true;
+
     const postfix = toPostfix(tokens);
     const stack = [];
     const haystack = text.toLowerCase();
 
     for (const token of postfix) {
-        if (token in OPERATORS) {
+        if (isOperator(token)) {
             const { arity } = OPERATORS[token];
             if (arity === 1) {
                 const value = stack.pop() ?? false;

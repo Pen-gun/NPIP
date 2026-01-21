@@ -1,22 +1,27 @@
+import jwt from 'jsonwebtoken';
 import asyncHandler from '../utils/asyncHandler.js';
-import jwt from "jsonwebtoken";
-import apiError from "../utils/apiError.js";
-import { User } from "../model/user.model.js";
+import ApiError from '../utils/apiError.js';
+import { User } from '../model/user.model.js';
 
-export const verifyJWT = asyncHandler(async (req, _, next) => {
-    const token = req.cookies?.accessToken || req.header("Authorization")?.replace("Bearer ", "");
+export const verifyJWT = asyncHandler(async (req, _res, next) => {
+    const token =
+        req.cookies?.accessToken || req.header('Authorization')?.replace('Bearer ', '');
+
     if (!token) {
-        throw new apiError(401, "access token missing!"); 
+        throw new ApiError(401, 'Access token missing');
     }
+
     try {
-        const decodedToken = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET);
-        const user = await User.findById(decodedToken?.userId).select('-password -refreshToken');
+        const decoded = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET);
+        const user = await User.findById(decoded?.userId).select('-password -refreshToken');
+
         if (!user) {
-            throw new apiError(404, "user not found!");
+            throw new ApiError(404, 'User not found');
         }
+
         req.user = user;
         next();
     } catch (error) {
-        throw new apiError(401, "invalid access token!");
+        throw new ApiError(401, 'Invalid access token');
     }
 });

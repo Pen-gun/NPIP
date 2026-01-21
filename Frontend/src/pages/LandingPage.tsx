@@ -2,7 +2,12 @@ import { Link } from 'react-router-dom'
 import BrandLogo from '../components/BrandLogo'
 import PrimaryButton from '../components/PrimaryButton'
 
-const highlights = [
+interface Highlight {
+  title: string
+  description: string
+}
+
+const HIGHLIGHTS: readonly Highlight[] = Object.freeze([
   {
     title: 'Public signal intake',
     description: 'Track public mentions across Nepali news, YouTube, Reddit and optional connectors.',
@@ -15,13 +20,37 @@ const highlights = [
     title: 'Alerts & reports',
     description: 'Real-time spike alerts, email digests, and exportable PDF summaries.',
   },
-]
+])
 
-const constraints = [
+const CONSTRAINTS = Object.freeze([
   'Local news + YouTube + Reddit are the reliable MVP sources.',
   'X, Meta, TikTok, Viber remain gated or best-effort.',
   'Public data only, respecting robots.txt and platform ToS.',
-]
+])
+
+const DATA_SOURCES = Object.freeze([
+  'Local News RSS',
+  'YouTube API',
+  'Reddit API',
+  'X (paid)',
+  'Meta (owned)',
+  'TikTok (best-effort)',
+])
+
+const WORKFLOW_STEPS = Object.freeze([
+  {
+    title: 'Create a project',
+    description: 'Define keywords, boolean queries, and the sources you want to monitor.',
+  },
+  {
+    title: 'Ingest mentions',
+    description: 'Schedule connectors to collect mentions across the supported stack.',
+  },
+  {
+    title: 'Act on insights',
+    description: 'Use sentiment, top sources, and alerts to take action quickly.',
+  },
+])
 
 export default function LandingPage() {
   return (
@@ -98,7 +127,7 @@ export default function LandingPage() {
         </section>
 
         <section id='features' className='grid gap-6 lg:grid-cols-3'>
-          {highlights.map((item) => (
+          {HIGHLIGHTS.map((item) => (
             <div
               key={item.title}
               className='rounded-2xl border border-(--border) bg-(--surface-base) p-6 shadow-(--shadow)'
@@ -113,40 +142,32 @@ export default function LandingPage() {
           <div className='rounded-2xl border border-(--border) bg-(--surface-base) p-6 shadow-(--shadow)'>
             <h3 className='text-lg font-semibold'>Source reality check</h3>
             <ul className='mt-4 space-y-3 text-sm text-(--text-muted)'>
-              {constraints.map((item) => (
+              {CONSTRAINTS.map((item) => (
                 <li key={item}>{item}</li>
               ))}
             </ul>
           </div>
           <div className='grid gap-4 sm:grid-cols-2'>
-            {['Local News RSS', 'YouTube API', 'Reddit API', 'X (paid)', 'Meta (owned)', 'TikTok (best-effort)'].map(
-              (item) => (
-                <div
-                  key={item}
-                  className='rounded-2xl border border-(--border) bg-(--surface-muted) p-4 text-sm font-semibold'
-                >
-                  {item}
-                </div>
-              ),
-            )}
+            {DATA_SOURCES.map((item) => (
+              <div
+                key={item}
+                className='rounded-2xl border border-(--border) bg-(--surface-muted) p-4 text-sm font-semibold'
+              >
+                {item}
+              </div>
+            ))}
           </div>
         </section>
 
         <section id='workflow' className='rounded-[28px] border border-(--border) bg-(--surface-base) p-8 shadow-(--shadow)'>
           <div className='grid gap-6 lg:grid-cols-3'>
-            {['Create a project', 'Ingest mentions', 'Act on insights'].map((step, index) => (
-              <div key={step} className='rounded-2xl bg-(--surface-muted) p-5'>
+            {WORKFLOW_STEPS.map((step, index) => (
+              <div key={step.title} className='rounded-2xl bg-(--surface-muted) p-5'>
                 <p className='text-xs font-semibold uppercase tracking-[0.28em] text-(--brand-accent)'>
                   Step {index + 1}
                 </p>
-                <h4 className='mt-3 text-lg font-semibold'>{step}</h4>
-                <p className='mt-2 text-sm text-(--text-muted)'>
-                  {index === 0
-                    ? 'Define keywords, boolean queries, and the sources you want to monitor.'
-                    : index === 1
-                      ? 'Schedule connectors to collect mentions across the supported stack.'
-                      : 'Use sentiment, top sources, and alerts to take action quickly.'}
-                </p>
+                <h4 className='mt-3 text-lg font-semibold'>{step.title}</h4>
+                <p className='mt-2 text-sm text-(--text-muted)'>{step.description}</p>
               </div>
             ))}
           </div>

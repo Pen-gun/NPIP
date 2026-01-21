@@ -18,7 +18,38 @@ import type { AlertItem, ConnectorHealth, Mention, Project, ProjectMetrics, User
 import ChartCard from '../components/ChartCard'
 import BrandLogo from '../components/BrandLogo'
 
-const SOURCES = [
+interface SourceConfig {
+  id: string
+  label: string
+}
+
+interface DashboardFilters {
+  from: string
+  to: string
+  source: string
+  sentiment: string
+}
+
+interface ProjectFormState {
+  name: string
+  keywords: string
+  booleanQuery: string
+  scheduleMinutes: number
+  geoFocus: string
+  sources: Record<string, boolean>
+}
+
+const SOCKET_URL = import.meta.env.VITE_SOCKET_URL || undefined
+const SKELETON_COUNTS = Object.freeze({ projects: 3, mentions: 4, alerts: 2, health: 3 })
+const DATE_FORMAT_OPTIONS: Intl.DateTimeFormatOptions = Object.freeze({
+  month: 'short',
+  day: 'numeric',
+  year: 'numeric',
+})
+const DEFAULT_UNKNOWN = 'Unknown'
+const ALERTS_LIMIT = 100
+
+const SOURCE_OPTIONS: readonly SourceConfig[] = Object.freeze([
   { id: 'localNews', label: 'Local News (RSS)' },
   { id: 'youtube', label: 'YouTube' },
   { id: 'reddit', label: 'Reddit' },
@@ -26,26 +57,77 @@ const SOURCES = [
   { id: 'meta', label: 'Meta (owned assets)' },
   { id: 'tiktok', label: 'TikTok (experimental)' },
   { id: 'viber', label: 'Viber (bot-only)' },
-]
+])
 
-const socketUrl = import.meta.env.VITE_SOCKET_URL || undefined
+const INITIAL_FILTERS: DashboardFilters = Object.freeze({
+  from: '',
+  to: '',
+  source: '',
+  sentiment: '',
+})
 
-const formatDate = (value?: string | Date | null) => {
-  if (!value) return 'Unknown'
+const INITIAL_PROJECT_FORM: ProjectFormState = Object.freeze({
+  name: '',
+  keywords: '',
+  booleanQuery: '',
+  scheduleMinutes: 30,
+  geoFocus: 'Nepal',
+  sources: {
+    localNews: true,
+    youtube: true,
+    reddit: true,
+    x: false,
+    meta: false,
+    tiktok: false,
+    viber: false,
+  },
+})
+
+const SOURCE_FILTER_OPTIONS = Object.freeze([
+  { value: '', label: 'All sources' },
+  { value: 'local_news', label: 'Local News' },
+  { value: 'youtube', label: 'YouTube' },
+  { value: 'reddit', label: 'Reddit' },
+  { value: 'x', label: 'X' },
+])
+
+const SENTIMENT_FILTER_OPTIONS = Object.freeze([
+  { value: '', label: 'All sentiment' },
+  { value: 'positive', label: 'Positive' },
+  { value: 'neutral', label: 'Neutral' },
+  { value: 'negative', label: 'Negative' },
+])
+
+const POLICY_ITEMS = Object.freeze([
+  'Public sources only. Bots must be authorized for Viber.',
+  'Meta monitoring is limited to owned assets.',
+  'TikTok search is experimental; expect gaps.',
+])
+
+const formatDate = (value?: string | Date | null): string => {
+  if (!value) return DEFAULT_UNKNOWN
   const date = new Date(value)
-  if (Number.isNaN(date.getTime())) return 'Unknown'
-  return date.toLocaleDateString('en-US', {
-    month: 'short',
-    day: 'numeric',
-    year: 'numeric',
-  })
+  if (Number.isNaN(date.getTime())) return DEFAULT_UNKNOWN
+  return date.toLocaleDateString('en-US', DATE_FORMAT_OPTIONS)
 }
 
-const parseKeywords = (value: string) =>
+const parseKeywords = (value: string): string[] =>
   value
     .split(',')
     .map((item) => item.trim())
     .filter(Boolean)
+
+const createSkeletonElement = (className: string) => (
+  <div className={`animate-pulse rounded-full bg-(--surface-muted) ${className}`} />
+)
+
+const getHealthStatusStyles = (status: string): string => {
+  const styles: Record<string, string> = {
+    ok: 'bg-emerald-100 text-emerald-700',
+    degraded: 'bg-amber-100 text-amber-700',
+  }
+  return styles[status] || 'bg-rose-100 text-rose-700'
+}
 
 export default function DashboardPage() {
   const navigate = useNavigate()
@@ -57,27 +139,11 @@ export default function DashboardPage() {
   const [alerts, setAlerts] = useState<AlertItem[]>([])
   const [health, setHealth] = useState<ConnectorHealth[]>([])
   const [loadingDashboard, setLoadingDashboard] = useState(false)
-  const [filters, setFilters] = useState({
-    from: '',
-    to: '',
-    source: '',
-    sentiment: '',
-  })
-  const [projectForm, setProjectForm] = useState({
-    name: '',
-    keywords: '',
-    booleanQuery: '',
-    scheduleMinutes: 30,
-    geoFocus: 'Nepal',
-    sources: {
-      localNews: true,
-      youtube: true,
-      reddit: true,
-      x: false,
-      meta: false,
-      tiktok: false,
-      viber: false,
-    },
+  const [loadingProjects, setLoadingProjects] = useState(false)
+  const [filters, setFilters] = useState<DashboardFilters>({ ...INITIAL_FILTERS })
+  const [projectForm, setProjectForm] = useState<ProjectFormState>({
+    ...INITIAL_PROJECT_FORM,
+    sources: { ...INITIAL_PROJECT_FORM.sources },
   })
 
   useEffect(() => {
@@ -92,6 +158,7 @@ export default function DashboardPage() {
 
   useEffect(() => {
     if (!user) return
+    setLoadingProjects(true)
     listProjects()
       .then((data) => {
         setProjects(data)
@@ -100,6 +167,7 @@ export default function DashboardPage() {
         }
       })
       .catch(() => null)
+      .finally(() => setLoadingProjects(false))
   }, [user, activeProjectId])
 
   useEffect(() => {
@@ -122,12 +190,12 @@ export default function DashboardPage() {
 
   useEffect(() => {
     if (!user) return
-    const socket: Socket = io(socketUrl || window.location.origin, {
+    const socket: Socket = io(SOCKET_URL || window.location.origin, {
       withCredentials: true,
     })
     socket.emit('join', { userId: user._id, projectId: activeProjectId })
     socket.on('alert', (alert: AlertItem) => {
-      setAlerts((prev) => [alert, ...prev].slice(0, 100))
+      setAlerts((prev) => [alert, ...prev].slice(0, ALERTS_LIMIT))
     })
     return () => {
       socket.disconnect()
@@ -158,7 +226,12 @@ export default function DashboardPage() {
     const created = await createProject(payload)
     setProjects((prev) => [created, ...prev])
     setActiveProjectId(created._id)
-    setProjectForm((prev) => ({ ...prev, name: '', keywords: '', booleanQuery: '' }))
+    setProjectForm((prev) => ({
+      ...prev,
+      name: INITIAL_PROJECT_FORM.name,
+      keywords: INITIAL_PROJECT_FORM.keywords,
+      booleanQuery: INITIAL_PROJECT_FORM.booleanQuery,
+    }))
   }
 
   const handleRunIngestion = async () => {
@@ -250,11 +323,11 @@ export default function DashboardPage() {
                 />
               </div>
               <div className='grid gap-2 text-sm text-(--text-muted) md:grid-cols-2'>
-                {SOURCES.map((source) => (
+                {SOURCE_OPTIONS.map((source) => (
                   <label key={source.id} className='flex items-center gap-2'>
                     <input
                       type='checkbox'
-                      checked={projectForm.sources[source.id as keyof typeof projectForm.sources]}
+                      checked={projectForm.sources[source.id] ?? false}
                       onChange={(event) =>
                         setProjectForm((prev) => ({
                           ...prev,
@@ -282,19 +355,27 @@ export default function DashboardPage() {
             <h2 className='text-lg font-semibold'>Projects</h2>
             <p className='text-sm text-(--text-muted)'>Select a project to monitor.</p>
             <div className='mt-4 flex flex-wrap gap-2'>
-              {projects.map((project) => (
-                <button
-                  key={project._id}
-                  onClick={() => setActiveProjectId(project._id)}
-                  className={`rounded-full px-4 py-2 text-xs font-semibold ${
-                    activeProjectId === project._id
-                      ? 'bg-(--brand-primary) text-(--text-inverse)'
-                      : 'border border-(--border)'
-                  }`}
-                >
-                  {project.name}
-                </button>
-              ))}
+              {loadingProjects &&
+                Array.from({ length: SKELETON_COUNTS.projects }).map((_, index) => (
+                  <div
+                    key={`project-skeleton-${index}`}
+                    className='h-8 w-24 rounded-full bg-(--surface-muted) animate-pulse'
+                  />
+                ))}
+              {!loadingProjects &&
+                projects.map((project) => (
+                  <button
+                    key={project._id}
+                    onClick={() => setActiveProjectId(project._id)}
+                    className={`rounded-full px-4 py-2 text-xs font-semibold ${
+                      activeProjectId === project._id
+                        ? 'bg-(--brand-primary) text-(--text-inverse)'
+                        : 'border border-(--border)'
+                    }`}
+                  >
+                    {project.name}
+                  </button>
+                ))}
             </div>
             {activeProject && (
               <div className='mt-4 flex flex-wrap items-center gap-3 text-sm text-(--text-muted)'>
@@ -349,27 +430,28 @@ export default function DashboardPage() {
                     onChange={(event) => setFilters((prev) => ({ ...prev, source: event.target.value }))}
                     className='rounded-xl border border-(--border) bg-(--surface-muted) px-3 py-1 text-xs'
                   >
-                    <option value=''>All sources</option>
-                    <option value='local_news'>Local News</option>
-                    <option value='youtube'>YouTube</option>
-                    <option value='reddit'>Reddit</option>
-                    <option value='x'>X</option>
+                    {SOURCE_FILTER_OPTIONS.map((opt) => (
+                      <option key={opt.value} value={opt.value}>{opt.label}</option>
+                    ))}
                   </select>
                   <select
                     value={filters.sentiment}
                     onChange={(event) => setFilters((prev) => ({ ...prev, sentiment: event.target.value }))}
                     className='rounded-xl border border-(--border) bg-(--surface-muted) px-3 py-1 text-xs'
                   >
-                    <option value=''>All sentiment</option>
-                    <option value='positive'>Positive</option>
-                    <option value='neutral'>Neutral</option>
-                    <option value='negative'>Negative</option>
+                    {SENTIMENT_FILTER_OPTIONS.map((opt) => (
+                      <option key={opt.value} value={opt.value}>{opt.label}</option>
+                    ))}
                   </select>
                 </div>
               </div>
 
               {loadingDashboard ? (
-                <p className='mt-4 text-sm text-(--text-muted)'>Loading dashboard...</p>
+                <div className='mt-6 grid gap-4 lg:grid-cols-3'>
+                  <div className='h-48 rounded-2xl bg-(--surface-muted) animate-pulse' />
+                  <div className='h-48 rounded-2xl bg-(--surface-muted) animate-pulse' />
+                  <div className='h-48 rounded-2xl bg-(--surface-muted) animate-pulse' />
+                </div>
               ) : (
                 <div className='mt-6 grid gap-4 lg:grid-cols-3'>
                   <ChartCard
@@ -397,50 +479,94 @@ export default function DashboardPage() {
               )}
             </div>
 
-            <div className='rounded-[28px] border border-(--border) bg-(--surface-base) p-6 shadow-(--shadow)'>
-              <h3 className='text-lg font-semibold'>Mentions</h3>
-              <div className='mt-4 grid gap-4'>
-                {mentions.length === 0 && (
-                  <p className='text-sm text-(--text-muted)'>No mentions yet.</p>
-                )}
-                {mentions.map((mention) => (
-                  <article
-                    key={mention._id}
+          <div className='rounded-[28px] border border-(--border) bg-(--surface-base) p-6 shadow-(--shadow)'>
+            <h3 className='text-lg font-semibold'>Mentions</h3>
+            <div className='mt-4 grid max-h-[520px] gap-4 overflow-y-auto pr-2'>
+              {loadingDashboard &&
+                Array.from({ length: SKELETON_COUNTS.mentions }).map((_, index) => (
+                  <div
+                    key={`mention-skeleton-${index}`}
                     className='rounded-xl border border-(--border) bg-(--surface-muted) p-4'
                   >
-                    <div className='flex items-center justify-between text-xs text-(--text-muted)'>
-                      <span>{mention.source}</span>
-                      <span>{formatDate(mention.publishedAt)}</span>
+                    <div className='flex items-center justify-between'>
+                      {createSkeletonElement('h-3 w-16')}
+                      {createSkeletonElement('h-3 w-20')}
                     </div>
-                    <h4 className='mt-2 text-sm font-semibold'>{mention.title || mention.text}</h4>
-                    {mention.url && (
-                      <a
-                        href={mention.url}
-                        target='_blank'
-                        rel='noreferrer'
-                        className='mt-2 inline-block text-xs font-semibold text-(--brand-accent)'
-                      >
-                        View source
-                      </a>
-                    )}
-                    <div className='mt-3 flex flex-wrap gap-2 text-xs text-(--text-muted)'>
-                      <span>Sentiment: {mention.sentiment?.label}</span>
-                      <span>Reach: {mention.reachEstimate || 0}</span>
+                    <div className='mt-3 space-y-2'>
+                      {createSkeletonElement('h-4 w-3/4')}
+                      {createSkeletonElement('h-3 w-1/2')}
                     </div>
-                  </article>
+                  </div>
                 ))}
-              </div>
+              {!loadingDashboard && mentions.length === 0 && (
+                <p className='text-sm text-(--text-muted)'>No mentions yet.</p>
+              )}
+              {!loadingDashboard &&
+                mentions.map((mention) =>
+                  mention.url ? (
+                    <a
+                      key={mention._id}
+                      href={mention.url}
+                      target='_blank'
+                      rel='noreferrer'
+                      className='rounded-xl border border-(--border) bg-(--surface-muted) p-4 transition hover:-translate-y-[1px] hover:shadow-[0_12px_24px_rgba(15,23,42,0.08)]'
+                    >
+                      <div className='flex items-center justify-between text-xs text-(--text-muted)'>
+                        <span>{mention.source}</span>
+                        <span>{formatDate(mention.publishedAt)}</span>
+                      </div>
+                      <h4 className='mt-2 text-sm font-semibold'>{mention.title || mention.text}</h4>
+                      <div className='mt-2 text-xs font-semibold text-(--brand-accent)'>Open source</div>
+                      <div className='mt-3 flex flex-wrap gap-2 text-xs text-(--text-muted)'>
+                        <span>Sentiment: {mention.sentiment?.label}</span>
+                        <span>Reach: {mention.reachEstimate || 0}</span>
+                      </div>
+                    </a>
+                  ) : (
+                    <article
+                      key={mention._id}
+                      className='rounded-xl border border-(--border) bg-(--surface-muted) p-4'
+                    >
+                      <div className='flex items-center justify-between text-xs text-(--text-muted)'>
+                        <span>{mention.source}</span>
+                        <span>{formatDate(mention.publishedAt)}</span>
+                      </div>
+                      <h4 className='mt-2 text-sm font-semibold'>{mention.title || mention.text}</h4>
+                      <div className='mt-2 text-xs font-semibold text-(--brand-accent)'>
+                        No source link
+                      </div>
+                      <div className='mt-3 flex flex-wrap gap-2 text-xs text-(--text-muted)'>
+                        <span>Sentiment: {mention.sentiment?.label}</span>
+                        <span>Reach: {mention.reachEstimate || 0}</span>
+                      </div>
+                    </article>
+                  ),
+                )}
             </div>
+          </div>
           </div>
 
           <aside className='space-y-6'>
             <div className='rounded-[28px] border border-(--border) bg-(--surface-base) p-6 shadow-(--shadow)'>
               <h3 className='text-lg font-semibold'>Alerts</h3>
               <div className='mt-4 space-y-3'>
-                {alerts.length === 0 && (
+                {loadingDashboard &&
+                  Array.from({ length: SKELETON_COUNTS.alerts }).map((_, index) => (
+                    <div
+                      key={`alert-skeleton-${index}`}
+                      className='rounded-xl border border-(--border) bg-(--surface-muted) p-3'
+                    >
+                      {createSkeletonElement('h-3 w-20')}
+                      <div className='mt-2 space-y-2'>
+                        {createSkeletonElement('h-3 w-3/4')}
+                        {createSkeletonElement('h-3 w-1/3')}
+                      </div>
+                    </div>
+                  ))}
+                {!loadingDashboard && alerts.length === 0 && (
                   <p className='text-sm text-(--text-muted)'>No alerts yet.</p>
                 )}
-                {alerts.map((alert) => (
+                {!loadingDashboard && alerts.map((alert) => (
                   <div
                     key={alert._id}
                     className='rounded-xl border border-(--border) bg-(--surface-muted) p-3'
@@ -475,19 +601,18 @@ export default function DashboardPage() {
             <div className='rounded-[28px] border border-(--border) bg-(--surface-base) p-6 shadow-(--shadow)'>
               <h3 className='text-lg font-semibold'>Connector health</h3>
               <div className='mt-4 space-y-2 text-sm text-(--text-muted)'>
-                {health.length === 0 && <p>No connector checks yet.</p>}
-                {health.map((item) => (
+                {loadingDashboard &&
+                  Array.from({ length: SKELETON_COUNTS.health }).map((_, index) => (
+                    <div key={`health-skeleton-${index}`} className='flex items-center justify-between'>
+                      {createSkeletonElement('h-3 w-20')}
+                      {createSkeletonElement('h-5 w-16')}
+                    </div>
+                  ))}
+                {!loadingDashboard && health.length === 0 && <p>No connector checks yet.</p>}
+                {!loadingDashboard && health.map((item) => (
                   <div key={item._id} className='flex items-center justify-between'>
                     <span>{item.connectorId}</span>
-                    <span
-                      className={`rounded-full px-3 py-1 text-xs font-semibold ${
-                        item.status === 'ok'
-                          ? 'bg-emerald-100 text-emerald-700'
-                          : item.status === 'degraded'
-                            ? 'bg-amber-100 text-amber-700'
-                            : 'bg-rose-100 text-rose-700'
-                      }`}
-                    >
+                    <span className={`rounded-full px-3 py-1 text-xs font-semibold ${getHealthStatusStyles(item.status)}`}>
                       {item.status}
                     </span>
                   </div>
@@ -498,9 +623,9 @@ export default function DashboardPage() {
             <div className='rounded-[28px] border border-(--border) bg-(--surface-base) p-6 shadow-(--shadow)'>
               <h3 className='text-lg font-semibold'>Source policy</h3>
               <ul className='mt-3 space-y-2 text-sm text-(--text-muted)'>
-                <li>Public sources only. Bots must be authorized for Viber.</li>
-                <li>Meta monitoring is limited to owned assets.</li>
-                <li>TikTok search is experimental; expect gaps.</li>
+                {POLICY_ITEMS.map((item, index) => (
+                  <li key={index}>{item}</li>
+                ))}
               </ul>
             </div>
           </aside>

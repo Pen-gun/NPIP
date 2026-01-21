@@ -1,4 +1,4 @@
-type PrimaryButtonProps = {
+interface PrimaryButtonProps {
   label: string
   onClick?: () => void
   type?: 'button' | 'submit'
@@ -9,7 +9,7 @@ export default function PrimaryButton({
   label,
   onClick,
   type = 'button',
-  disabled,
+  disabled = false,
 }: PrimaryButtonProps) {
   return (
     <button

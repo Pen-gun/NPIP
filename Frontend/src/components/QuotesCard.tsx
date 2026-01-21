@@ -1,4 +1,4 @@
-type QuotesCardProps = {
+interface QuotesCardProps {
   quotes: string[]
 }
 
@@ -11,9 +11,11 @@ export default function QuotesCard({ quotes }: QuotesCardProps) {
           Extracted
         </span>
       </div>
+
       {quotes.length === 0 && (
         <p className='mt-3 text-sm text-(--text-muted)'>No quotes found yet.</p>
       )}
+
       <ul className='mt-4 space-y-3 text-sm text-(--text-primary)'>
         {quotes.map((quote) => (
           <li key={quote} className='rounded-xl border border-(--border) p-3'>

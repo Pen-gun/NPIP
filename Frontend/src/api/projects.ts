@@ -1,24 +1,26 @@
 import npipClient from './npipClient'
 import type { ConnectorHealth, Project, ProjectMetrics } from '../types/app'
 
-export const listProjects = async (): Promise<Project[]> => {
-  const response = await npipClient.get('/projects')
-  return response.data.data
-}
-
-export const createProject = async (payload: {
+interface CreateProjectPayload {
   name: string
   keywords: string[]
   booleanQuery: string
   scheduleMinutes: number
   geoFocus: string
   sources: Record<string, boolean>
-}): Promise<Project> => {
+}
+
+export const listProjects = async (): Promise<Project[]> => {
+  const response = await npipClient.get('/projects')
+  return response.data.data
+}
+
+export const createProject = async (payload: CreateProjectPayload): Promise<Project> => {
   const response = await npipClient.post('/projects', payload)
   return response.data.data
 }
 
-export const deleteProject = async (projectId: string) => {
+export const deleteProject = async (projectId: string): Promise<void> => {
   await npipClient.delete(`/projects/${projectId}`)
 }
 

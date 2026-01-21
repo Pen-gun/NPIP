@@ -1,21 +1,18 @@
 import fetch from 'node-fetch';
 
 const YOUTUBE_SEARCH_URL = 'https://www.googleapis.com/youtube/v3/search';
+const DEFAULT_LIMIT = 5;
 
-export const fetchYouTubeVideos = async (query, limit = 5) => {
+export const fetchYouTubeVideos = async (query, limit = DEFAULT_LIMIT) => {
     const apiKey = process.env.YOUTUBE_API_KEY;
+
     if (!apiKey) {
-        return {
-            videos: [],
-            warning: 'YOUTUBE_API_KEY is not configured',
-        };
+        return { videos: [], warning: 'YOUTUBE_API_KEY is not configured' };
     }
 
     const resolvedLimit = Number(process.env.YOUTUBE_LIMIT) || limit;
     const searchQuery = `${query} Nepal interview speech`;
-    const url = `${YOUTUBE_SEARCH_URL}?part=snippet&type=video&maxResults=${resolvedLimit}&q=${encodeURIComponent(
-        searchQuery
-    )}&key=${apiKey}`;
+    const url = `${YOUTUBE_SEARCH_URL}?part=snippet&type=video&maxResults=${resolvedLimit}&q=${encodeURIComponent(searchQuery)}&key=${apiKey}`;
 
     const response = await fetch(url);
     if (!response.ok) {
@@ -23,6 +20,7 @@ export const fetchYouTubeVideos = async (query, limit = 5) => {
     }
 
     const data = await response.json();
+
     const videos = (data?.items || []).map((item) => ({
         id: item?.id?.videoId || '',
         title: item?.snippet?.title || '',

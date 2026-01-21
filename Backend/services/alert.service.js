@@ -1,18 +1,22 @@
 import { Alert } from '../model/alert.model.js';
 import { Mention } from '../model/mention.model.js';
-import { getSocket } from './socket.service.js';
+import { emitToUser, emitToProject } from './socket.service.js';
 import { sendEmail } from './email.service.js';
 
+const SPIKE_THRESHOLD_MIN = 5;
+const SPIKE_MULTIPLIER = 2;
+const HOUR_MS = 60 * 60 * 1000;
+const DAY_MS = 24 * HOUR_MS;
+
 const notifyRealtime = (alert) => {
-    const io = getSocket();
-    if (!io) return;
-    io.to(`user:${alert.userId}`).emit('alert', alert);
-    io.to(`project:${alert.projectId}`).emit('alert', alert);
+    emitToUser(alert.userId, 'alert', alert);
+    emitToProject(alert.projectId, 'alert', alert);
 };
 
+const shouldSendEmail = () => process.env.ALERT_EMAIL_ENABLED === 'true';
+
 const maybeEmail = async (user, alert) => {
-    if (!process.env.ALERT_EMAIL_ENABLED) return;
-    if (!user?.email) return;
+    if (!shouldSendEmail() || !user?.email) return;
     await sendEmail({
         to: user.email,
         subject: `NPIP Alert: ${alert.type}`,
@@ -28,6 +32,7 @@ export const createAlert = async ({ user, project, type, message, payload = {} }
         message,
         payload,
     });
+
     notifyRealtime(alert);
     await maybeEmail(user, alert);
     return alert;
@@ -35,8 +40,8 @@ export const createAlert = async ({ user, project, type, message, payload = {} }
 
 export const checkForSpike = async ({ project, user }) => {
     const now = new Date();
-    const hourAgo = new Date(now.getTime() - 60 * 60 * 1000);
-    const dayAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+    const hourAgo = new Date(now.getTime() - HOUR_MS);
+    const dayAgo = new Date(now.getTime() - DAY_MS);
 
     const [lastHourCount, lastDayCount] = await Promise.all([
         Mention.countDocuments({ projectId: project._id, createdAt: { $gte: hourAgo } }),
@@ -44,7 +49,9 @@ export const checkForSpike = async ({ project, user }) => {
     ]);
 
     const avgHourly = lastDayCount / 24 || 0;
-    if (lastHourCount > Math.max(5, avgHourly * 2)) {
+    const threshold = Math.max(SPIKE_THRESHOLD_MIN, avgHourly * SPIKE_MULTIPLIER);
+
+    if (lastHourCount > threshold) {
         await createAlert({
             user,
             project,

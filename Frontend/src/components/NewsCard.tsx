@@ -1,18 +1,21 @@
 import type { FigureNewsResponse } from '../types/figure'
 
-type NewsCardProps = {
+interface NewsCardProps {
   data: FigureNewsResponse
   formatDate: (value?: string) => string
   isLoading?: boolean
   errorMessage?: string
 }
 
+const collectSourceWarnings = (sources: FigureNewsResponse['metadata']['sources']) =>
+  [sources.gnews.warning, sources.rss.warning].filter(Boolean)
+
+const areAllSourcesDown = (sources: FigureNewsResponse['metadata']['sources']) =>
+  !sources.gnews.ok && !sources.rss.ok
+
 export default function NewsCard({ data, formatDate, isLoading, errorMessage }: NewsCardProps) {
-  const sourceIssues = [
-    data.metadata.sources.gnews.warning,
-    data.metadata.sources.rss.warning,
-  ].filter(Boolean)
-  const allSourcesDown = !data.metadata.sources.gnews.ok && !data.metadata.sources.rss.ok
+  const sourceIssues = collectSourceWarnings(data.metadata.sources)
+  const allSourcesDown = areAllSourcesDown(data.metadata.sources)
 
   return (
     <article className='rounded-2xl border border-(--border) bg-(--surface-base) p-6 shadow-(--shadow) max-h-130 overflow-y-auto'>
@@ -22,13 +25,16 @@ export default function NewsCard({ data, formatDate, isLoading, errorMessage }: 
           Top sources
         </span>
       </div>
+
       {isLoading && <p className='mt-3 text-sm text-(--text-muted)'>Loading news...</p>}
       {errorMessage && <p className='mt-3 text-sm text-(--state-error)'>{errorMessage}</p>}
+
       {data.metadata.warning && (
         <p className='mt-3 text-sm text-(--state-warning)'>
           News feed is limited: {data.metadata.warning}
         </p>
       )}
+
       {data.news.length === 0 && (
         <p className='mt-3 text-sm text-(--text-muted)'>
           {allSourcesDown && sourceIssues.length
@@ -36,6 +42,7 @@ export default function NewsCard({ data, formatDate, isLoading, errorMessage }: 
             : 'No headlines found yet.'}
         </p>
       )}
+
       <div className='mt-4 grid gap-3'>
         {data.news.map((article) => (
           <a

@@ -1,6 +1,7 @@
 import dotenv from 'dotenv';
 import http from 'http';
 import { Server } from 'socket.io';
+
 import app from './app.js';
 import connectToDB from './db/connectToDatabase.helper.js';
 import { initSocket } from './services/socket.service.js';
@@ -8,14 +9,13 @@ import { startIngestionScheduler } from './services/ingestion.service.js';
 
 dotenv.config({ path: './ai.env' });
 
-const port = Number(process.env.PORT) || 8000;
+const PORT = Number(process.env.PORT) || 8000;
+const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:5173';
 
 const server = http.createServer(app);
+
 const io = new Server(server, {
-    cors: {
-        origin: process.env.FRONTEND_URL || 'http://localhost:5173',
-        credentials: true,
-    },
+    cors: { origin: FRONTEND_URL, credentials: true },
 });
 
 io.on('connection', (socket) => {
@@ -27,14 +27,29 @@ io.on('connection', (socket) => {
 
 initSocket(io);
 
+const gracefulShutdown = (signal) => {
+    console.log(`\n${signal} received. Shutting down gracefully...`);
+    server.close(() => {
+        console.log('HTTP server closed.');
+        process.exit(0);
+    });
+    setTimeout(() => {
+        console.error('Forced shutdown after timeout.');
+        process.exit(1);
+    }, 10_000);
+};
+
+process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
+process.on('SIGINT', () => gracefulShutdown('SIGINT'));
+
 connectToDB()
     .then(() => {
-        server.listen(port, () => {
-            console.log(`NPIP backend is running on port ${port}`);
+        server.listen(PORT, () => {
+            console.log(`NPIP backend running on port ${PORT}`);
         });
         startIngestionScheduler();
     })
     .catch((err) => {
-        console.error('Error starting the server', err);
+        console.error('Failed to start server:', err);
         process.exit(1);
     });

@@ -1,3 +1,5 @@
+const SKELETON_COUNT = 3
+
 export default function SkeletonGrid() {
   return (
     <div
@@ -5,9 +7,9 @@ export default function SkeletonGrid() {
       aria-live='polite'
       aria-busy='true'
     >
-      {[0, 1, 2].map((item) => (
+      {Array.from({ length: SKELETON_COUNT }, (_, index) => (
         <div
-          key={item}
+          key={index}
           className='animate-pulse rounded-2xl border border-(--border) bg-(--surface-base) p-6 shadow-(--shadow)'
         >
           <div className='h-3 w-2/5 rounded-full bg-(--surface-muted)' />

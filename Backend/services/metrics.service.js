@@ -1,12 +1,17 @@
 import { Mention } from '../model/mention.model.js';
 
+const buildDateFilter = (from, to) => {
+    const filter = { $ne: null };
+    if (from) filter.$gte = from;
+    if (to) filter.$lte = to;
+    return filter;
+};
+
 export const getProjectMetrics = async (projectId, { from, to } = {}) => {
-    const match = { projectId, publishedAt: { $ne: null } };
-    if (from || to) {
-        match.publishedAt = { $ne: null };
-        if (from) match.publishedAt.$gte = from;
-        if (to) match.publishedAt.$lte = to;
-    }
+    const match = {
+        projectId,
+        publishedAt: buildDateFilter(from, to),
+    };
 
     const [volume, sentimentShare, topSources, topAuthors] = await Promise.all([
         Mention.aggregate([
@@ -41,10 +46,5 @@ export const getProjectMetrics = async (projectId, { from, to } = {}) => {
         ]),
     ]);
 
-    return {
-        volume,
-        sentimentShare,
-        topSources,
-        topAuthors,
-    };
+    return { volume, sentimentShare, topSources, topAuthors };
 };

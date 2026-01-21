@@ -1,11 +1,13 @@
 import type { FigureNewsResponse } from '../types/figure'
 
-type EventsCardProps = {
+interface EventsCardProps {
   data: FigureNewsResponse
   formatDate: (value?: string) => string
   isLoading?: boolean
   errorMessage?: string
 }
+
+const formatSourceCount = (count: number) => `${count} source${count > 1 ? 's' : ''}`
 
 export default function EventsCard({ data, formatDate, isLoading, errorMessage }: EventsCardProps) {
   return (
@@ -16,17 +18,18 @@ export default function EventsCard({ data, formatDate, isLoading, errorMessage }
           Grouped
         </span>
       </div>
+
       {isLoading && <p className='mt-3 text-sm text-(--text-muted)'>Loading events...</p>}
       {errorMessage && <p className='mt-3 text-sm text-(--state-error)'>{errorMessage}</p>}
+
       {data.events.length === 0 && (
         <p className='mt-3 text-sm text-(--text-muted)'>No grouped events yet.</p>
       )}
+
       <ul className='mt-4 space-y-4 text-sm'>
         {data.events.map((event) => (
           <li key={event.url} className='space-y-1'>
-            <span className='text-xs text-(--text-muted)'>
-              {formatDate(event.latestPublishedAt)}
-            </span>
+            <span className='text-xs text-(--text-muted)'>{formatDate(event.latestPublishedAt)}</span>
             <a
               href={event.url}
               target='_blank'
@@ -36,7 +39,7 @@ export default function EventsCard({ data, formatDate, isLoading, errorMessage }
               {event.title}
             </a>
             <small className='text-xs text-(--text-muted)'>
-              {event.sources.join(', ')} • {event.count} source{event.count > 1 ? 's' : ''}
+              {event.sources.join(', ')} • {formatSourceCount(event.count)}
             </small>
           </li>
         ))}

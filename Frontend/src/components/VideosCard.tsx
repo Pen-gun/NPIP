@@ -1,6 +1,6 @@
 import type { FigureVideosResponse } from '../types/figure'
 
-type VideosCardProps = {
+interface VideosCardProps {
   data: FigureVideosResponse
   formatDate: (value?: string) => string
   isLoading?: boolean
@@ -9,6 +9,8 @@ type VideosCardProps = {
 
 export default function VideosCard({ data, formatDate, isLoading, errorMessage }: VideosCardProps) {
   const videoWarning = data.metadata.sources.youtube.warning
+  const hasTranscript = (video: FigureVideosResponse['videos'][0]) =>
+    video.transcriptPreview && video.transcriptPreview.length > 0
 
   return (
     <article className='rounded-2xl border border-(--border) bg-(--surface-base) p-6 shadow-(--shadow) max-h-130 overflow-y-auto'>
@@ -18,26 +20,29 @@ export default function VideosCard({ data, formatDate, isLoading, errorMessage }
           YouTube
         </span>
       </div>
+
       {isLoading && <p className='mt-3 text-sm text-(--text-muted)'>Loading videos...</p>}
       {errorMessage && <p className='mt-3 text-sm text-(--state-error)'>{errorMessage}</p>}
+
       {data.videos.length === 0 && (
         <p className='mt-3 text-sm text-(--text-muted)'>
           {videoWarning ? `Videos unavailable: ${videoWarning}` : 'No videos found yet.'}
         </p>
       )}
+
       <div className='mt-4 grid gap-4'>
         {data.videos.map((video) => (
           <div
             key={video.url || video.id}
             className='grid gap-3 rounded-xl border border-transparent p-3 transition hover:border-(--brand-accent) hover:bg-(--surface-muted) sm:grid-cols-[96px_1fr]'
           >
-            {video.thumbnail ? (
+            {video.thumbnail && (
               <img
                 src={video.thumbnail}
                 alt={video.title}
                 className='h-16 w-24 rounded-lg object-cover'
               />
-            ) : null}
+            )}
             <div className='space-y-2'>
               <a
                 href={video.url}
@@ -50,7 +55,7 @@ export default function VideosCard({ data, formatDate, isLoading, errorMessage }
               <span className='text-xs text-(--text-muted)'>
                 {video.channelTitle} • {formatDate(video.publishedAt)}
               </span>
-              {video.transcriptPreview && video.transcriptPreview.length > 0 && (
+              {hasTranscript(video) && (
                 <details className='text-xs text-(--text-muted)'>
                   <summary className='cursor-pointer font-semibold'>Transcript preview</summary>
                   <p className='mt-1'>{video.transcriptPreview.join(' ')}</p>

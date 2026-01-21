@@ -1,4 +1,6 @@
-type SearchFormProps = {
+import type { FormEvent } from 'react'
+
+interface SearchFormProps {
   query: string
   inputError: string
   isFetching: boolean
@@ -8,7 +10,12 @@ type SearchFormProps = {
   onQuickSearch: (value: string) => void
 }
 
-const quickSearches = ['KP Oli', 'Balen Shah', 'Sher Bahadur Deuba', 'Pradeep Gyawali']
+const QUICK_SEARCHES = Object.freeze([
+  'KP Oli',
+  'Balen Shah',
+  'Sher Bahadur Deuba',
+  'Pradeep Gyawali',
+])
 
 export default function SearchForm({
   query,
@@ -19,15 +26,14 @@ export default function SearchForm({
   onSubmit,
   onQuickSearch,
 }: SearchFormProps) {
+  const handleSubmit = (event: FormEvent) => {
+    event.preventDefault()
+    onSubmit()
+  }
+
   return (
     <section className='rounded-2xl border border-(--border) bg-(--surface-base) p-6 shadow-(--shadow)'>
-      <form
-        className='flex flex-col gap-4'
-        onSubmit={(event) => {
-          event.preventDefault()
-          onSubmit()
-        }}
-      >
+      <form className='flex flex-col gap-4' onSubmit={handleSubmit}>
         <label className='text-sm font-semibold text-(--text-primary)' htmlFor='query'>
           Search a public figure
         </label>
@@ -51,18 +57,21 @@ export default function SearchForm({
           </button>
         </div>
       </form>
+
       {inputError && (
         <p id='search-error' className='mt-3 text-xs text-(--state-error)' role='alert'>
           {inputError}
         </p>
       )}
+
       {isFetching && status !== 'pending' && (
         <p className='mt-3 text-xs text-(--info-text)' role='status' aria-live='polite'>
           Refreshing latest signals...
         </p>
       )}
+
       <div className='mt-4 flex flex-wrap gap-2'>
-        {quickSearches.map((item) => (
+        {QUICK_SEARCHES.map((item) => (
           <button
             key={item}
             type='button'

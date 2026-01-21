@@ -1,7 +1,16 @@
 import npipClient from './npipClient'
 import type { FigureIdentityResponse, FigureNewsResponse, FigureVideosResponse } from '../types/figure'
 
-export const fetchIdentity = async (query: string, signal?: AbortSignal) => {
+interface FetchNewsParams {
+  name: string
+  query?: string
+  aliases?: string[]
+}
+
+export const fetchIdentity = async (
+  query: string,
+  signal?: AbortSignal,
+): Promise<FigureIdentityResponse> => {
   const response = await npipClient.get<FigureIdentityResponse>('/figures/identity', {
     params: { query },
     signal,
@@ -10,9 +19,9 @@ export const fetchIdentity = async (query: string, signal?: AbortSignal) => {
 }
 
 export const fetchNews = async (
-  params: { name: string; query?: string; aliases?: string[] },
+  params: FetchNewsParams,
   signal?: AbortSignal,
-) => {
+): Promise<FigureNewsResponse> => {
   const response = await npipClient.get<FigureNewsResponse>('/v1/figures/news', {
     params: {
       name: params.name,
@@ -24,7 +33,10 @@ export const fetchNews = async (
   return response.data
 }
 
-export const fetchVideos = async (name: string, signal?: AbortSignal) => {
+export const fetchVideos = async (
+  name: string,
+  signal?: AbortSignal,
+): Promise<FigureVideosResponse> => {
   const response = await npipClient.get<FigureVideosResponse>('/figures/videos', {
     params: { name },
     signal,

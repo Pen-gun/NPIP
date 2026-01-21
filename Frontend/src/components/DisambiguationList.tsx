@@ -1,11 +1,15 @@
 import type { FigureIdentityResponse } from '../types/figure'
 
-type DisambiguationListProps = {
+interface DisambiguationListProps {
   data: FigureIdentityResponse
   onSelect: (value: string) => void
 }
 
+const MAX_CANDIDATES = 6
+
 export default function DisambiguationList({ data, onSelect }: DisambiguationListProps) {
+  const visibleCandidates = data.candidates.slice(0, MAX_CANDIDATES)
+
   return (
     <div className='rounded-2xl border border-(--border) bg-(--surface-base) p-6 shadow-(--shadow)'>
       <div className='flex items-center justify-between'>
@@ -14,30 +18,28 @@ export default function DisambiguationList({ data, onSelect }: DisambiguationLis
           Disambiguation
         </span>
       </div>
+
       <p className='mt-2 text-sm text-(--text-muted)'>
         "{data.query}" matches multiple entries. Pick the right profile to continue.
       </p>
-      {data.candidates.length === 0 ? (
+
+      {visibleCandidates.length === 0 ? (
         <p className='mt-3 text-sm text-(--text-muted)'>
           No candidates found. Try a more specific query.
         </p>
       ) : (
         <div className='mt-4 grid gap-3'>
-          {data.candidates.slice(0, 6).map((candidate) => (
+          {visibleCandidates.map((candidate) => (
             <button
               key={candidate.wikipediaUrl || candidate.title}
               type='button'
               className='rounded-xl border border-(--border) bg-(--surface-muted) p-4 text-left transition hover:-translate-y-0.5 hover:border-(--brand-accent) hover:shadow-md'
               onClick={() => onSelect(candidate.title)}
             >
-              <div>
-                <p className='text-sm font-semibold text-(--text-primary)'>
-                  {candidate.title}
-                </p>
-                <span className='text-xs text-(--text-muted)'>
-                  {candidate.description || 'Wikipedia entry'}
-                </span>
-              </div>
+              <p className='text-sm font-semibold text-(--text-primary)'>{candidate.title}</p>
+              <span className='text-xs text-(--text-muted)'>
+                {candidate.description || 'Wikipedia entry'}
+              </span>
             </button>
           ))}
         </div>

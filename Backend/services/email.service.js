@@ -1,32 +1,38 @@
 import nodemailer from 'nodemailer';
 
 let transporter = null;
-let fromUser = '';
+let fromAddress = '';
 
 const getTransporter = () => {
-    if (!transporter) {
-        const { SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS } = process.env;
-        if (!SMTP_HOST || !SMTP_PORT || !SMTP_USER || !SMTP_PASS) {
-            return null;
-        }
-        fromUser = SMTP_USER;
-        transporter = nodemailer.createTransport({
-            host: SMTP_HOST,
-            port: Number(SMTP_PORT),
-            auth: { user: SMTP_USER, pass: SMTP_PASS },
-        });
+    if (transporter) return transporter;
+
+    const { SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS, SMTP_FROM } = process.env;
+
+    if (!SMTP_HOST || !SMTP_PORT || !SMTP_USER || !SMTP_PASS) {
+        return null;
     }
+
+    fromAddress = SMTP_FROM || SMTP_USER;
+    transporter = nodemailer.createTransport({
+        host: SMTP_HOST,
+        port: Number(SMTP_PORT),
+        auth: { user: SMTP_USER, pass: SMTP_PASS },
+    });
+
     return transporter;
 };
 
-export const sendEmail = async ({ to, subject, text }) => {
+export const sendEmail = async ({ to, subject, text, html }) => {
     const mailer = getTransporter();
     if (!mailer) return false;
+
     await mailer.sendMail({
-        from: process.env.SMTP_FROM || fromUser,
+        from: fromAddress,
         to,
         subject,
         text,
+        html,
     });
+
     return true;
 };

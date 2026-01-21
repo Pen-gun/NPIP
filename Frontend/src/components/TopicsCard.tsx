@@ -1,5 +1,10 @@
-type TopicsCardProps = {
-  topics: Array<{ topic: string; count: number }>
+interface Topic {
+  topic: string
+  count: number
+}
+
+interface TopicsCardProps {
+  topics: Topic[]
 }
 
 export default function TopicsCard({ topics }: TopicsCardProps) {
@@ -11,9 +16,11 @@ export default function TopicsCard({ topics }: TopicsCardProps) {
           Signals
         </span>
       </div>
+
       {topics.length === 0 && (
         <p className='mt-3 text-sm text-(--text-muted)'>No topics extracted yet.</p>
       )}
+
       <div className='mt-4 flex flex-wrap gap-2'>
         {topics.map((item) => (
           <span

@@ -8,46 +8,55 @@ import { AuditLog } from '../model/auditLog.model.js';
 import { evaluateBooleanQuery, sanitizeQuery } from '../utils/booleanQuery.js';
 import { createSimilarityHash } from '../utils/hash.js';
 import { detectLanguage, inferSentiment } from './sentiment.service.js';
-import { PLAN_LIMITS } from '../utils/plans.js';
+import { getPlanLimits } from '../utils/plans.js';
 import { getMonthKey } from '../utils/date.js';
 import { createAlert, checkForSpike } from './alert.service.js';
 
-const timeout = (ms) => new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), ms));
+const CONNECTOR_TIMEOUT_MS = 25_000;
+const SCHEDULER_INTERVAL_MS = 60_000;
+const REACH_MULTIPLIERS = Object.freeze({
+    youtube: 10,
+    reddit: 5,
+});
+const DEFAULT_ENGAGEMENT = Object.freeze({ likes: 0, comments: 0, shares: 0 });
 
+const timeout = (ms) => new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), ms));
 const withTimeout = (promise, ms) => Promise.race([promise, timeout(ms)]);
 
-const getEnabledConnectors = (project) => {
-    return connectors.filter((connector) => {
-        const key = connector.id;
-        return project.sources?.[key] ?? connector.enabledByDefault;
-    });
-};
+const getEnabledConnectors = (project) =>
+    connectors.filter((connector) => project.sources?.[connector.id] ?? connector.enabledByDefault);
 
 const matchKeywords = (project, text) => {
     const haystack = text.toLowerCase();
     const keywords = (project.keywords || []).map((k) => k.toLowerCase());
-    const matched = keywords.find((keyword) => haystack.includes(keyword));
+    const matchedKeyword = keywords.find((keyword) => haystack.includes(keyword)) || '';
     const sanitized = sanitizeQuery(project.booleanQuery || '');
     const booleanMatch = sanitized ? evaluateBooleanQuery(sanitized, haystack) : true;
-    return { matchedKeyword: matched || '', booleanMatch };
+    return { matchedKeyword, booleanMatch };
 };
 
 const estimateReach = (mention) => {
     if (mention.followerCount) return mention.followerCount;
-    if (mention.source === 'youtube') return (mention.engagement?.likes || 0) * 10;
-    if (mention.source === 'reddit') return (mention.engagement?.comments || 0) * 5;
+
+    const multiplier = REACH_MULTIPLIERS[mention.source];
+    if (multiplier) {
+        const metric = mention.source === 'youtube'
+            ? mention.engagement?.likes || 0
+            : mention.engagement?.comments || 0;
+        return metric * multiplier;
+    }
+
     return 0;
 };
 
-const upsertConnectorHealth = async (projectId, connectorId, status, err) => {
-    const payload = {
-        status,
-        lastError: err ? String(err.message || err) : '',
-        lastCheckedAt: new Date(),
-    };
+const upsertConnectorHealth = async (projectId, connectorId, status, err = null) => {
     await ConnectorHealth.findOneAndUpdate(
         { projectId, connectorId },
-        payload,
+        {
+            status,
+            lastError: err ? String(err.message || err) : '',
+            lastCheckedAt: new Date(),
+        },
         { upsert: true, new: true }
     );
 };
@@ -63,32 +72,73 @@ const logConnectorError = async (project, connectorId, err) => {
 };
 
 const ensureUsage = async (userId) => {
-    const month = getMonthKey();
-    const usage = await Usage.findOneAndUpdate(
-        { userId, month },
+    return Usage.findOneAndUpdate(
+        { userId, month: getMonthKey() },
         { $setOnInsert: { mentionsCount: 0 } },
         { upsert: true, new: true }
     );
-    return usage;
 };
 
 const isOverLimit = (user, usage) => {
-    const plan = PLAN_LIMITS[user.plan] || PLAN_LIMITS.individual;
-    return usage.mentionsCount >= plan.mentionsPerMonth;
+    const limits = getPlanLimits(user.plan);
+    return usage.mentionsCount >= limits.mentionsPerMonth;
 };
 
 const runConnector = async (connector, project) => {
     const result = await withTimeout(
         connector.run({ project, from: project.lastRunAt, to: new Date() }),
-        25_000
+        CONNECTOR_TIMEOUT_MS
     );
     return Array.isArray(result) ? result : [];
 };
 
+const prepareMention = async (raw, project, matchedKeyword) => {
+    const text = `${raw.title || ''} ${raw.text || ''}`.trim();
+
+    return {
+        projectId: project._id,
+        source: raw.source,
+        keywordMatched: matchedKeyword,
+        title: raw.title || '',
+        text: raw.text || '',
+        author: raw.author || '',
+        url: raw.url || null,
+        publishedAt: raw.publishedAt ? new Date(raw.publishedAt) : null,
+        engagement: raw.engagement || DEFAULT_ENGAGEMENT,
+        followerCount: raw.followerCount || 0,
+        reachEstimate: estimateReach(raw),
+        lang: detectLanguage(text),
+        geo: project.geoFocus || '',
+        sentiment: await inferSentiment(text),
+        similarityHash: createSimilarityHash(`${raw.title} ${raw.text}`) || null,
+    };
+};
+
+const insertMentions = async (prepared) => {
+    if (!prepared.length) return 0;
+
+    try {
+        const docs = await Mention.insertMany(prepared, { ordered: false });
+        return docs.length;
+    } catch (err) {
+        if (err?.writeErrors) {
+            return prepared.length - err.writeErrors.length;
+        }
+        throw err;
+    }
+};
+
+const isDue = (project) => {
+    const lastRun = project.lastRunAt ? new Date(project.lastRunAt).getTime() : 0;
+    return Date.now() - lastRun >= project.scheduleMinutes * 60 * 1000;
+};
+
 export const ingestProject = async (project) => {
     if (project.status !== 'active') return { inserted: 0 };
+
     const user = await User.findById(project.userId);
     const usage = await ensureUsage(project.userId);
+
     if (!user || isOverLimit(user, usage)) {
         return { inserted: 0, reason: 'limit' };
     }
@@ -105,43 +155,15 @@ export const ingestProject = async (project) => {
             for (const raw of rawMentions) {
                 const text = `${raw.title || ''} ${raw.text || ''}`.trim();
                 const { matchedKeyword, booleanMatch } = matchKeywords(project, text);
+
                 if (!booleanMatch || (!matchedKeyword && project.keywords?.length)) {
                     continue;
                 }
-                const lang = detectLanguage(text);
-                const sentiment = await inferSentiment(text);
-                const similarityHash = createSimilarityHash(`${raw.title} ${raw.text}`) || null;
-                prepared.push({
-                    projectId: project._id,
-                    source: raw.source,
-                    keywordMatched: matchedKeyword,
-                    title: raw.title || '',
-                    text: raw.text || '',
-                    author: raw.author || '',
-                    url: raw.url || null,
-                    publishedAt: raw.publishedAt ? new Date(raw.publishedAt) : null,
-                    engagement: raw.engagement || { likes: 0, comments: 0, shares: 0 },
-                    followerCount: raw.followerCount || 0,
-                    reachEstimate: estimateReach(raw),
-                    lang,
-                    geo: project.geoFocus || '',
-                    sentiment,
-                    similarityHash,
-                });
+
+                prepared.push(await prepareMention(raw, project, matchedKeyword));
             }
 
-            if (prepared.length) {
-                try {
-                    const docs = await Mention.insertMany(prepared, { ordered: false });
-                    inserted += docs.length;
-                } catch (err) {
-                    if (err?.writeErrors) {
-                        inserted += prepared.length - err.writeErrors.length;
-                    } else {
-                        throw err;
-                    }
-                }
-            }
+            inserted += await insertMentions(prepared);
         } catch (err) {
             await upsertConnectorHealth(project._id, connector.id, 'degraded', err);
             await logConnectorError(project, connector.id, err);
@@ -170,15 +192,13 @@ export const ingestProject = async (project) => {
 };
 
 export const startIngestionScheduler = () => {
-    const intervalMs = 60_000;
     setInterval(async () => {
         const projects = await Project.find({ status: 'active' });
+
         for (const project of projects) {
-            const lastRun = project.lastRunAt ? new Date(project.lastRunAt).getTime() : 0;
-            const due = Date.now() - lastRun >= project.scheduleMinutes * 60 * 1000;
-            if (due) {
+            if (isDue(project)) {
                 await ingestProject(project);
             }
         }
-    }, intervalMs);
+    }, SCHEDULER_INTERVAL_MS);
 };

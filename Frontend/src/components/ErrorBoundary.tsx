@@ -1,14 +1,16 @@
 import type { ReactNode } from 'react'
 import { Component } from 'react'
 
-type ErrorBoundaryProps = {
+interface ErrorBoundaryProps {
   children: ReactNode
 }
 
-type ErrorBoundaryState = {
+interface ErrorBoundaryState {
   hasError: boolean
   message: string
 }
+
+const DEFAULT_ERROR_MESSAGE = 'Unexpected error'
 
 export default class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
   state: ErrorBoundaryState = {
@@ -16,14 +18,14 @@ export default class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBo
     message: '',
   }
 
-  static getDerivedStateFromError(error: Error) {
+  static getDerivedStateFromError(error: Error): ErrorBoundaryState {
     return {
       hasError: true,
-      message: error.message || 'Unexpected error',
+      message: error.message || DEFAULT_ERROR_MESSAGE,
     }
   }
 
-  handleReload = () => {
+  handleReload = (): void => {
     window.location.reload()
   }
 

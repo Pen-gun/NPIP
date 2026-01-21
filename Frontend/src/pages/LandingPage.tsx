@@ -1,5 +1,4 @@
 import { Link } from 'react-router-dom'
-import Navbar from '../components/Navbar'
 import PrimaryButton from '../components/PrimaryButton'
 
 interface Highlight {
@@ -54,50 +53,47 @@ const WORKFLOW_STEPS = Object.freeze([
 
 export default function LandingPage() {
   return (
-    <div className='min-h-screen text-(--text-primary)'>
-      <div className='mx-auto flex w-full max-w-6xl flex-col gap-10 px-4 py-6 sm:gap-14 sm:px-6 sm:py-10'>
-        <Navbar />
-
-        <section className='grid items-center gap-8 lg:grid-cols-[1.2fr_0.8fr] lg:gap-10'>
-          <div className='text-center lg:text-left'>
-            <p className='text-xs font-semibold uppercase tracking-[0.38em] text-(--brand-accent)'>
-              Nepal Social Listening
-            </p>
-            <h1 className='mt-4 font-display text-3xl font-semibold leading-tight sm:text-4xl lg:text-5xl xl:text-6xl'>
-              A modern intelligence desk for Nepali media signals.
-            </h1>
-            <p className='mx-auto mt-5 max-w-xl text-sm text-(--text-muted) sm:text-base lg:mx-0 lg:text-lg'>
-              Build projects, monitor public mentions, and act on sentiment shifts with an
-              infrastructure tuned for Nepal.
-            </p>
-            <div className='mt-6 flex flex-col items-center gap-3 sm:mt-8 sm:flex-row sm:justify-center lg:justify-start'>
-              <Link to='/login'>
-                <PrimaryButton label='Start Monitoring' />
-              </Link>
-              <Link
-                to='/search'
-                className='rounded-full border border-(--border) px-5 py-2 text-xs font-semibold uppercase tracking-[0.24em] transition hover:bg-(--surface-muted)'
-              >
-                Quick Search
-              </Link>
-            </div>
+    <div className='mx-auto flex w-full max-w-6xl flex-col gap-10 px-4 py-6 sm:gap-14 sm:px-6 sm:py-10'>
+      <section className='grid items-center gap-8 lg:grid-cols-[1.2fr_0.8fr] lg:gap-10'>
+        <div className='text-center lg:text-left'>
+          <p className='text-xs font-semibold uppercase tracking-[0.38em] text-(--brand-accent)'>
+            Nepal Social Listening
+          </p>
+          <h1 className='mt-4 font-display text-3xl font-semibold leading-tight sm:text-4xl lg:text-5xl xl:text-6xl'>
+            A modern intelligence desk for Nepali media signals.
+          </h1>
+          <p className='mx-auto mt-5 max-w-xl text-sm text-(--text-muted) sm:text-base lg:mx-0 lg:text-lg'>
+            Build projects, monitor public mentions, and act on sentiment shifts with an
+            infrastructure tuned for Nepal.
+          </p>
+          <div className='mt-6 flex flex-col items-center gap-3 sm:mt-8 sm:flex-row sm:justify-center lg:justify-start'>
+            <Link to='/login'>
+              <PrimaryButton label='Start Monitoring' />
+            </Link>
+            <Link
+              to='/search'
+              className='rounded-full border border-(--border) px-5 py-2 text-xs font-semibold uppercase tracking-[0.24em] transition hover:bg-(--surface-muted)'
+            >
+              Quick Search
+            </Link>
           </div>
+        </div>
 
-          <div className='rounded-[28px] border border-(--border) bg-(--surface-base) p-4 shadow-(--shadow) sm:p-6'>
-            <div className='grid gap-3 sm:gap-4'>
-              <div className='rounded-2xl bg-(--surface-muted) p-4'>
-                <p className='text-xs font-semibold uppercase tracking-[0.28em] text-(--brand-accent)'>
-                  Live monitoring
-                </p>
-                <h3 className='mt-2 text-base font-semibold sm:mt-3 sm:text-lg'>Project Health</h3>
-                <p className='mt-1 text-xs text-(--text-muted) sm:mt-2 sm:text-sm'>
-                  Connector status and freshness snapshot updated every ingest cycle.
-                </p>
-              </div>
-              <div className='rounded-2xl bg-(--surface-muted) p-4'>
-                <p className='text-xs font-semibold uppercase tracking-[0.28em] text-(--brand-accent)'>
-                  Insight panel
-                </p>
+        <div className='rounded-[28px] border border-(--border) bg-(--surface-base) p-4 shadow-(--shadow) sm:p-6'>
+          <div className='grid gap-3 sm:gap-4'>
+            <div className='rounded-2xl bg-(--surface-muted) p-4'>
+              <p className='text-xs font-semibold uppercase tracking-[0.28em] text-(--brand-accent)'>
+                Live monitoring
+              </p>
+              <h3 className='mt-2 text-base font-semibold sm:mt-3 sm:text-lg'>Project Health</h3>
+              <p className='mt-1 text-xs text-(--text-muted) sm:mt-2 sm:text-sm'>
+                Connector status and freshness snapshot updated every ingest cycle.
+              </p>
+            </div>
+            <div className='rounded-2xl bg-(--surface-muted) p-4'>
+              <p className='text-xs font-semibold uppercase tracking-[0.28em] text-(--brand-accent)'>
+                Insight panel
+              </p>
                 <h3 className='mt-2 text-base font-semibold sm:mt-3 sm:text-lg'>Sentiment mix + volume</h3>
                 <p className='mt-1 text-xs text-(--text-muted) sm:mt-2 sm:text-sm'>
                   Understand mood shifts, top sources, and key mentions instantly.
@@ -168,6 +164,5 @@ export default function LandingPage() {
           <span className='text-center'>Built for Nepal&apos;s public data ecosystem.</span>
         </footer>
       </div>
-    </div>
   )
 }

@@ -1,37 +1,16 @@
-import { useEffect, useState } from 'react'
 import type { ReactNode } from 'react'
 import { Navigate, useLocation } from 'react-router-dom'
-import { getCurrentUser } from '../api/auth'
+import { useAuth } from '../contexts/AuthContext'
 
 interface ProtectedRouteProps {
   children: ReactNode
 }
 
-type AuthState = 'loading' | 'authenticated' | 'unauthenticated'
-
 export default function ProtectedRoute({ children }: ProtectedRouteProps) {
   const location = useLocation()
-  const [authState, setAuthState] = useState<AuthState>('loading')
+  const { isLoading, isAuthenticated } = useAuth()
 
-  useEffect(() => {
-    let cancelled = false
-
-    getCurrentUser()
-      .then(() => {
-        if (cancelled) return
-        setAuthState('authenticated')
-      })
-      .catch(() => {
-        if (cancelled) return
-        setAuthState('unauthenticated')
-      })
-
-    return () => {
-      cancelled = true
-    }
-  }, [])
-
-  if (authState === 'loading') {
+  if (isLoading) {
     return (
       <div className='flex min-h-screen items-center justify-center text-(--text-primary)'>
         <div className='flex flex-col items-center gap-4'>
@@ -42,7 +21,7 @@ export default function ProtectedRoute({ children }: ProtectedRouteProps) {
     )
   }
 
-  if (authState === 'unauthenticated') {
+  if (!isAuthenticated) {
     return <Navigate to='/login' state={{ from: location }} replace />
   }
 

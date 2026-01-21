@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import type { FormEvent } from 'react'
 import { io, Socket } from 'socket.io-client'
-import { useNavigate } from 'react-router-dom'
 import {
   createProject,
   deleteProject,
@@ -13,10 +12,9 @@ import {
 import { fetchMentions } from '../api/mentions'
 import { fetchAlerts, markAlertRead } from '../api/alerts'
 import { downloadReport } from '../api/reports'
-import { getCurrentUser, logoutUser } from '../api/auth'
-import type { AlertItem, ConnectorHealth, Mention, Project, ProjectMetrics, User } from '../types/app'
+import { useAuth } from '../contexts/AuthContext'
+import type { AlertItem, ConnectorHealth, Mention, Project, ProjectMetrics } from '../types/app'
 import {
-  DashboardHeader,
   ProjectForm,
   ProjectList,
   DashboardFiltersBar,
@@ -68,8 +66,7 @@ const parseKeywords = (value: string): string[] =>
     .filter(Boolean)
 
 export default function DashboardPage() {
-  const navigate = useNavigate()
-  const [user, setUser] = useState<User | null>(null)
+  const { user } = useAuth()
   const [projects, setProjects] = useState<Project[]>([])
   const [activeProjectId, setActiveProjectId] = useState<string>('')
   const [metrics, setMetrics] = useState<ProjectMetrics | null>(null)
@@ -86,18 +83,6 @@ export default function DashboardPage() {
     ...INITIAL_PROJECT_FORM,
     sources: { ...INITIAL_PROJECT_FORM.sources },
   })
-
-  useEffect(() => {
-    getCurrentUser()
-      .then(setUser)
-      .catch((err) => {
-        if (err.message?.includes('401') || err.message?.includes('token')) {
-          navigate('/login')
-        } else {
-          setError('Failed to load user session. Please try again.')
-        }
-      })
-  }, [navigate])
 
   useEffect(() => {
     if (!user) return
@@ -188,11 +173,6 @@ export default function DashboardPage() {
     [projects, activeProjectId],
   )
 
-  const handleLogout = async () => {
-    await logoutUser()
-    navigate('/login')
-  }
-
   const handleProjectSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
     if (!user || actionLoading) return
@@ -278,9 +258,9 @@ export default function DashboardPage() {
   const dismissError = () => setError(null)
 
   return (
-    <div className='min-h-screen text-(--text-primary)'>
+    <>
       {error && (
-        <div className='sticky top-0 z-50 flex items-center justify-between gap-4 bg-(--state-error) px-4 py-3 text-sm text-white'>
+        <div className='flex items-center justify-between gap-4 bg-(--state-error) px-4 py-3 text-sm text-white'>
           <span>{error}</span>
           <button
             type='button'
@@ -293,13 +273,11 @@ export default function DashboardPage() {
         </div>
       )}
       {!socketConnected && user && (
-        <div className='sticky top-0 z-40 bg-(--state-warning) px-4 py-2 text-center text-xs text-(--text-primary)'>
+        <div className='bg-(--state-warning) px-4 py-2 text-center text-xs text-(--text-primary)'>
           Real-time updates disconnected. Reconnecting...
         </div>
       )}
-      <div className='flex w-full flex-col gap-6 px-4 py-6 sm:gap-8 sm:px-6 sm:py-8 lg:gap-10 lg:px-10 lg:py-10'>
-        <DashboardHeader userName={user?.fullName} onLogout={handleLogout} />
-
+      <div className='mx-auto flex w-full max-w-7xl flex-col gap-6 px-4 py-6 sm:gap-8 sm:px-6 sm:py-8 lg:gap-10 lg:px-10 lg:py-10'>
         <section className='grid gap-4 sm:gap-6 lg:grid-cols-[1.1fr_0.9fr]'>
           <ProjectForm
             formState={projectForm}
@@ -340,6 +318,6 @@ export default function DashboardPage() {
           </aside>
         </section>
       </div>
-    </div>
+    </>
   )
 }

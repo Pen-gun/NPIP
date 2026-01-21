@@ -1,7 +1,5 @@
 import { useState, useCallback } from 'react'
-import { Link } from 'react-router-dom'
 import { useFigureIdentity, useFigureNews, useFigureVideos } from '../hooks/useFigureSearch'
-import BrandLogo from '../components/BrandLogo'
 import SearchForm from '../components/SearchForm'
 import ProfileCard from '../components/ProfileCard'
 import DisambiguationList from '../components/DisambiguationList'
@@ -122,33 +120,13 @@ export default function FigureSearchPage() {
   const hasSearched = Boolean(searchedQuery)
 
   return (
-    <div className='min-h-screen bg-(--surface-background) text-(--text-primary)'>
-      <div className='mx-auto flex min-h-screen w-full max-w-7xl flex-col gap-6 px-4 py-6 sm:gap-8 sm:px-6 sm:py-8'>
-        {/* Header */}
-        <header className='flex items-center justify-between'>
-          <BrandLogo />
-          <nav className='flex items-center gap-4'>
-            <Link
-              to='/app'
-              className='text-xs font-semibold uppercase tracking-[0.2em] text-(--text-muted) transition hover:text-(--text-primary) sm:tracking-[0.3em]'
-            >
-              Dashboard
-            </Link>
-            <Link
-              to='/login'
-              className='text-xs font-semibold uppercase tracking-[0.2em] text-(--text-muted) transition hover:text-(--text-primary) sm:tracking-[0.3em]'
-            >
-              Login
-            </Link>
-          </nav>
-        </header>
-
-        {/* Hero Section */}
-        <section className='text-center'>
-          <h1 className='font-display text-3xl font-semibold sm:text-4xl'>
-            Public Figure Intelligence
-          </h1>
-          <p className='mx-auto mt-2 max-w-xl text-sm text-(--text-muted) sm:text-base'>
+    <div className='mx-auto flex w-full max-w-7xl flex-col gap-6 px-4 py-6 sm:gap-8 sm:px-6 sm:py-8'>
+      {/* Hero Section */}
+      <section className='text-center'>
+        <h1 className='font-display text-3xl font-semibold sm:text-4xl'>
+          Public Figure Intelligence
+        </h1>
+        <p className='mx-auto mt-2 max-w-xl text-sm text-(--text-muted) sm:text-base'>
             Search any public figure to instantly get news, videos, quotes, and sentiment analysis.
             No project setup required.
           </p>
@@ -257,6 +235,5 @@ export default function FigureSearchPage() {
           </div>
         )}
       </div>
-    </div>
   )
 }

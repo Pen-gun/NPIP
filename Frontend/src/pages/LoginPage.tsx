@@ -1,9 +1,9 @@
-import { Link, useNavigate } from 'react-router-dom'
-import { useState } from 'react'
+import { Link, useNavigate, useLocation } from 'react-router-dom'
+import { useState, useEffect } from 'react'
 import type { FormEvent } from 'react'
 import BrandLogo from '../components/BrandLogo'
 import PrimaryButton from '../components/PrimaryButton'
-import { loginUser, registerUser } from '../api/auth'
+import { useAuth } from '../contexts/AuthContext'
 
 type AuthMode = 'login' | 'register'
 
@@ -18,9 +18,19 @@ const FEATURES = Object.freeze([
 
 export default function LoginPage() {
   const navigate = useNavigate()
+  const location = useLocation()
+  const { login, register, isAuthenticated, isLoading } = useAuth()
   const [mode, setMode] = useState<AuthMode>('login')
   const [error, setError] = useState('')
   const [busy, setBusy] = useState(false)
+
+  // Redirect if already authenticated
+  useEffect(() => {
+    if (!isLoading && isAuthenticated) {
+      const from = (location.state as { from?: Location })?.from?.pathname || '/app'
+      navigate(from, { replace: true })
+    }
+  }, [isAuthenticated, isLoading, navigate, location])
 
   const isLogin = mode === 'login'
   const toggleMode = () => setMode(isLogin ? 'register' : 'login')
@@ -40,19 +50,29 @@ export default function LoginPage() {
 
     try {
       if (!isLogin) {
-        await registerUser(payload)
+        await register(payload)
       }
-      await loginUser({
+      await login({
         username: payload.username,
         email: payload.email,
         password: payload.password,
       })
-      navigate('/app')
+      const from = (location.state as { from?: Location })?.from?.pathname || '/app'
+      navigate(from, { replace: true })
     } catch (err) {
       setError(err instanceof Error ? err.message : DEFAULT_ERROR_MESSAGE)
     } finally {
       setBusy(false)
     }
+  }
+
+  // Show loading state while checking auth
+  if (isLoading) {
+    return (
+      <div className='flex min-h-screen items-center justify-center bg-(--surface-background) text-(--text-primary)'>
+        <div className='h-8 w-8 animate-spin rounded-full border-4 border-(--brand-primary) border-t-transparent' />
+      </div>
+    )
   }
 
   return (

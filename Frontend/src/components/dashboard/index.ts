@@ -1,4 +1,3 @@
-export { default as DashboardHeader } from './DashboardHeader'
 export { default as ProjectForm } from './ProjectForm'
 export { default as ProjectList } from './ProjectList'
 export { default as DashboardFiltersBar } from './DashboardFiltersBar'

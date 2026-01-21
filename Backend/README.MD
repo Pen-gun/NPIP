@@ -1,53 +1,85 @@
-# NPIP Backend (MVP)
+# NPIP Backend
 
-Simple Express service for the Nepal Public Figure Intelligence Platform (NPIP).
+Express API and ingestion worker for NPIP. It owns authentication, project setup, data ingestion,
+alerting, and reporting.
 
-## Setup
+## Responsibilities
 
-1. `cp ai.env.example ai.env`
-2. Fill `GNEWS_API_KEY` (optional but recommended).
-3. `npm install`
-4. `npm run dev`
+- REST API for figures, projects, mentions, alerts, and reports
+- Scheduled ingestion from connectors (news + social)
+- Data enrichment (sentiment, language, reach, dedupe)
+- Realtime notifications via Socket.IO
+- PDF report generation
 
-Backend runs on `http://localhost:8000` by default.
+## Local Development
 
-## Configuration
-
-- `GNEWS_API_KEY`: optional, enables verified news headlines
-- `NEWS_LIMIT`: optional, default 5
-- `WIKI_LIMIT`: optional, default 5
-
-## Endpoints
-
-`GET /health`
-
-`GET /api/v1/figures/search?query=KP%20Oli`
-
-Response:
-
-```json
-{
-  "query": "KP Oli",
-  "person": {
-    "name": "K. P. Sharma Oli",
-    "description": "Prime Minister of Nepal",
-    "wikipediaUrl": "https://en.wikipedia.org/wiki/K._P._Sharma_Oli",
-    "thumbnail": "https://upload.wikimedia.org/...",
-    "extract": "Khadga Prasad Sharma Oli ...",
-    "pageId": 12345
-  },
-  "recentActivities": [
-    {
-      "title": "Headline...",
-      "publishedAt": "2025-01-01T00:00:00Z",
-      "source": "Source name",
-      "url": "https://..."
-    }
-  ],
-  "news": [],
-  "metadata": {
-    "newsProvider": "gnews",
-    "warning": null
-  }
-}
+```bash
+cp ai.env.example ai.env
+npm install
+npm run dev
 ```
+
+API: http://localhost:8000
+
+## Environment Variables
+
+Required:
+- `MONGODB_URL`
+- `ACCESS_TOKEN_SECRET`
+- `REFRESH_TOKEN_SECRET`
+
+Common:
+- `PORT` (default 8000)
+- `FRONTEND_URL` (for CORS and Socket.IO)
+
+Optional integrations:
+- `GNEWS_API_KEY`
+- `YOUTUBE_API_KEY`
+- `TWITTER_BEARER_TOKEN`
+- `META_ACCESS_TOKEN`
+- `ALERT_EMAIL_ENABLED` + `SMTP_*`
+
+Tuning:
+- `WIKI_LIMIT`, `NEWS_LIMIT`, `YOUTUBE_LIMIT`, `CACHE_TTL_MS`
+
+## API Surface (Key Routes)
+
+- Health: `GET /health`
+- Figures: `GET /api/v1/figures/identity|news|videos|search`
+- Auth: `POST /api/v1/auth/*`
+- Projects: `GET|POST|PATCH /api/v1/projects`
+- Mentions: `GET /api/v1/mentions`
+- Alerts: `GET /api/v1/alerts`
+- Reports: `GET /api/v1/reports/:id` (PDF)
+- Stripe webhook: `POST /api/v1/stripe/webhook`
+
+## Ingestion Flow (Summary)
+
+1) Scheduler selects active projects that are due to run
+2) Each enabled connector fetches raw mentions
+3) Mentions are filtered by keyword and boolean query
+4) Mentions are enriched and deduped before insertion
+5) Usage is tracked and alerts are emitted (including spikes)
+
+## Realtime Events
+
+Socket rooms:
+- `user:{userId}`
+- `project:{projectId}`
+
+Events:
+- `alert` (new alert payloads)
+
+## Data Model (High Level)
+
+- `User` (auth + plan)
+- `Project` (keywords, sources, schedule, geo focus)
+- `Mention` (source, text, engagement, sentiment, reach)
+- `Alert` (type, message, payload)
+- `Usage` (monthly counts)
+- `AuditLog` (connector errors)
+
+## Scripts
+
+- `npm run dev` runs the API with nodemon
+- `npm test` placeholder

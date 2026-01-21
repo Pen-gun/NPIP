@@ -1,29 +1,33 @@
 # Nepal Public Figure Intelligence Platform (NPIP)
 
-NPIP is a public-figure intelligence console for Nepal. Search a person and get verified identity,
-deduplicated timelines, trusted news, interviews, and quick signals.
+NPIP is a public-figure intelligence console focused on Nepal. It collects public signals, normalizes
+mentions, and presents dashboards with identity, news, sentiment, and alerts.
 
-## What This Does Today
+## What It Does
 
-- Identity confirmation via Wikipedia (with disambiguation support)
-- Multi-source news aggregation (GNews + RSS)
-- Timeline deduplication + relevance filtering
-- Recent activity highlights
-- YouTube interviews/speeches
-- Location signals from the last 24 hours (heuristic from headlines)
-- Progressive loading: identity first, then news/videos
+- Confirms identity using Wikipedia with disambiguation handling
+- Aggregates news and social mentions across multiple connectors
+- Deduplicates and enriches mentions with sentiment, language, reach
+- Streams alerts and live updates via WebSocket
+- Generates PDF reports for projects
+
+## Architecture (High Level)
+
+- Frontend (React + Vite) consumes the API and subscribes to Socket.IO
+- Backend (Node + Express) exposes REST endpoints and runs a scheduler
+- MongoDB stores users, projects, mentions, alerts, and usage
 
 ## Tech Stack
 
-- Backend: Node.js + Express
-- Frontend: React + Vite + React Query
-- Data: Wikipedia REST API, GNews API, RSS feeds, YouTube Data API
+- Backend: Node.js, Express, MongoDB (Mongoose), Socket.IO
+- Frontend: React, Vite, TypeScript, React Query, Tailwind, Chart.js
+- External data: Wikipedia REST API, GNews, RSS, YouTube, social connectors
 
 ## Quick Start
 
 ```bash
 # Backend
-cd aiMicroService
+cd Backend
 cp ai.env.example ai.env
 npm install
 npm run dev
@@ -34,95 +38,42 @@ npm install
 npm run dev
 ```
 
-Frontend: `http://localhost:5173`  
-Backend: `http://localhost:8000`
+Frontend: http://localhost:5173
+Backend: http://localhost:8000
 
 ## Configuration
 
-Set API keys in `aiMicroService/ai.env`:
+Backend environment variables are in `Backend/ai.env`.
+Frontend environment variables are in `Frontend/.env`.
 
-- `GNEWS_API_KEY` (optional but recommended)
-- `YOUTUBE_API_KEY` (optional)
-- `CACHE_TTL_MS` (default 600000)
+## Data Flow (Summary)
 
-## API Overview
+1) User creates a project with keywords and sources
+2) Scheduler runs connectors and pulls mentions on a cadence
+3) Mentions are enriched (sentiment/lang/reach) and stored
+4) Alerts are emitted for spikes and new mentions
+5) Frontend fetches metrics/mentions and listens for realtime updates
 
-Identity first, then load sections progressively:
-
-- `GET /api/v1/figures/identity?query=KP%20Oli`
-- `GET /api/v1/figures/news?name=K.%20P.%20Sharma%20Oli&query=KP%20Oli&aliases=K.%20P.%20Sharma%20Oli`
-- `GET /api/v1/figures/videos?name=K.%20P.%20Sharma%20Oli`
-
-Legacy combined endpoint (still supported):
-
-- `GET /api/v1/figures/search?query=KP%20Oli`
-
-## Response Shapes (Short)
-
-Identity:
-
-```json
-{
-  "query": "KP Oli",
-  "person": {
-    "name": "K. P. Sharma Oli",
-    "description": "Prime Minister of Nepal",
-    "wikipediaUrl": "https://en.wikipedia.org/wiki/K._P._Sharma_Oli",
-    "thumbnail": "https://upload.wikimedia.org/...",
-    "extract": "Khadga Prasad Sharma Oli ...",
-    "pageId": 12345,
-    "aliases": ["K. P. Sharma Oli"]
-  },
-  "candidates": [],
-  "isDisambiguation": false
-}
-```
-
-News:
-
-```json
-{
-  "query": "KP Oli",
-  "name": "K. P. Sharma Oli",
-  "recentActivities": [],
-  "recentLocations": [],
-  "news": [],
-  "metadata": { "newsProvider": "gnews+rss", "warning": null }
-}
-```
-
-Videos:
-
-```json
-{
-  "name": "K. P. Sharma Oli",
-  "videos": [],
-  "metadata": { "warning": null }
-}
-```
-
-## Folder Structure
+## Repo Layout
 
 ```
 NPIP/
-  aiMicroService/     # Express API
-    controllers/
-    routes/
-    services/
-  Frontend/           # React UI
-    src/
+  Backend/      # Express API, scheduler, connectors, Mongo models
+  Frontend/     # React UI
 ```
 
-## Roadmap
+## API At A Glance
 
-- Better entity matching (aliases + exact phrase match)
-- Named entity extraction for locations + events
-- Source confidence scoring
-- Scheduled background refreshes + storage
-- Role-based dashboards and alerts
+- Health: `GET /health`
+- Figures: `GET /api/v1/figures/identity|news|videos|search`
+- Auth: `POST /api/v1/auth/*`
+- Projects: `GET|POST|PATCH /api/v1/projects`
+- Mentions: `GET /api/v1/mentions`
+- Alerts: `GET /api/v1/alerts`
+- Reports: `GET /api/v1/reports/:id`
 
-## Ethics & Compliance
+## Notes
 
-- Public data only
-- Source transparency on every output
-- No private or leaked information
+- Connectors are opt-in per project and can be toggled in the project settings.
+- Email alerts require SMTP configuration and `ALERT_EMAIL_ENABLED=true`.
+- Stripe webhook endpoint is exposed at `/api/v1/stripe/webhook` if enabled.

@@ -27,7 +27,6 @@
     "pdfkit": "^0.15.0",
     "selenium-webdriver": "^4.25.0",
     "socket.io": "^4.8.1",
-    "stripe": "^17.0.0",
     "twitter-api-v2": "^1.17.1",
     "youtube-transcript": "^1.2.1"
   },

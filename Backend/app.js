@@ -36,7 +36,6 @@ import projectRoutes from './routes/project.route.js';
 import mentionRoutes from './routes/mention.route.js';
 import alertRoutes from './routes/alert.route.js';
 import reportRoutes from './routes/report.route.js';
-import stripeRoutes from './routes/stripe.route.js';
 
 // define routes
 app.get('/health', (req, res) => {
@@ -48,7 +47,6 @@ app.use('/api/v1/projects', projectRoutes);
 app.use('/api/v1/mentions', mentionRoutes);
 app.use('/api/v1/alerts', alertRoutes);
 app.use('/api/v1/reports', reportRoutes);
-app.use('/api/v1/stripe', stripeRoutes);
 
 // Global error handling middleware
 app.use((err, req, res, next) => {

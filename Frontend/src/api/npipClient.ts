@@ -1,8 +1,9 @@
 import axios, { isAxiosError } from 'axios'
 
 const npipClient = axios.create({
-  baseURL: '/api',
+  baseURL: import.meta.env.VITE_API_URL || '/api/v1',
   timeout: 15000,
+  withCredentials: true,
 })
 
 npipClient.interceptors.response.use(

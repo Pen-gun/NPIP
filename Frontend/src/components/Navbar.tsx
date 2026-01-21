@@ -16,6 +16,7 @@ interface NavbarProps {
 }
 
 const DEFAULT_LINKS: NavLink[] = [
+  { href: '/search', label: 'Search' },
   { href: '#features', label: 'Features', isExternal: true },
   { href: '#sources', label: 'Sources', isExternal: true },
   { href: '#workflow', label: 'Workflow', isExternal: true },

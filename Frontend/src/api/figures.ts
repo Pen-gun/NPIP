@@ -22,7 +22,7 @@ export const fetchNews = async (
   params: FetchNewsParams,
   signal?: AbortSignal,
 ): Promise<FigureNewsResponse> => {
-  const response = await npipClient.get<FigureNewsResponse>('/v1/figures/news', {
+  const response = await npipClient.get<FigureNewsResponse>('/figures/news', {
     params: {
       name: params.name,
       query: params.query,

@@ -75,10 +75,10 @@ export default function LandingPage() {
                 <PrimaryButton label='Start Monitoring' />
               </Link>
               <Link
-                to='/app'
+                to='/search'
                 className='rounded-full border border-(--border) px-5 py-2 text-xs font-semibold uppercase tracking-[0.24em] transition hover:bg-(--surface-muted)'
               >
-                View dashboard
+                Quick Search
               </Link>
             </div>
           </div>

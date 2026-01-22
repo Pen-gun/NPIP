@@ -1,4 +1,4 @@
-# Nepal Public Figure Intelligence Platform (NPIP)
+9# Nepal Public Figure Intelligence Platform (NPIP)
 
 NPIP is a public-figure intelligence console focused on Nepal. It collects public signals, normalizes
 mentions, and presents dashboards with identity, news, sentiment, and alerts.
@@ -77,3 +77,4 @@ NPIP/
 - Connectors are opt-in per project and can be toggled in the project settings.
 - Email alerts require SMTP configuration and `ALERT_EMAIL_ENABLED=true`.
 - Stripe webhook endpoint is exposed at `/api/v1/stripe/webhook` if enabled.
+-still in complete ongoing project

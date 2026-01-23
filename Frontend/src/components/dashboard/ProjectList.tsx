@@ -36,18 +36,6 @@ export default function ProjectList({
 }: ProjectListProps) {
   const [now, setNow] = useState(() => Date.now())
   const [reportScope, setReportScope] = useState<ReportScope>('summary')
-  const [pausedSnapshot, setPausedSnapshot] = useState<{
-    projectId: string;
-    timeLeftMs: number | null;
-    lastRunAtMs: number | null;
-  } | null>(null)
-
-  useEffect(() => {
-    const interval = window.setInterval(() => {
-      setNow(Date.now())
-    }, 1000)
-    return () => window.clearInterval(interval)
-  }, [])
 
   const formatCountdown = (diffMs: number) => {
     const totalSeconds = Math.max(0, Math.floor(diffMs / 1000))
@@ -81,21 +69,27 @@ export default function ProjectList({
   const isOverdue = isPaused && typeof timeLeftMs === 'number' && timeLeftMs <= 0
 
   useEffect(() => {
-    if (!activeProject) {
-      setPausedSnapshot(null)
-      return
-    }
-    if (activeProject.status === 'paused') {
-      setPausedSnapshot((prev) => {
-        if (prev?.projectId === activeProject._id && prev.lastRunAtMs === lastRunAtMs) return prev
-        return { projectId: activeProject._id, timeLeftMs, lastRunAtMs }
-      })
-      return
-    }
-    setPausedSnapshot(null)
-  }, [activeProject, lastRunAtMs, timeLeftMs])
+    if (isPaused) return
+    const interval = window.setInterval(() => {
+      setNow(Date.now())
+    }, 1000)
+    return () => window.clearInterval(interval)
+  }, [isPaused])
 
-  const displayTimeLeftMs = isPaused ? pausedSnapshot?.timeLeftMs ?? null : timeLeftMs
+  const displayTimeLeftMs = timeLeftMs
+
+  const handleToggleStatus = () => {
+    if (!activeProject) return
+    if (activeProject.status === 'paused') {
+      setNow(Date.now())
+    }
+    onToggleStatus()
+  }
+
+  const handleRunNow = () => {
+    setNow(Date.now())
+    onRunIngestion()
+  }
 
   const nextRunLabel = useMemo(() => {
     if (!activeProject) return ''
@@ -139,6 +133,7 @@ export default function ProjectList({
             <span className='w-full sm:w-auto'>Keywords: {activeProject.keywords.join(', ') || 'None'}</span>
             <span>Schedule: {activeProject.scheduleMinutes} min</span>
             <span>{nextRunLabel}</span>
+            <span>Timer: {isPaused ? 'paused' : 'running'}</span>
             <span className='uppercase tracking-[0.12em] text-xs'>
               Status: {activeProject.status || 'active'}
             </span>
@@ -149,7 +144,7 @@ export default function ProjectList({
           <div className='flex flex-wrap gap-2 pt-2'>
             <button
               className={`${ACTION_BTN_CLASS} disabled:cursor-not-allowed disabled:opacity-60`}
-              onClick={onRunIngestion}
+              onClick={handleRunNow}
               type='button'
               disabled={!!actionLoading || (isPaused && !isOverdue)}
             >
@@ -158,7 +153,7 @@ export default function ProjectList({
             </button>
             <button
               className={`${ACTION_BTN_CLASS} disabled:cursor-not-allowed disabled:opacity-60`}
-              onClick={onToggleStatus}
+              onClick={handleToggleStatus}
               type='button'
               disabled={!!actionLoading || isOverdue}
             >

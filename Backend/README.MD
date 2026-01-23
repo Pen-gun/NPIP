@@ -51,7 +51,6 @@ Tuning:
 - Mentions: `GET /api/v1/mentions`
 - Alerts: `GET /api/v1/alerts`
 - Reports: `GET /api/v1/reports/:id` (PDF)
-- Stripe webhook: `POST /api/v1/stripe/webhook`
 
 ## Ingestion Flow (Summary)
 

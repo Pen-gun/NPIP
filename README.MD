@@ -76,5 +76,3 @@ NPIP/
 
 - Connectors are opt-in per project and can be toggled in the project settings.
 - Email alerts require SMTP configuration and `ALERT_EMAIL_ENABLED=true`.
-- Stripe webhook endpoint is exposed at `/api/v1/stripe/webhook` if enabled.
--still in complete ongoing project

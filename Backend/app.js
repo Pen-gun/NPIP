@@ -17,7 +17,6 @@ const ALLOWED_ORIGIN = process.env.FRONTEND_URL || 'http://localhost:5173';
 const BODY_SIZE_LIMIT = '50mb';
 const RATE_LIMIT_WINDOW_MS = 60_000;
 const RATE_LIMIT_MAX_REQUESTS = 120;
-const STRIPE_WEBHOOK_PATH = '/api/v1/stripe/webhook';
 
 const corsOptions = {
     origin: ALLOWED_ORIGIN,
@@ -27,13 +26,8 @@ const corsOptions = {
 };
 
 app.use(cors(corsOptions));
-app.use(STRIPE_WEBHOOK_PATH, express.raw({ type: 'application/json' }));
-
 const jsonParser = express.json({ limit: BODY_SIZE_LIMIT });
-app.use((req, res, next) => {
-    if (req.originalUrl === STRIPE_WEBHOOK_PATH) return next();
-    return jsonParser(req, res, next);
-});
+app.use(jsonParser);
 
 app.use(express.urlencoded({ extended: true, limit: BODY_SIZE_LIMIT }));
 app.use(cookieParser);

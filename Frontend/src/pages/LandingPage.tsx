@@ -59,7 +59,7 @@ export default function LandingPage() {
   return (
     <div className='landing-page mx-auto flex w-full max-w-6xl flex-col gap-10 px-4 py-6 sm:gap-14 sm:px-6 sm:py-10'>
         <section
-          className='grid items-center gap-8 rounded-[28px] border border-(--border) p-4 lg:grid-cols-[1.2fr_0.8fr] lg:gap-10 sm:p-6'
+          className='grid items-center gap-8 lg:grid-cols-[1.2fr_0.8fr] lg:gap-10'
           style={withDelay(80)}
         >
           <div className='text-center lg:text-left'>
@@ -98,10 +98,7 @@ export default function LandingPage() {
             </div>
           </div>
 
-          <div
-            className='landing-hero-card landing-reveal rounded-[22px] border border-(--border) p-4 sm:p-5'
-            style={withDelay(240)}
-          >
+          <div className='landing-hero-card landing-reveal' style={withDelay(240)}>
             <div className='grid gap-4 text-left'>
               <div className='landing-reveal-soft' style={withDelay(320)}>
                 <p className='text-xs font-semibold uppercase tracking-[0.28em] text-(--brand-accent)'>
@@ -136,14 +133,11 @@ export default function LandingPage() {
           </div>
         </section>
 
-        <section
-          id='features'
-          className='grid gap-4 rounded-[28px] border border-(--border) p-4 sm:grid-cols-2 sm:gap-6 sm:p-6 lg:grid-cols-3'
-        >
+        <section id='features' className='grid gap-4 sm:grid-cols-2 sm:gap-6 lg:grid-cols-3'>
           {HIGHLIGHTS.map((item, index) => (
             <div
               key={item.title}
-              className='landing-reveal rounded-2xl border border-(--border) p-4'
+              className='landing-reveal rounded-2xl bg-(--surface-muted)/80 p-4 shadow-[0_12px_30px_rgba(15,23,42,0.08)] backdrop-blur-sm'
               style={withDelay(120 + index * 90)}
             >
               <h3 className='text-base font-semibold sm:text-lg'>{item.title}</h3>
@@ -154,11 +148,11 @@ export default function LandingPage() {
           ))}
         </section>
 
-        <section
-          id='sources'
-          className='grid gap-4 rounded-[28px] border border-(--border) p-4 sm:gap-6 sm:p-6 lg:grid-cols-[0.7fr_1.3fr]'
-        >
-          <div className='landing-reveal rounded-2xl border border-(--border) p-4' style={withDelay(120)}>
+        <section id='sources' className='grid gap-4 sm:gap-6 lg:grid-cols-[0.7fr_1.3fr]'>
+          <div
+            className='landing-reveal rounded-2xl bg-(--surface-muted)/80 p-4 shadow-[0_12px_30px_rgba(15,23,42,0.08)] backdrop-blur-sm'
+            style={withDelay(120)}
+          >
             <h3 className='text-base font-semibold sm:text-lg'>Source reality check</h3>
             <ul className='mt-3 space-y-2 text-xs text-(--text-muted) sm:mt-4 sm:space-y-3 sm:text-sm'>
               {CONSTRAINTS.map((item) => (
@@ -170,7 +164,7 @@ export default function LandingPage() {
             {DATA_SOURCES.map((item, index) => (
               <div
                 key={item}
-                className='landing-reveal rounded-2xl border border-(--border) px-3 py-2 text-xs font-semibold sm:text-sm'
+                className='landing-reveal rounded-2xl bg-(--surface-muted)/80 px-3 py-2 text-xs font-semibold shadow-[0_10px_24px_rgba(15,23,42,0.08)] backdrop-blur-sm sm:text-sm'
                 style={withDelay(180 + index * 60)}
               >
                 {item}
@@ -179,16 +173,12 @@ export default function LandingPage() {
           </div>
         </section>
 
-        <section
-          id='workflow'
-          className='landing-reveal rounded-[28px] border border-(--border) p-4 sm:p-6'
-          style={withDelay(120)}
-        >
+        <section id='workflow' className='landing-reveal' style={withDelay(120)}>
           <div className='grid gap-4 sm:gap-6 lg:grid-cols-3'>
             {WORKFLOW_STEPS.map((step, index) => (
               <div
                 key={step.title}
-                className='landing-reveal-soft rounded-2xl border border-(--border) p-4'
+                className='landing-reveal-soft rounded-2xl bg-(--surface-muted)/80 p-4 shadow-[0_12px_30px_rgba(15,23,42,0.08)] backdrop-blur-sm'
                 style={withDelay(200 + index * 90)}
               >
                 <p className='text-xs font-semibold uppercase tracking-[0.28em] text-(--brand-accent)'>

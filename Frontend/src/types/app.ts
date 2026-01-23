@@ -23,6 +23,7 @@ export type Mention = {
   source: string
   title: string
   text: string
+  author?: string
   url?: string | null
   publishedAt?: string | Date | null
   sentiment?: { label: string; confidence: number }

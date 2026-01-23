@@ -2,6 +2,15 @@ import { useEffect, useMemo, useState } from 'react'
 import type { FormEvent } from 'react'
 import { io, Socket } from 'socket.io-client'
 import {
+  Bell,
+  ChevronDown,
+  HelpCircle,
+  Plus,
+  Search,
+  SlidersHorizontal,
+  Sparkles,
+} from 'lucide-react'
+import {
   createProject,
   deleteProject,
   fetchProjectHealth,
@@ -19,7 +28,6 @@ import type { AlertItem, ConnectorHealth, Mention, Project, ProjectMetrics } fro
 import {
   ProjectForm,
   ProjectList,
-  DashboardFiltersBar,
   MetricsCharts,
   MentionsList,
   AlertsPanel,
@@ -61,6 +69,81 @@ const parseKeywords = (value: string): string[] =>
     .map((item) => item.trim())
     .filter(Boolean)
 
+const SOURCE_FILTERS = Object.freeze([
+  { id: 'facebook', label: 'Facebook' },
+  { id: 'instagram', label: 'Instagram' },
+  { id: 'x', label: 'X (Twitter)' },
+  { id: 'tiktok', label: 'TikTok' },
+  { id: 'videos', label: 'Videos' },
+  { id: 'news', label: 'News' },
+  { id: 'podcasts', label: 'Podcasts' },
+  { id: 'other', label: 'Other socials' },
+  { id: 'blogs', label: 'Blogs' },
+  { id: 'web', label: 'Web' },
+])
+
+const REPORT_NAV_ITEMS = Object.freeze([
+  'Email reports',
+  'PDF report',
+  'Excel report',
+  'Infographic',
+])
+
+const ANALYTICS_NAV_ITEMS = Object.freeze([
+  'Geo analysis',
+  'Influencer analysis',
+  'Emotion analysis',
+])
+
+const FILTER_CHIPS = Object.freeze([
+  { id: 'x', label: 'X (Twitter)' },
+  { id: 'tiktok', label: 'TikTok' },
+])
+
+const SOURCE_MAP: Record<string, string> = Object.freeze({
+  facebook: 'facebook',
+  instagram: 'instagram',
+  x: 'x',
+  twitter: 'x',
+  tiktok: 'tiktok',
+  youtube: 'videos',
+  videos: 'videos',
+  local_news: 'news',
+  news: 'news',
+  reddit: 'other',
+  podcasts: 'podcasts',
+  blogs: 'blogs',
+  web: 'web',
+})
+
+const normalizeSentiment = (value?: string) => {
+  const normalized = value?.toLowerCase() || ''
+  if (['5 stars', '4 stars', 'positive'].includes(normalized)) return 'positive'
+  if (['3 stars', 'neutral'].includes(normalized)) return 'neutral'
+  if (['2 stars', '1 star', 'negative'].includes(normalized)) return 'negative'
+  return ''
+}
+
+const normalizeSource = (value?: string) => {
+  const normalized = value?.toLowerCase().trim() || ''
+  return SOURCE_MAP[normalized] || ''
+}
+
+const formatDateInput = (value: Date) => value.toISOString().slice(0, 10)
+
+const getDateRange = (range: string) => {
+  const to = new Date()
+  const from = new Date(to)
+  if (range === 'last_7_days') {
+    from.setDate(to.getDate() - 7)
+  } else if (range === 'last_30_days') {
+    from.setDate(to.getDate() - 30)
+  } else if (range === 'last_90_days') {
+    from.setDate(to.getDate() - 90)
+  }
+  return { from: formatDateInput(from), to: formatDateInput(to) }
+}
+
 export default function DashboardPage() {
   const { user } = useAuth()
   const [projects, setProjects] = useState<Project[]>([])
@@ -79,6 +162,16 @@ export default function DashboardPage() {
     ...INITIAL_PROJECT_FORM,
     sources: { ...INITIAL_PROJECT_FORM.sources },
   })
+  const [mentionSearch, setMentionSearch] = useState('')
+  const [chartView, setChartView] = useState<'mentions' | 'sentiment'>('mentions')
+  const [chartGranularity, setChartGranularity] = useState<'days' | 'weeks' | 'months'>('days')
+  const [dateRange, setDateRange] = useState('last_30_days')
+  const [sourceFilters, setSourceFilters] = useState<Record<string, boolean>>({})
+  const [connectedSources, setConnectedSources] = useState<Record<string, boolean>>({})
+  const [sentimentFilters, setSentimentFilters] = useState<Record<string, boolean>>({})
+  const [influenceScore, setInfluenceScore] = useState(6)
+  const [continentFilter, setContinentFilter] = useState('')
+  const [countryFilter, setCountryFilter] = useState('')
 
   useEffect(() => {
     if (!user) return
@@ -276,6 +369,59 @@ export default function DashboardPage() {
 
   const dismissError = () => setError(null)
 
+  const handleDateRangeChange = (value: string) => {
+    setDateRange(value)
+    const range = getDateRange(value)
+    setFilters((prev) => ({ ...prev, from: range.from, to: range.to }))
+  }
+
+  const handleSourceFilterToggle = (sourceId: string) => {
+    setSourceFilters((prev) => ({ ...prev, [sourceId]: !prev[sourceId] }))
+  }
+
+  const handleSentimentToggle = (key: 'negative' | 'neutral' | 'positive') => {
+    setSentimentFilters((prev) => ({ ...prev, [key]: !prev[key] }))
+  }
+
+  const handleConnectSource = (sourceId: string) => {
+    setConnectedSources((prev) => ({ ...prev, [sourceId]: !prev[sourceId] }))
+  }
+
+  const mentionsBySource = useMemo(() => {
+    const counts: Record<string, number> = {}
+    mentions.forEach((mention) => {
+      const sourceId = normalizeSource(mention.source)
+      if (!sourceId) return
+      counts[sourceId] = (counts[sourceId] || 0) + 1
+    })
+    return counts
+  }, [mentions])
+
+  const filteredMentions = useMemo(() => {
+    const query = mentionSearch.trim().toLowerCase()
+    const activeSources = Object.entries(sourceFilters).filter(([, enabled]) => enabled).map(([key]) => key)
+    const activeSentiments = Object.entries(sentimentFilters).filter(([, enabled]) => enabled).map(([key]) => key)
+
+    return mentions.filter((mention) => {
+      if (query) {
+        const haystack = `${mention.title || ''} ${mention.text || ''} ${mention.author || ''} ${mention.url || ''}`.toLowerCase()
+        if (!haystack.includes(query)) return false
+      }
+
+      if (activeSources.length) {
+        const sourceId = normalizeSource(mention.source)
+        if (!sourceId || !activeSources.includes(sourceId)) return false
+      }
+
+      if (activeSentiments.length) {
+        const sentiment = normalizeSentiment(mention.sentiment?.label)
+        if (!sentiment || !activeSentiments.includes(sentiment)) return false
+      }
+
+      return true
+    })
+  }, [mentionSearch, mentions, sentimentFilters, sourceFilters])
+
   return (
     <>
       {error && (
@@ -296,14 +442,53 @@ export default function DashboardPage() {
           Real-time updates disconnected. Reconnecting...
         </div>
       )}
-      <div className='mx-auto flex w-full max-w-7xl flex-col gap-6 px-4 py-6 sm:gap-8 sm:px-6 sm:py-8 lg:gap-10 lg:px-10 lg:py-10'>
-        <section className='landing-reveal grid gap-4 sm:gap-6 lg:grid-cols-[1.1fr_0.9fr]'>
-          <ProjectForm
-            formState={projectForm}
-            onFormChange={setProjectForm}
-            onSubmit={handleProjectSubmit}
-            submitting={actionLoading === 'create'}
-          />
+      <div className='bg-[radial-gradient(circle_at_top,_rgba(56,189,248,0.08),_transparent_55%)]'>
+        <div className='mx-auto flex w-full max-w-[1400px] flex-col gap-4 px-4 py-4 sm:px-6 lg:px-8'>
+          <div className='rounded-2xl border border-(--border) bg-[#1d4ed8] px-4 py-3 text-xs font-semibold text-white shadow-lg'>
+            Trial view with limited data. Upgrade to unlock full public mentions. <button className='ml-2 underline'>Upgrade</button>
+          </div>
+        </div>
+      </div>
+      <div className='mx-auto w-full max-w-[1400px] px-4 py-6 sm:px-6 lg:px-8'>
+        <div className='grid gap-6 lg:grid-cols-[260px_minmax(0,1fr)_320px]'>
+          <aside className='space-y-4'>
+            <div className='rounded-[20px] border border-(--border) bg-(--surface-base) p-4 shadow-(--shadow)'>
+              <div className='flex items-center justify-between'>
+                <h3 className='text-sm font-semibold'>Projects</h3>
+                <button className='rounded-full border border-(--border) p-1.5 text-(--text-muted) hover:text-(--text-primary)'>
+                  <Plus className='h-4 w-4' />
+                </button>
+              </div>
+              <div className='mt-3 space-y-2'>
+                {projects.map((project) => (
+                  <button
+                    key={project._id}
+                    onClick={() => setActiveProjectId(project._id)}
+                    className={`flex w-full items-center justify-between rounded-xl px-3 py-2 text-left text-xs font-semibold transition ${
+                      activeProjectId === project._id
+                        ? 'bg-(--brand-primary) text-(--text-inverse)'
+                        : 'border border-(--border) text-(--text-primary) hover:bg-(--surface-muted)'
+                    }`}
+                  >
+                    <span>{project.name}</span>
+                    <span className='text-[10px] text-(--text-muted)'>
+                      {filteredMentions.length} new
+                    </span>
+                  </button>
+                ))}
+                {!projects.length && (
+                  <p className='text-xs text-(--text-muted)'>No projects yet.</p>
+                )}
+              </div>
+            </div>
+
+            <ProjectForm
+              formState={projectForm}
+              onFormChange={setProjectForm}
+              onSubmit={handleProjectSubmit}
+              submitting={actionLoading === 'create'}
+            />
+
             <ProjectList
               projects={projects}
               activeProjectId={activeProjectId}
@@ -317,35 +502,312 @@ export default function DashboardPage() {
               onToggleStatus={handleToggleProjectStatus}
               onDeleteProject={handleDeleteProject}
             />
-        </section>
 
-        <section className='landing-reveal grid gap-4 sm:gap-6 xl:grid-cols-[2fr_1fr]'>
-          <div className='space-y-4 sm:space-y-6'>
-            <div className='landing-reveal-soft rounded-[20px] border border-(--border) bg-(--surface-base) p-4 shadow-(--shadow) sm:rounded-[28px] sm:p-6'>
-              <DashboardFiltersBar filters={filters} onFiltersChange={setFilters} />
+            <div className='rounded-[20px] border border-(--border) bg-(--surface-base) p-4 text-xs shadow-(--shadow)'>
+              <p className='text-[11px] font-semibold uppercase tracking-[0.2em] text-(--text-muted)'>Mentions</p>
+              <div className='mt-3 space-y-2'>
+                {['Mentions', 'Analysis', 'Comparison', 'Influencers & Sources'].map((label) => (
+                  <button
+                    key={label}
+                    className='flex w-full items-center justify-between rounded-lg px-2 py-1.5 text-left font-semibold text-(--text-primary) hover:bg-(--surface-muted)'
+                  >
+                    <span>{label}</span>
+                    {label === 'Mentions' && (
+                      <span className='rounded-full border border-(--border) px-2 py-0.5 text-[10px] text-(--text-muted)'>
+                        {filteredMentions.length}
+                      </span>
+                    )}
+                  </button>
+                ))}
+              </div>
+              <p className='mt-5 text-[11px] font-semibold uppercase tracking-[0.2em] text-(--text-muted)'>Reports</p>
+              <div className='mt-2 space-y-1'>
+                {REPORT_NAV_ITEMS.map((item) => (
+                  <button
+                    key={item}
+                    className='flex w-full items-center justify-between rounded-lg px-2 py-1.5 text-left font-semibold text-(--text-primary) hover:bg-(--surface-muted)'
+                  >
+                    {item}
+                  </button>
+                ))}
+              </div>
+              <p className='mt-5 text-[11px] font-semibold uppercase tracking-[0.2em] text-(--text-muted)'>Advanced analytics</p>
+              <div className='mt-2 space-y-1'>
+                {ANALYTICS_NAV_ITEMS.map((item) => (
+                  <button
+                    key={item}
+                    className='flex w-full items-center justify-between rounded-lg px-2 py-1.5 text-left font-semibold text-(--text-primary) hover:bg-(--surface-muted)'
+                  >
+                    {item}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className='rounded-[20px] border border-(--border) bg-(--surface-base) p-4 text-xs shadow-(--shadow)'>
+              <div className='flex items-center gap-2 text-sm font-semibold'>
+                <Sparkles className='h-4 w-4 text-(--brand-accent)' />
+                Upcoming webinar
+              </div>
+              <p className='mt-2 text-(--text-muted)'>Get a social listening certificate with NPIP.</p>
+              <p className='mt-2 text-(--text-muted)'>Date: Wednesday, Jan 28, 2026</p>
+              <button className='mt-3 inline-flex items-center gap-2 rounded-full border border-(--border) px-3 py-1.5 text-xs font-semibold'>
+                Sign up
+              </button>
+            </div>
+          </aside>
+
+          <main className='space-y-6'>
+            <div className='flex flex-wrap items-center justify-between gap-3 rounded-[20px] border border-(--border) bg-(--surface-base) p-4 shadow-(--shadow)'>
+              <div className='flex flex-1 items-center gap-2 rounded-full border border-(--border) bg-(--surface-muted) px-3 py-2 text-sm'>
+                <Search className='h-4 w-4 text-(--text-muted)' />
+                <input
+                  value={mentionSearch}
+                  onChange={(event) => setMentionSearch(event.target.value)}
+                  placeholder='Search through mentions, authors & domains...'
+                  className='w-full bg-transparent text-sm outline-none'
+                />
+              </div>
+              <div className='flex items-center gap-2 text-xs font-semibold'>
+                <button className='inline-flex items-center gap-2 rounded-full border border-(--border) px-3 py-2'>
+                  <SlidersHorizontal className='h-4 w-4' />
+                  Filters
+                </button>
+                <button className='rounded-full border border-(--border) px-4 py-2 text-xs font-semibold text-(--text-primary)'>
+                  Upgrade
+                </button>
+                <button className='rounded-full border border-(--border) p-2'>
+                  <HelpCircle className='h-4 w-4' />
+                </button>
+                <button className='rounded-full border border-(--border) p-2'>
+                  <Bell className='h-4 w-4' />
+                </button>
+              </div>
+            </div>
+
+            <div className='flex flex-wrap items-center gap-2 text-xs font-semibold text-(--text-muted)'>
+              {FILTER_CHIPS.map((chip) => (
+                <span
+                  key={chip.id}
+                  className='rounded-full border border-(--border) bg-(--surface-muted) px-3 py-1'
+                >
+                  {chip.label}
+                </span>
+              ))}
+              <button className='inline-flex items-center gap-1 text-(--brand-accent)'>
+                Clear filters
+              </button>
+              <button className='inline-flex items-center gap-1 text-(--brand-accent)'>
+                Save filters
+              </button>
+            </div>
+
+            <section className='rounded-[20px] border border-(--border) bg-(--surface-base) p-4 shadow-(--shadow) sm:p-6'>
+              <div className='flex flex-wrap items-center justify-between gap-4 text-xs font-semibold text-(--text-muted)'>
+                <div className='flex items-center gap-2'>
+                  <button
+                    type='button'
+                    onClick={() => setChartView('mentions')}
+                    className={`rounded-full border px-3 py-1 ${
+                      chartView === 'mentions'
+                        ? 'border-(--brand-accent) text-(--brand-accent)'
+                        : 'border-(--border) text-(--text-muted)'
+                    }`}
+                  >
+                    Mentions & Reach
+                  </button>
+                  <button
+                    type='button'
+                    onClick={() => setChartView('sentiment')}
+                    className={`rounded-full border px-3 py-1 ${
+                      chartView === 'sentiment'
+                        ? 'border-(--brand-accent) text-(--brand-accent)'
+                        : 'border-(--border) text-(--text-muted)'
+                    }`}
+                  >
+                    Sentiment
+                  </button>
+                </div>
+                <span>Click on the chart to filter by date</span>
+                <div className='flex items-center gap-2'>
+                  {(['days', 'weeks', 'months'] as const).map((item) => (
+                    <button
+                      key={item}
+                      type='button'
+                      onClick={() => setChartGranularity(item)}
+                      className={`rounded-full border px-3 py-1 ${
+                        chartGranularity === item
+                          ? 'border-(--brand-accent) text-(--brand-accent)'
+                          : 'border-(--border) text-(--text-muted)'
+                      }`}
+                    >
+                      {item.charAt(0).toUpperCase() + item.slice(1)}
+                    </button>
+                  ))}
+                </div>
+              </div>
               <MetricsCharts metrics={metrics} loading={loadingDashboard} />
-            </div>
-            <div className='landing-reveal-soft'>
-              <MentionsList mentions={mentions} loading={loadingDashboard} />
-            </div>
-          </div>
+            </section>
 
-          <aside className='space-y-4 sm:space-y-6'>
-            <div className='landing-reveal-soft'>
+            <div className='flex flex-wrap items-center justify-between gap-3 rounded-[20px] border border-(--border) bg-(--surface-base) px-4 py-3 text-xs font-semibold shadow-(--shadow)'>
+              <div className='flex items-center gap-2'>
+                <button className='rounded-full border border-(--border) px-3 py-1.5'>
+                  Recent first
+                  <ChevronDown className='ml-2 inline h-3 w-3' />
+                </button>
+                <button className='rounded-full border border-(--border) px-3 py-1.5 text-(--text-muted)'>
+                  Tags
+                </button>
+              </div>
+              <div className='flex items-center gap-2'>
+                {[1, 2, 3, 4, 5].map((page) => (
+                  <button
+                    key={page}
+                    className={`h-7 w-7 rounded-full border text-[11px] ${
+                      page === 1 ? 'border-(--brand-accent) text-(--brand-accent)' : 'border-(--border)'
+                    }`}
+                  >
+                    {page}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <MentionsList mentions={filteredMentions} loading={loadingDashboard} />
+          </main>
+
+          <aside className='space-y-4'>
+            <div className='rounded-[20px] border border-(--border) bg-(--surface-base) p-4 text-xs shadow-(--shadow)'>
+              <div className='flex items-center justify-between'>
+                <span className='font-semibold'>Last 30 days</span>
+                <button className='rounded-full border border-(--border) px-2 py-1 text-[10px]'>
+                  {dateRange === 'last_30_days' ? 'Last 30 days' : 'Custom'}
+                  <ChevronDown className='ml-1 inline h-3 w-3' />
+                </button>
+              </div>
+              <div className='mt-3 grid gap-2'>
+                <label className='text-[11px] text-(--text-muted)'>Date range</label>
+                <select
+                  value={dateRange}
+                  onChange={(event) => handleDateRangeChange(event.target.value)}
+                  className='rounded-xl border border-(--border) bg-(--surface-muted) px-3 py-2 text-xs font-semibold'
+                >
+                  <option value='last_7_days'>Last 7 days</option>
+                  <option value='last_30_days'>Last 30 days</option>
+                  <option value='last_90_days'>Last 90 days</option>
+                </select>
+              </div>
+            </div>
+
+            <div className='rounded-[20px] border border-(--border) bg-(--surface-base) p-4 text-xs shadow-(--shadow)'>
+              <div className='flex items-center justify-between'>
+                <span className='font-semibold'>Sources</span>
+                <button className='text-(--brand-accent)'>Show all (1287)</button>
+              </div>
+              <div className='mt-3 grid gap-3'>
+                {SOURCE_FILTERS.map((source) => (
+                  <label key={source.id} className='flex items-center justify-between gap-2'>
+                    <span className='flex items-center gap-2'>
+                      <input
+                        type='checkbox'
+                        checked={!!sourceFilters[source.id]}
+                        onChange={() => handleSourceFilterToggle(source.id)}
+                        className='h-4 w-4 rounded border-(--border)'
+                      />
+                    <span className='font-semibold'>{source.label}</span>
+                    <span className='text-[11px] text-(--text-muted)'>({mentionsBySource[source.id] || 0})</span>
+                    </span>
+                    <button
+                      type='button'
+                      onClick={() => handleConnectSource(source.id)}
+                      className={`rounded-full border px-2 py-1 text-[10px] font-semibold ${
+                        connectedSources[source.id]
+                          ? 'border-(--state-success) text-(--state-success)'
+                          : 'border-(--border) text-(--text-muted)'
+                      }`}
+                    >
+                      {connectedSources[source.id] ? 'Connected' : 'Connect'}
+                    </button>
+                  </label>
+                ))}
+              </div>
+            </div>
+
+            <div className='rounded-[20px] border border-(--border) bg-(--surface-base) p-4 text-xs shadow-(--shadow)'>
+              <span className='font-semibold'>Sentiment</span>
+              <div className='mt-3 flex flex-wrap gap-3'>
+                {(['negative', 'neutral', 'positive'] as const).map((item) => (
+                  <label key={item} className='flex items-center gap-2 font-semibold capitalize'>
+                    <input
+                      type='checkbox'
+                      checked={!!sentimentFilters[item]}
+                      onChange={() => handleSentimentToggle(item)}
+                      className='h-4 w-4 rounded border-(--border)'
+                    />
+                    {item}
+                  </label>
+                ))}
+              </div>
+            </div>
+
+            <div className='rounded-[20px] border border-(--border) bg-(--surface-base) p-4 text-xs shadow-(--shadow)'>
+              <span className='font-semibold'>Influence score</span>
+              <div className='mt-3'>
+                <input
+                  type='range'
+                  min={1}
+                  max={10}
+                  value={influenceScore}
+                  onChange={(event) => setInfluenceScore(Number(event.target.value))}
+                  className='w-full'
+                />
+                <div className='mt-1 flex items-center justify-between text-[10px] text-(--text-muted)'>
+                  <span>1</span>
+                  <span>10</span>
+                </div>
+              </div>
+            </div>
+
+            <div className='rounded-[20px] border border-(--border) bg-(--surface-base) p-4 text-xs shadow-(--shadow)'>
+              <div className='flex items-center justify-between'>
+                <span className='font-semibold'>Geolocation</span>
+                <button className='text-[11px] text-(--text-muted)'>Exclude countries</button>
+              </div>
+              <div className='mt-3 grid gap-2'>
+                <select
+                  value={continentFilter}
+                  onChange={(event) => setContinentFilter(event.target.value)}
+                  className='rounded-xl border border-(--border) bg-(--surface-muted) px-3 py-2 text-xs font-semibold'
+                >
+                  <option value=''>Choose continents</option>
+                  <option value='asia'>Asia</option>
+                  <option value='europe'>Europe</option>
+                  <option value='north_america'>North America</option>
+                </select>
+                <select
+                  value={countryFilter}
+                  onChange={(event) => setCountryFilter(event.target.value)}
+                  className='rounded-xl border border-(--border) bg-(--surface-muted) px-3 py-2 text-xs font-semibold'
+                >
+                  <option value=''>Choose countries</option>
+                  <option value='nepal'>Nepal</option>
+                  <option value='india'>India</option>
+                  <option value='usa'>United States</option>
+                </select>
+              </div>
+            </div>
+
+            <div className='space-y-4'>
               <AlertsPanel
                 alerts={alerts}
                 loading={loadingDashboard}
                 onMarkRead={handleMarkAlertRead}
               />
-            </div>
-            <div className='landing-reveal-soft'>
               <ConnectorHealthPanel health={health} loading={loadingDashboard} />
-            </div>
-            <div className='landing-reveal-soft'>
               <SourcePolicyPanel />
             </div>
           </aside>
-        </section>
+        </div>
       </div>
     </>
   )

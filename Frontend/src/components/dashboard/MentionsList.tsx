@@ -1,3 +1,5 @@
+import { BellOff, CheckSquare, ExternalLink, FileText, MoreHorizontal, Tag, Trash2 } from 'lucide-react'
+import { useState } from 'react'
 import type { Mention } from '../../types/app'
 
 interface MentionsListProps {
@@ -39,19 +41,55 @@ const createSkeletonElement = (className: string) => (
 )
 
 function MentionCard({ mention }: { mention: Mention }) {
+  const title = mention.title || mention.text || 'Untitled mention'
+  const snippet = mention.text && mention.text !== mention.title ? mention.text : ''
+
   const content = (
     <>
       <div className='flex items-center justify-between text-xs text-(--text-muted)'>
-        <span>{mention.source}</span>
+        <span className='inline-flex items-center gap-2 font-semibold text-(--text-primary)'>
+          <span className='grid h-8 w-8 place-items-center rounded-full bg-(--surface-base) text-xs font-semibold uppercase'>
+            {mention.source?.slice(0, 1) || 'M'}
+          </span>
+          {mention.source || 'Unknown source'}
+        </span>
         <span>{formatDate(mention.publishedAt)}</span>
       </div>
-      <h4 className='mt-2 text-sm font-semibold'>{mention.title || mention.text}</h4>
-      <div className='mt-2 text-xs font-semibold text-(--brand-accent)'>
-        {mention.url ? 'Open source' : 'No source link'}
+      <h4 className='mt-2 text-sm font-semibold'>{title}</h4>
+      {snippet && <p className='mt-1 text-xs text-(--text-muted)'>{snippet}</p>}
+      <div className='mt-3 flex flex-wrap gap-3 text-xs text-(--text-muted)'>
+        <span className='rounded-full border border-(--border) px-2 py-0.5'>Sentiment: {formatSentimentLabel(mention.sentiment?.label)}</span>
+        <span className='rounded-full border border-(--border) px-2 py-0.5'>Reach: {mention.reachEstimate || 0}</span>
+        <span className='rounded-full border border-(--border) px-2 py-0.5'>Influence score: 9/10</span>
       </div>
-      <div className='mt-3 flex flex-wrap gap-2 text-xs text-(--text-muted)'>
-        <span>Sentiment: {formatSentimentLabel(mention.sentiment?.label)}</span>
-        <span>Reach: {mention.reachEstimate || 0}</span>
+      <div className='mt-3 flex flex-wrap items-center gap-2 text-xs font-semibold text-(--text-muted)'>
+        <button className='inline-flex items-center gap-1 rounded-full border border-(--border) px-2 py-1 hover:bg-(--surface-base)'>
+          <ExternalLink className='h-3.5 w-3.5' />
+          Visit
+        </button>
+        <button className='inline-flex items-center gap-1 rounded-full border border-(--border) px-2 py-1 hover:bg-(--surface-base)'>
+          <Tag className='h-3.5 w-3.5' />
+          Tags
+        </button>
+        <button className='inline-flex items-center gap-1 rounded-full border border-(--border) px-2 py-1 hover:bg-(--surface-base)'>
+          <Trash2 className='h-3.5 w-3.5' />
+          Delete
+        </button>
+        <button className='inline-flex items-center gap-1 rounded-full border border-(--border) px-2 py-1 hover:bg-(--surface-base)'>
+          <FileText className='h-3.5 w-3.5' />
+          Add to PDF report
+        </button>
+        <button className='inline-flex items-center gap-1 rounded-full border border-(--border) px-2 py-1 hover:bg-(--surface-base)'>
+          <BellOff className='h-3.5 w-3.5' />
+          Mute source
+        </button>
+        <button className='inline-flex items-center gap-1 rounded-full border border-(--border) px-2 py-1 hover:bg-(--surface-base)'>
+          <MoreHorizontal className='h-3.5 w-3.5' />
+          More actions
+        </button>
+        <button className='ml-auto inline-flex items-center gap-1 rounded-full border border-(--border) px-2 py-1 hover:bg-(--surface-base)'>
+          <CheckSquare className='h-3.5 w-3.5' />
+        </button>
       </div>
     </>
   )
@@ -92,9 +130,25 @@ function MentionSkeleton() {
 }
 
 export default function MentionsList({ mentions, loading }: MentionsListProps) {
+  const [sortOrder, setSortOrder] = useState('recent')
+
   return (
     <div className='rounded-[20px] border border-(--border) bg-(--surface-base) p-4 shadow-(--shadow) sm:rounded-[28px] sm:p-6'>
-      <h3 className='text-base font-semibold sm:text-lg'>Mentions</h3>
+      <div className='flex flex-wrap items-center justify-between gap-3'>
+        <h3 className='text-base font-semibold sm:text-lg'>Mentions</h3>
+        <div className='flex items-center gap-2 text-xs font-semibold'>
+          <label className='text-(--text-muted)'>Sort</label>
+          <select
+            value={sortOrder}
+            onChange={(event) => setSortOrder(event.target.value)}
+            className='rounded-full border border-(--border) bg-(--surface-muted) px-3 py-1'
+          >
+            <option value='recent'>Recent first</option>
+            <option value='oldest'>Oldest first</option>
+            <option value='reach'>Highest reach</option>
+          </select>
+        </div>
+      </div>
       <div className='mt-3 grid max-h-96 gap-3 overflow-y-auto pr-1 sm:mt-4 sm:max-h-130 sm:gap-4 sm:pr-2'>
         {loading &&
           Array.from({ length: SKELETON_COUNT }).map((_, index) => (
@@ -104,6 +158,21 @@ export default function MentionsList({ mentions, loading }: MentionsListProps) {
           <p className='text-sm text-(--text-muted)'>No mentions yet.</p>
         )}
         {!loading && mentions.map((mention) => <MentionCard key={mention._id} mention={mention} />)}
+      </div>
+      <div className='mt-4 flex flex-wrap items-center justify-between gap-2 text-xs font-semibold text-(--text-muted)'>
+        <span>Showing {mentions.length} mentions</span>
+        <div className='flex items-center gap-2'>
+          {[1, 2, 3, 4, 5].map((page) => (
+            <button
+              key={page}
+              className={`h-7 w-7 rounded-full border ${
+                page === 1 ? 'border-(--brand-accent) text-(--brand-accent)' : 'border-(--border)'
+              }`}
+            >
+              {page}
+            </button>
+          ))}
+        </div>
       </div>
     </div>
   )

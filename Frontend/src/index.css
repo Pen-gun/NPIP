@@ -101,3 +101,79 @@ img {
 a {
   color: inherit;
 }
+
+.landing-page {
+  position: relative;
+  overflow: hidden;
+}
+
+.landing-page::before {
+  content: '';
+  position: absolute;
+  inset: -40% 0 auto 0;
+  height: 420px;
+  background: radial-gradient(circle at center, rgba(216, 107, 44, 0.18), transparent 60%);
+  opacity: 0.8;
+  transform: translateY(-20px);
+  pointer-events: none;
+  animation: landing-hero-glow 1.6s ease forwards;
+}
+
+.landing-reveal {
+  opacity: 0;
+  transform: translateY(16px);
+  animation: landing-fade-up 700ms ease forwards;
+  animation-delay: var(--delay, 0ms);
+}
+
+.landing-reveal-soft {
+  opacity: 0;
+  transform: translateY(10px);
+  animation: landing-fade-up 650ms ease forwards;
+  animation-delay: var(--delay, 0ms);
+}
+
+.landing-hero-card {
+  animation: landing-float 6s ease-in-out infinite;
+  animation-delay: 300ms;
+}
+
+@keyframes landing-fade-up {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes landing-hero-glow {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes landing-float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-8px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .landing-reveal,
+  .landing-reveal-soft,
+  .landing-hero-card {
+    animation: none;
+    opacity: 1;
+    transform: none;
+  }
+
+  .landing-page::before {
+    animation: none;
+    opacity: 0.6;
+    transform: none;
+  }
+}

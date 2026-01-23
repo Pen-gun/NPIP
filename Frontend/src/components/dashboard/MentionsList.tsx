@@ -1,10 +1,14 @@
-import { BellOff, CheckSquare, ExternalLink, FileText, MoreHorizontal, Tag, Trash2 } from 'lucide-react'
-import { useState } from 'react'
+import { BellOff, CheckSquare, ChevronLeft, ChevronRight, ExternalLink, FileText, MoreHorizontal, Tag, Trash2 } from 'lucide-react'
 import type { Mention } from '../../types/app'
+import type { PaginationInfo } from '../../api/mentions'
 
 interface MentionsListProps {
   mentions: Mention[]
   loading: boolean
+  pagination?: PaginationInfo
+  sortOrder: 'recent' | 'oldest' | 'reach'
+  onSortChange: (sort: 'recent' | 'oldest' | 'reach') => void
+  onPageChange: (page: number) => void
 }
 
 const SKELETON_COUNT = 4
@@ -129,18 +133,38 @@ function MentionSkeleton() {
   )
 }
 
-export default function MentionsList({ mentions, loading }: MentionsListProps) {
-  const [sortOrder, setSortOrder] = useState('recent')
+export default function MentionsList({ mentions, loading, pagination, sortOrder, onSortChange, onPageChange }: MentionsListProps) {
+  // Generate page numbers to display
+  const getPageNumbers = () => {
+    if (!pagination) return []
+    const { page, totalPages } = pagination
+    const pages: (number | 'ellipsis')[] = []
+    
+    if (totalPages <= 7) {
+      for (let i = 1; i <= totalPages; i++) pages.push(i)
+    } else {
+      pages.push(1)
+      if (page > 3) pages.push('ellipsis')
+      for (let i = Math.max(2, page - 1); i <= Math.min(totalPages - 1, page + 1); i++) {
+        pages.push(i)
+      }
+      if (page < totalPages - 2) pages.push('ellipsis')
+      pages.push(totalPages)
+    }
+    return pages
+  }
 
   return (
     <div className='rounded-[20px] border border-(--border) bg-(--surface-base) p-4 shadow-(--shadow) sm:rounded-[28px] sm:p-6'>
       <div className='flex flex-wrap items-center justify-between gap-3'>
-        <h3 className='text-base font-semibold sm:text-lg'>Mentions</h3>
+        <h3 className='text-base font-semibold sm:text-lg'>
+          Mentions {pagination && <span className='text-sm font-normal text-(--text-muted)'>({pagination.totalCount.toLocaleString()} total)</span>}
+        </h3>
         <div className='flex items-center gap-2 text-xs font-semibold'>
           <label className='text-(--text-muted)'>Sort</label>
           <select
             value={sortOrder}
-            onChange={(event) => setSortOrder(event.target.value)}
+            onChange={(event) => onSortChange(event.target.value as 'recent' | 'oldest' | 'reach')}
             className='rounded-full border border-(--border) bg-(--surface-muted) px-3 py-1'
           >
             <option value='recent'>Recent first</option>
@@ -160,19 +184,49 @@ export default function MentionsList({ mentions, loading }: MentionsListProps) {
         {!loading && mentions.map((mention) => <MentionCard key={mention._id} mention={mention} />)}
       </div>
       <div className='mt-4 flex flex-wrap items-center justify-between gap-2 text-xs font-semibold text-(--text-muted)'>
-        <span>Showing {mentions.length} mentions</span>
-        <div className='flex items-center gap-2'>
-          {[1, 2, 3, 4, 5].map((page) => (
+        <span>
+          {pagination 
+            ? `Showing ${((pagination.page - 1) * pagination.limit) + 1}-${Math.min(pagination.page * pagination.limit, pagination.totalCount)} of ${pagination.totalCount.toLocaleString()}`
+            : `Showing ${mentions.length} mentions`
+          }
+        </span>
+        {pagination && pagination.totalPages > 1 && (
+          <div className='flex items-center gap-1'>
             <button
-              key={page}
-              className={`h-7 w-7 rounded-full border ${
-                page === 1 ? 'border-(--brand-accent) text-(--brand-accent)' : 'border-(--border)'
-              }`}
+              onClick={() => onPageChange(pagination.page - 1)}
+              disabled={!pagination.hasPrevPage}
+              className='flex h-7 w-7 items-center justify-center rounded-full border border-(--border) disabled:cursor-not-allowed disabled:opacity-40'
+              aria-label='Previous page'
             >
-              {page}
+              <ChevronLeft className='h-4 w-4' />
             </button>
-          ))}
-        </div>
+            {getPageNumbers().map((pageNum, idx) => 
+              pageNum === 'ellipsis' ? (
+                <span key={`ellipsis-${idx}`} className='px-1'>…</span>
+              ) : (
+                <button
+                  key={pageNum}
+                  onClick={() => onPageChange(pageNum)}
+                  className={`h-7 w-7 rounded-full border ${
+                    pageNum === pagination.page 
+                      ? 'border-(--brand-accent) bg-(--brand-accent) text-white' 
+                      : 'border-(--border) hover:bg-(--surface-muted)'
+                  }`}
+                >
+                  {pageNum}
+                </button>
+              )
+            )}
+            <button
+              onClick={() => onPageChange(pagination.page + 1)}
+              disabled={!pagination.hasNextPage}
+              className='flex h-7 w-7 items-center justify-center rounded-full border border-(--border) disabled:cursor-not-allowed disabled:opacity-40'
+              aria-label='Next page'
+            >
+              <ChevronRight className='h-4 w-4' />
+            </button>
+          </div>
+        )}
       </div>
     </div>
   )

@@ -4,8 +4,9 @@ import type { FormEvent } from 'react'
 import BrandLogo from '../components/BrandLogo'
 import PrimaryButton from '../components/PrimaryButton'
 import { useAuth } from '../contexts/AuthContext'
+import { forgotPassword } from '../api/auth'
 
-type AuthMode = 'login' | 'register'
+type AuthMode = 'login' | 'register' | 'forgot'
 
 const DEFAULT_ERROR_MESSAGE = 'Unable to authenticate'
 
@@ -22,6 +23,7 @@ export default function LoginPage() {
   const { login, register, isAuthenticated, isLoading } = useAuth()
   const [mode, setMode] = useState<AuthMode>('login')
   const [error, setError] = useState('')
+  const [success, setSuccess] = useState('')
   const [busy, setBusy] = useState(false)
 
   // Redirect if already authenticated
@@ -33,14 +35,41 @@ export default function LoginPage() {
   }, [isAuthenticated, isLoading, navigate, location])
 
   const isLogin = mode === 'login'
-  const toggleMode = () => setMode(isLogin ? 'register' : 'login')
+  const isRegister = mode === 'register'
+  const isForgot = mode === 'forgot'
+  const toggleMode = () => {
+    setMode(isLogin ? 'register' : 'login')
+    setError('')
+    setSuccess('')
+  }
+  const toggleForgot = () => {
+    setMode(isForgot ? 'login' : 'forgot')
+    setError('')
+    setSuccess('')
+  }
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
     setError('')
+    setSuccess('')
     setBusy(true)
 
     const form = new FormData(event.currentTarget)
+    
+    // Handle forgot password
+    if (isForgot) {
+      const email = String(form.get('email') || '').trim()
+      try {
+        await forgotPassword({ email })
+        setSuccess('If an account exists with this email, you will receive a password reset link.')
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Failed to send reset email')
+      } finally {
+        setBusy(false)
+      }
+      return
+    }
+
     const payload = {
       fullName: String(form.get('fullName') || ''),
       username: String(form.get('username') || ''),
@@ -51,7 +80,7 @@ export default function LoginPage() {
       String(form.get('identifier') || '').trim() || payload.email.trim() || payload.username.trim()
 
     try {
-      if (!isLogin) {
+      if (isRegister) {
         await register(payload)
       }
       await login({
@@ -92,68 +121,109 @@ export default function LoginPage() {
               Welcome
             </p>
             <h1 className='mt-2 font-display text-2xl font-semibold sm:mt-3 sm:text-3xl'>
-              {isLogin ? 'Sign in to your workspace' : 'Create your monitoring workspace'}
+              {isForgot ? 'Reset your password' : isLogin ? 'Sign in to your workspace' : 'Create your monitoring workspace'}
             </h1>
             <p className='mt-2 text-xs text-(--text-muted) sm:mt-3 sm:text-sm'>
-              Access real-time alerts, sentiment tracking, and project dashboards in one place.
+              {isForgot 
+                ? 'Enter your email address and we\'ll send you a link to reset your password.'
+                : 'Access real-time alerts, sentiment tracking, and project dashboards in one place.'
+              }
             </p>
 
             <form className='mt-5 space-y-3 sm:mt-6 sm:space-y-4' onSubmit={handleSubmit}>
-              {!isLogin && (
+              {isForgot ? (
                 <input
-                  name='fullName'
-                  placeholder='Full name'
-                  autoComplete='name'
-                  className='w-full rounded-xl border border-(--border) bg-(--surface-muted) px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-(--brand-primary)/20'
-                  required
-                />
-              )}
-              {isLogin ? (
-                <input
-                  name='identifier'
-                  placeholder='Email or username'
-                  autoComplete='username'
+                  name='email'
+                  type='email'
+                  placeholder='Email address'
+                  autoComplete='email'
                   className='w-full rounded-xl border border-(--border) bg-(--surface-muted) px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-(--brand-primary)/20'
                   required
                 />
               ) : (
                 <>
+                  {isRegister && (
+                    <input
+                      name='fullName'
+                      placeholder='Full name'
+                      autoComplete='name'
+                      className='w-full rounded-xl border border-(--border) bg-(--surface-muted) px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-(--brand-primary)/20'
+                      required
+                    />
+                  )}
+                  {isLogin ? (
+                    <input
+                      name='identifier'
+                      placeholder='Email or username'
+                      autoComplete='username'
+                      className='w-full rounded-xl border border-(--border) bg-(--surface-muted) px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-(--brand-primary)/20'
+                      required
+                    />
+                  ) : (
+                    <>
+                      <input
+                        name='username'
+                        placeholder='Username'
+                        autoComplete='username'
+                        className='w-full rounded-xl border border-(--border) bg-(--surface-muted) px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-(--brand-primary)/20'
+                        required
+                      />
+                      <input
+                        name='email'
+                        type='email'
+                        placeholder='Email'
+                        autoComplete='email'
+                        className='w-full rounded-xl border border-(--border) bg-(--surface-muted) px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-(--brand-primary)/20'
+                        required
+                      />
+                    </>
+                  )}
                   <input
-                    name='username'
-                    placeholder='Username'
-                    autoComplete='username'
-                    className='w-full rounded-xl border border-(--border) bg-(--surface-muted) px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-(--brand-primary)/20'
-                    required
-                  />
-                  <input
-                    name='email'
-                    type='email'
-                    placeholder='Email'
-                    autoComplete='email'
+                    name='password'
+                    type='password'
+                    placeholder='Password'
+                    autoComplete={isLogin ? 'current-password' : 'new-password'}
                     className='w-full rounded-xl border border-(--border) bg-(--surface-muted) px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-(--brand-primary)/20'
                     required
                   />
                 </>
               )}
-              <input
-                name='password'
-                type='password'
-                placeholder='Password'
-                autoComplete={isLogin ? 'current-password' : 'new-password'}
-                className='w-full rounded-xl border border-(--border) bg-(--surface-muted) px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-(--brand-primary)/20'
-                required
-              />
               {error && <p className='text-xs text-(--state-error)'>{error}</p>}
-              <PrimaryButton label={isLogin ? 'Sign in' : 'Create account'} type='submit' disabled={busy} />
+              {success && <p className='text-xs text-green-600'>{success}</p>}
+              <PrimaryButton 
+                label={isForgot ? 'Send reset link' : isLogin ? 'Sign in' : 'Create account'} 
+                type='submit' 
+                disabled={busy} 
+              />
             </form>
 
-            <button
-              type='button'
-              onClick={toggleMode}
-              className='mt-4 text-xs font-semibold uppercase tracking-[0.2em] text-(--text-muted) transition hover:text-(--text-primary) sm:tracking-[0.3em]'
-            >
-              {isLogin ? 'Need an account?' : 'Already have an account?'}
-            </button>
+            <div className='mt-4 flex flex-wrap items-center justify-between gap-2'>
+              <button
+                type='button'
+                onClick={toggleMode}
+                className='text-xs font-semibold uppercase tracking-[0.2em] text-(--text-muted) transition hover:text-(--text-primary) sm:tracking-[0.3em]'
+              >
+                {isLogin ? 'Need an account?' : isForgot ? 'Back to login' : 'Already have an account?'}
+              </button>
+              {isLogin && (
+                <button
+                  type='button'
+                  onClick={toggleForgot}
+                  className='text-xs font-semibold text-(--brand-accent) transition hover:underline'
+                >
+                  Forgot password?
+                </button>
+              )}
+              {isForgot && (
+                <button
+                  type='button'
+                  onClick={toggleForgot}
+                  className='text-xs font-semibold text-(--brand-accent) transition hover:underline'
+                >
+                  Back to login
+                </button>
+              )}
+            </div>
           </section>
 
           <aside className='landing-reveal-soft hidden w-full max-w-md rounded-[28px] border border-(--border) bg-(--surface-base) p-6 shadow-(--shadow) sm:p-8 lg:block lg:max-w-none lg:flex-1'>

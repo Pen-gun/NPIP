@@ -5,6 +5,7 @@ import ProtectedRoute from './components/ProtectedRoute'
 
 const LandingPage = lazy(() => import('./pages/LandingPage'))
 const LoginPage = lazy(() => import('./pages/LoginPage'))
+const ResetPasswordPage = lazy(() => import('./pages/ResetPasswordPage'))
 const DashboardPage = lazy(() => import('./pages/DashboardPage'))
 const FigureSearchPage = lazy(() => import('./pages/FigureSearchPage'))
 
@@ -22,6 +23,7 @@ export default function App() {
           <Route path='/' element={<LandingPage />} />
           <Route path='/search' element={<FigureSearchPage />} />
           <Route path='/login' element={<LoginPage />} />
+          <Route path='/reset-password' element={<ResetPasswordPage />} />
           <Route
             path='/app'
             element={

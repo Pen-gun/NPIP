@@ -1,8 +1,10 @@
 import jwt from 'jsonwebtoken';
+import crypto from 'crypto';
 import { User } from '../model/user.model.js';
 import ApiError from '../utils/apiError.js';
 import asyncHandler from '../utils/asyncHandler.js';
 import ApiResponse from '../utils/apiResponse.js';
+import { sendEmail, sendPasswordResetEmail, sendWelcomeEmail } from '../services/email.service.js';
 
 const generateRefreshAndAccessToken = async (userid) => {
     try {
@@ -40,6 +42,11 @@ const registerUser = asyncHandler(async (req, res) => {
     if (!createdUser) {
         throw new ApiError(500, 'Unable to create user');
     }
+
+    // Send welcome email (don't block registration if it fails)
+    sendWelcomeEmail(user.email, user.fullName).catch(err => {
+        console.warn('[Registration] Failed to send welcome email:', err.message);
+    });
 
     return res.status(201).json(new ApiResponse(201, createdUser, 'User created successfully'));
 });
@@ -194,6 +201,77 @@ const updateAccount = asyncHandler(async (req, res) => {
     return res.status(200).json(new ApiResponse(200, updatedUser, 'Account updated successfully'));
 });
 
+const forgotPassword = asyncHandler(async (req, res) => {
+    const { email } = req.body;
+
+    if (!email?.trim()) {
+        throw new ApiError(400, 'Email is required');
+    }
+
+    const user = await User.findOne({ email: email.toLowerCase().trim() });
+    
+    // Always return success to prevent email enumeration attacks
+    if (!user) {
+        return res.status(200).json(new ApiResponse(200, null, 'If an account exists, a password reset email has been sent'));
+    }
+
+    const resetToken = user.generatePasswordResetToken();
+    await user.save({ validateBeforeSave: false });
+
+    const emailSent = await sendPasswordResetEmail(user.email, resetToken, user.fullName);
+
+    if (!emailSent) {
+        // If email service is not configured, return the token for development purposes
+        if (process.env.NODE_ENV === 'development') {
+            return res.status(200).json(new ApiResponse(200, { resetToken }, 'Email service not configured. Use the token directly in development.'));
+        }
+        user.passwordResetToken = undefined;
+        user.passwordResetExpires = undefined;
+        await user.save({ validateBeforeSave: false });
+        throw new ApiError(500, 'Email service is not configured. Please contact support.');
+    }
+
+    return res.status(200).json(new ApiResponse(200, null, 'Password reset email sent successfully'));
+});
+
+const resetPassword = asyncHandler(async (req, res) => {
+    const { token, newPassword, confirmPassword } = req.body;
+
+    if (!token?.trim()) {
+        throw new ApiError(400, 'Reset token is required');
+    }
+    if (!newPassword || !confirmPassword) {
+        throw new ApiError(400, 'New password and confirm password are required');
+    }
+    if (newPassword !== confirmPassword) {
+        throw new ApiError(400, 'Passwords do not match');
+    }
+    if (newPassword.length < 6) {
+        throw new ApiError(400, 'Password must be at least 6 characters long');
+    }
+
+    // Hash the token to compare with stored hash
+    const hashedToken = crypto.createHash('sha256').update(token.trim()).digest('hex');
+
+    const user = await User.findOne({
+        passwordResetToken: hashedToken,
+        passwordResetExpires: { $gt: Date.now() },
+    });
+
+    if (!user) {
+        throw new ApiError(400, 'Invalid or expired reset token');
+    }
+
+    // Update password and clear reset token
+    user.password = newPassword;
+    user.passwordResetToken = undefined;
+    user.passwordResetExpires = undefined;
+    user.refreshToken = null; // Invalidate all sessions
+    await user.save();
+
+    return res.status(200).json(new ApiResponse(200, null, 'Password reset successful. Please login with your new password.'));
+});
+
 
 const refreshAccessToken = asyncHandler(async (req, res) => {
     const incomingRefreshToken = req.cookies?.refreshToken || req.body?.refreshToken;
@@ -240,4 +318,6 @@ export {
     getCurrentUser,
     updateAccount,
     refreshAccessToken,
+    forgotPassword,
+    resetPassword,
 };

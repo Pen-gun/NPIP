@@ -72,7 +72,100 @@ NPIP/
 - Alerts: `GET /api/v1/alerts`
 - Reports: `GET /api/v1/reports/:id`
 
+## Mentions System
+
+The mentions system is the core of NPIP, aggregating and analyzing public signals about tracked figures.
+
+### Mention Data Structure
+
+Each mention contains:
+- **Content**: Title, snippet, full text, URL, and media attachments
+- **Source**: Platform (YouTube, Reddit, X, Meta, TikTok, News, RSS)
+- **Author**: Username, display name, follower count, profile URL
+- **Timestamps**: Published date, ingested date, last updated
+- **Engagement**: Likes, comments, shares, views, reach estimate
+- **Sentiment**: Label (positive/neutral/negative), confidence score
+- **Language**: Detected language code and confidence
+- **Location**: Geo-tagged location if available (province/district for Nepal)
+
+### Mention Endpoints
+
+```
+GET /api/v1/mentions
+  ?projectId=     # Required: Filter by project
+  ?source=        # Optional: Filter by source (youtube, reddit, x, meta, news, etc.)
+  ?sentiment=     # Optional: Filter by sentiment (positive, neutral, negative)
+  ?startDate=     # Optional: Start of date range (ISO 8601)
+  ?endDate=       # Optional: End of date range (ISO 8601)
+  ?search=        # Optional: Full-text search in title/snippet
+  ?author=        # Optional: Filter by author name
+  ?page=          # Optional: Page number (default: 1)
+  ?limit=         # Optional: Items per page (default: 20, max: 100)
+  ?sort=          # Optional: Sort field (newest, oldest, reach, engagement)
+```
+
+### Response Format
+
+```json
+{
+  "success": true,
+  "data": {
+    "mentions": [...],
+    "pagination": {
+      "page": 1,
+      "limit": 20,
+      "totalCount": 1250,
+      "totalPages": 63
+    }
+  }
+}
+```
+
+### Mention Sources
+
+| Source | Connector | Data Collected |
+|--------|-----------|----------------|
+| YouTube | youtube.connector.js | Videos, comments, transcripts |
+| Reddit | reddit.connector.js | Posts, comments from relevant subreddits |
+| X (Twitter) | x.connector.js | Tweets, retweets, replies |
+| Meta | meta.connector.js | Facebook posts, Instagram posts |
+| TikTok | tiktok.connector.js | Videos, comments |
+| News | localNews.connector.js | Nepali news articles |
+| RSS | rss.service.js | Custom RSS feed articles |
+
+### Mention Processing Pipeline
+
+1. **Collection**: Connectors fetch raw data from APIs
+2. **Deduplication**: URL-based deduplication prevents duplicates
+3. **Enrichment**: 
+   - Sentiment analysis via ML model
+   - Language detection
+   - Reach estimation based on source metrics
+4. **Storage**: Mentions saved to MongoDB with full indexing
+5. **Alerting**: Spike detection triggers real-time alerts
+6. **Streaming**: New mentions pushed via Socket.IO
+
 ## Notes
 
 - Connectors are opt-in per project and can be toggled in the project settings.
 - Email alerts require SMTP configuration and `ALERT_EMAIL_ENABLED=true`.
+
+Phase 1: Fix Broken UI (1-2 weeks)
+Real pagination for mentions
+Save/clear filters
+Remove or disable non-functional buttons
+Phase 2: Complete Core Features (2-4 weeks)
+Password reset
+Excel export
+Complete Meta connector
+Analysis view (basic)
+Phase 3: Differentiation (4-8 weeks)
+Implement TikTok connector
+Geo analysis with Nepal provinces
+Nepali sentiment fine-tuning
+Comparison/benchmarking view
+Phase 4: Enterprise (8-12 weeks)
+Emotion analysis
+Influencer scoring
+Email scheduled reports
+Payment & plan management

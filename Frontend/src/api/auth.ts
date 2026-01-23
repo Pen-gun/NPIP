@@ -13,6 +13,16 @@ interface LoginPayload {
   password: string
 }
 
+interface ForgotPasswordPayload {
+  email: string
+}
+
+interface ResetPasswordPayload {
+  token: string
+  newPassword: string
+  confirmPassword: string
+}
+
 export const registerUser = async (payload: RegisterPayload) => {
   const response = await npipClient.post('/auth/register', payload)
   return response.data
@@ -30,4 +40,14 @@ export const getCurrentUser = async (): Promise<User> => {
 
 export const logoutUser = async (): Promise<void> => {
   await npipClient.post('/auth/logout')
+}
+
+export const forgotPassword = async (payload: ForgotPasswordPayload): Promise<string> => {
+  const response = await npipClient.post('/auth/forgot-password', payload)
+  return response.data.message
+}
+
+export const resetPassword = async (payload: ResetPasswordPayload): Promise<string> => {
+  const response = await npipClient.post('/auth/reset-password', payload)
+  return response.data.message
 }

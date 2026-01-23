@@ -28,6 +28,7 @@ export type Mention = {
   publishedAt?: string | Date | null
   sentiment?: { label: string; confidence: number }
   reachEstimate?: number
+  engagement?: { likes?: number; comments?: number; shares?: number }
 }
 
 export type AlertItem = {

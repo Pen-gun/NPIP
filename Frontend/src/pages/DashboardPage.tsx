@@ -20,9 +20,10 @@ import {
   updateProjectStatus,
 } from '../api/projects'
 import { fetchMentions } from '../api/mentions'
+import type { PaginationInfo, MentionFilters } from '../api/mentions'
 import { fetchAlerts, markAlertRead } from '../api/alerts'
 import { downloadReport } from '../api/reports'
-import type { ReportScope } from '../api/reports'
+import type { ReportScope, ReportFormat } from '../api/reports'
 import { useAuth } from '../contexts/AuthContext'
 import type { AlertItem, ConnectorHealth, Mention, Project, ProjectMetrics } from '../types/app'
 import {
@@ -33,8 +34,11 @@ import {
   AlertsPanel,
   ConnectorHealthPanel,
   SourcePolicyPanel,
+  AnalysisView,
 } from '../components/dashboard'
 import type { ProjectFormState, DashboardFilters } from '../components/dashboard'
+
+type DashboardView = 'mentions' | 'analysis'
 
 const SOCKET_URL = import.meta.env.VITE_SOCKET_URL || undefined
 const ALERTS_LIMIT = 100
@@ -172,6 +176,10 @@ export default function DashboardPage() {
   const [influenceScore, setInfluenceScore] = useState(6)
   const [continentFilter, setContinentFilter] = useState('')
   const [countryFilter, setCountryFilter] = useState('')
+  const [currentPage, setCurrentPage] = useState(1)
+  const [pagination, setPagination] = useState<PaginationInfo | null>(null)
+  const [sortOrder, setSortOrder] = useState<'recent' | 'oldest' | 'reach'>('recent')
+  const [currentView, setCurrentView] = useState<DashboardView>('mentions')
 
   useEffect(() => {
     if (!user) return
@@ -200,16 +208,23 @@ export default function DashboardPage() {
     let cancelled = false
     setLoadingDashboard(true)
     setError(null)
+    const mentionFilters: MentionFilters = {
+      ...filters,
+      page: currentPage,
+      limit: 20,
+      sort: sortOrder,
+    }
     Promise.all([
       fetchProjectMetrics(activeProjectId, filters.from, filters.to),
-      fetchMentions(activeProjectId, filters),
+      fetchMentions(activeProjectId, mentionFilters),
       fetchAlerts(),
       fetchProjectHealth(activeProjectId),
     ])
       .then(([metricData, mentionData, alertData, healthData]) => {
         if (cancelled) return
         setMetrics(metricData)
-        setMentions(mentionData)
+        setMentions(mentionData.mentions)
+        setPagination(mentionData.pagination)
         setAlerts(alertData)
         setHealth(healthData)
       })
@@ -220,7 +235,7 @@ export default function DashboardPage() {
         if (!cancelled) setLoadingDashboard(false)
       })
     return () => { cancelled = true }
-  }, [user, activeProjectId, filters])
+  }, [user, activeProjectId, filters, currentPage, sortOrder])
 
   useEffect(() => {
     if (!user) return
@@ -328,12 +343,12 @@ export default function DashboardPage() {
     }
   }
 
-  const handleDownloadReport = async (scope: ReportScope) => {
+  const handleDownloadReport = async (scope: ReportScope, format: ReportFormat = 'pdf') => {
     if (!activeProjectId || actionLoading) return
     setActionLoading('report')
     setError(null)
     try {
-      await downloadReport(activeProjectId, scope)
+      await downloadReport(activeProjectId, scope, format)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to download report')
     } finally {
@@ -373,19 +388,73 @@ export default function DashboardPage() {
     setDateRange(value)
     const range = getDateRange(value)
     setFilters((prev) => ({ ...prev, from: range.from, to: range.to }))
+    setCurrentPage(1) // Reset to first page on filter change
   }
 
   const handleSourceFilterToggle = (sourceId: string) => {
     setSourceFilters((prev) => ({ ...prev, [sourceId]: !prev[sourceId] }))
+    setCurrentPage(1) // Reset to first page on filter change
   }
 
   const handleSentimentToggle = (key: 'negative' | 'neutral' | 'positive') => {
     setSentimentFilters((prev) => ({ ...prev, [key]: !prev[key] }))
+    setCurrentPage(1) // Reset to first page on filter change
   }
 
   const handleConnectSource = (sourceId: string) => {
     setConnectedSources((prev) => ({ ...prev, [sourceId]: !prev[sourceId] }))
   }
+
+  // Filter persistence
+  const FILTERS_STORAGE_KEY = `npip_filters_${activeProjectId}`
+  
+  const handleSaveFilters = () => {
+    if (!activeProjectId) return
+    const savedFilters = {
+      dateRange,
+      sourceFilters,
+      sentimentFilters,
+      influenceScore,
+      continentFilter,
+      countryFilter,
+    }
+    localStorage.setItem(FILTERS_STORAGE_KEY, JSON.stringify(savedFilters))
+    // Show success feedback (could add a toast here)
+    alert('Filters saved!')
+  }
+
+  const handleClearFilters = () => {
+    setDateRange('last_30_days')
+    setSourceFilters({})
+    setSentimentFilters({})
+    setInfluenceScore(6)
+    setContinentFilter('')
+    setCountryFilter('')
+    setMentionSearch('')
+    setCurrentPage(1)
+    if (activeProjectId) {
+      localStorage.removeItem(FILTERS_STORAGE_KEY)
+    }
+  }
+
+  // Load saved filters when project changes
+  useEffect(() => {
+    if (!activeProjectId) return
+    const saved = localStorage.getItem(FILTERS_STORAGE_KEY)
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved)
+        if (parsed.dateRange) setDateRange(parsed.dateRange)
+        if (parsed.sourceFilters) setSourceFilters(parsed.sourceFilters)
+        if (parsed.sentimentFilters) setSentimentFilters(parsed.sentimentFilters)
+        if (parsed.influenceScore) setInfluenceScore(parsed.influenceScore)
+        if (parsed.continentFilter) setContinentFilter(parsed.continentFilter)
+        if (parsed.countryFilter) setCountryFilter(parsed.countryFilter)
+      } catch {
+        // Ignore invalid JSON
+      }
+    }
+  }, [activeProjectId])
 
   const mentionsBySource = useMemo(() => {
     const counts: Record<string, number> = {}
@@ -506,39 +575,102 @@ export default function DashboardPage() {
             <div className='rounded-[20px] border border-(--border) bg-(--surface-base) p-4 text-xs shadow-(--shadow)'>
               <p className='text-[11px] font-semibold uppercase tracking-[0.2em] text-(--text-muted)'>Mentions</p>
               <div className='mt-3 space-y-2'>
-                {['Mentions', 'Analysis', 'Comparison', 'Influencers & Sources'].map((label) => (
-                  <button
-                    key={label}
-                    className='flex w-full items-center justify-between rounded-lg px-2 py-1.5 text-left font-semibold text-(--text-primary) hover:bg-(--surface-muted)'
-                  >
-                    <span>{label}</span>
-                    {label === 'Mentions' && (
-                      <span className='rounded-full border border-(--border) px-2 py-0.5 text-[10px] text-(--text-muted)'>
-                        {filteredMentions.length}
+                {['Mentions', 'Analysis', 'Comparison', 'Influencers & Sources'].map((label) => {
+                  const viewMap: Record<string, DashboardView | null> = {
+                    'Mentions': 'mentions',
+                    'Analysis': 'analysis',
+                    'Comparison': null,
+                    'Influencers & Sources': null,
+                  }
+                  const targetView = viewMap[label]
+                  const isActive = targetView === currentView
+                  const isComingSoon = targetView === null
+                  
+                  const handleNavClick = () => {
+                    if (targetView) setCurrentView(targetView)
+                  }
+                  
+                  return (
+                    <button
+                      key={label}
+                      disabled={isComingSoon}
+                      onClick={handleNavClick}
+                      title={isComingSoon ? 'Coming soon' : undefined}
+                      className={`flex w-full items-center justify-between rounded-lg px-2 py-1.5 text-left font-semibold ${
+                        isActive 
+                          ? 'bg-(--surface-muted) text-(--brand-accent)' 
+                          : isComingSoon
+                            ? 'cursor-not-allowed text-(--text-muted) opacity-50'
+                            : 'text-(--text-primary) hover:bg-(--surface-muted)'
+                      }`}
+                    >
+                      <span className='flex items-center gap-2'>
+                        {label}
+                        {isComingSoon && (
+                          <span className='rounded bg-(--surface-muted) px-1.5 py-0.5 text-[9px] font-normal'>Soon</span>
+                        )}
                       </span>
-                    )}
-                  </button>
-                ))}
+                      {label === 'Mentions' && pagination && (
+                        <span className='rounded-full border border-(--border) px-2 py-0.5 text-[10px] text-(--text-muted)'>
+                          {pagination.totalCount.toLocaleString()}
+                        </span>
+                      )}
+                    </button>
+                  )
+                })}
               </div>
               <p className='mt-5 text-[11px] font-semibold uppercase tracking-[0.2em] text-(--text-muted)'>Reports</p>
               <div className='mt-2 space-y-1'>
-                {REPORT_NAV_ITEMS.map((item) => (
-                  <button
-                    key={item}
-                    className='flex w-full items-center justify-between rounded-lg px-2 py-1.5 text-left font-semibold text-(--text-primary) hover:bg-(--surface-muted)'
-                  >
-                    {item}
-                  </button>
-                ))}
+                {REPORT_NAV_ITEMS.map((item) => {
+                  const isPDF = item === 'PDF report'
+                  const isExcel = item === 'Excel report'
+                  const isCSV = item === 'CSV export'
+                  const isEnabled = isPDF || isExcel
+                  const isComingSoon = !isEnabled
+                  
+                  const handleClick = () => {
+                    if (!activeProjectId) return
+                    if (isPDF) handleDownloadReport('summary', 'pdf')
+                    else if (isExcel) handleDownloadReport('all', 'excel')
+                  }
+                  
+                  return (
+                    <button
+                      key={item}
+                      disabled={isComingSoon || actionLoading === 'report'}
+                      title={isComingSoon ? 'Coming soon' : `Download ${item}`}
+                      onClick={handleClick}
+                      className={`flex w-full items-center justify-between rounded-lg px-2 py-1.5 text-left font-semibold ${
+                        isComingSoon
+                          ? 'cursor-not-allowed text-(--text-muted) opacity-50'
+                          : actionLoading === 'report'
+                            ? 'cursor-wait opacity-70'
+                            : 'text-(--text-primary) hover:bg-(--surface-muted)'
+                      }`}
+                    >
+                      <span className='flex items-center gap-2'>
+                        {item}
+                        {isComingSoon && (
+                          <span className='rounded bg-(--surface-muted) px-1.5 py-0.5 text-[9px] font-normal'>Soon</span>
+                        )}
+                      </span>
+                    </button>
+                  )
+                })}
               </div>
               <p className='mt-5 text-[11px] font-semibold uppercase tracking-[0.2em] text-(--text-muted)'>Advanced analytics</p>
               <div className='mt-2 space-y-1'>
                 {ANALYTICS_NAV_ITEMS.map((item) => (
                   <button
                     key={item}
-                    className='flex w-full items-center justify-between rounded-lg px-2 py-1.5 text-left font-semibold text-(--text-primary) hover:bg-(--surface-muted)'
+                    disabled
+                    title='Coming soon'
+                    className='flex w-full cursor-not-allowed items-center justify-between rounded-lg px-2 py-1.5 text-left font-semibold text-(--text-muted) opacity-50'
                   >
-                    {item}
+                    <span className='flex items-center gap-2'>
+                      {item}
+                      <span className='rounded bg-(--surface-muted) px-1.5 py-0.5 text-[9px] font-normal'>Soon</span>
+                    </span>
                   </button>
                 ))}
               </div>
@@ -551,8 +683,12 @@ export default function DashboardPage() {
               </div>
               <p className='mt-2 text-(--text-muted)'>Get a social listening certificate with NPIP.</p>
               <p className='mt-2 text-(--text-muted)'>Date: Wednesday, Jan 28, 2026</p>
-              <button className='mt-3 inline-flex items-center gap-2 rounded-full border border-(--border) px-3 py-1.5 text-xs font-semibold'>
-                Sign up
+              <button 
+                disabled
+                title='Coming soon'
+                className='mt-3 inline-flex cursor-not-allowed items-center gap-2 rounded-full border border-(--border) px-3 py-1.5 text-xs font-semibold opacity-50'
+              >
+                Sign up (Coming soon)
               </button>
             </div>
           </aside>
@@ -594,10 +730,16 @@ export default function DashboardPage() {
                   {chip.label}
                 </span>
               ))}
-              <button className='inline-flex items-center gap-1 text-(--brand-accent)'>
+              <button 
+                onClick={handleClearFilters}
+                className='inline-flex items-center gap-1 text-(--brand-accent) hover:underline'
+              >
                 Clear filters
               </button>
-              <button className='inline-flex items-center gap-1 text-(--brand-accent)'>
+              <button 
+                onClick={handleSaveFilters}
+                className='inline-flex items-center gap-1 text-(--brand-accent) hover:underline'
+              >
                 Save filters
               </button>
             </div>
@@ -660,20 +802,30 @@ export default function DashboardPage() {
                 </button>
               </div>
               <div className='flex items-center gap-2'>
-                {[1, 2, 3, 4, 5].map((page) => (
-                  <button
-                    key={page}
-                    className={`h-7 w-7 rounded-full border text-[11px] ${
-                      page === 1 ? 'border-(--brand-accent) text-(--brand-accent)' : 'border-(--border)'
-                    }`}
-                  >
-                    {page}
-                  </button>
-                ))}
+                {/* Pagination is now handled by MentionsList component */}
               </div>
             </div>
 
-            <MentionsList mentions={filteredMentions} loading={loadingDashboard} />
+            {currentView === 'mentions' && (
+              <MentionsList 
+                mentions={filteredMentions} 
+                loading={loadingDashboard}
+                pagination={pagination ?? undefined}
+                sortOrder={sortOrder}
+                onSortChange={(sort) => {
+                  setSortOrder(sort)
+                  setCurrentPage(1)
+                }}
+                onPageChange={setCurrentPage}
+              />
+            )}
+
+            {currentView === 'analysis' && (
+              <AnalysisView
+                mentions={mentions}
+                loading={loadingDashboard}
+              />
+            )}
           </main>
 
           <aside className='space-y-4'>

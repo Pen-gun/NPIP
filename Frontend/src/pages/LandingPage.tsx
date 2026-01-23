@@ -67,7 +67,7 @@ export default function LandingPage() {
               className='landing-reveal text-xs font-semibold uppercase tracking-[0.38em] text-(--brand-accent)'
               style={withDelay(140)}
             >
-              Nepal Social Listening
+              Nepal's Public Figure Intelligence Portal
             </p>
             <h1
               className='landing-reveal mt-4 font-display text-3xl font-semibold leading-tight sm:text-4xl lg:text-5xl xl:text-6xl'
@@ -197,7 +197,7 @@ export default function LandingPage() {
           className='landing-reveal flex flex-col items-center justify-between gap-3 text-xs text-(--text-muted) sm:flex-row sm:gap-4'
           style={withDelay(120)}
         >
-          <span>NPIP (c) 2026</span>
+          <span>NPIP — Nepal&apos;s Public Figure Information Portal</span>
           <span className='text-center'>Built for Nepal&apos;s public data ecosystem.</span>
         </footer>
     </div>

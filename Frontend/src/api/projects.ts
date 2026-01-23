@@ -44,3 +44,11 @@ export const runProjectIngestion = async (projectId: string) => {
   const response = await npipClient.post(`/projects/${projectId}/run`)
   return response.data.data
 }
+
+export const updateProjectStatus = async (
+  projectId: string,
+  status: 'active' | 'paused',
+): Promise<Project> => {
+  const response = await npipClient.patch(`/projects/${projectId}`, { status })
+  return response.data.data
+}

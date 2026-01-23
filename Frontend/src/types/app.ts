@@ -14,6 +14,8 @@ export type Project = {
   scheduleMinutes: number
   geoFocus: string
   sources: Record<string, boolean>
+  lastRunAt?: string | null
+  status?: 'active' | 'paused'
 }
 
 export type Mention = {

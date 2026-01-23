@@ -133,7 +133,7 @@ const isDue = (project) => {
     return Date.now() - lastRun >= project.scheduleMinutes * 60 * 1000;
 };
 
-export const ingestProject = async (project) => {
+export const ingestProject = async (project, options = {}) => {
     if (project.status !== 'active') return { inserted: 0 };
 
     const user = await User.findById(project.userId);
@@ -186,9 +186,12 @@ export const ingestProject = async (project) => {
     }
 
     project.lastRunAt = new Date();
+    if (options.autoPause) {
+        project.status = 'paused';
+    }
     await project.save({ validateBeforeSave: false });
 
-    return { inserted };
+    return { inserted, status: project.status };
 };
 
 export const startIngestionScheduler = () => {
@@ -197,7 +200,7 @@ export const startIngestionScheduler = () => {
 
         for (const project of projects) {
             if (isDue(project)) {
-                await ingestProject(project);
+                await ingestProject(project, { autoPause: true });
             }
         }
     }, SCHEDULER_INTERVAL_MS);

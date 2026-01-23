@@ -123,7 +123,7 @@ export default function FigureSearchPage() {
   return (
     <div className='mx-auto flex w-full max-w-7xl flex-col gap-6 px-4 py-6 sm:gap-8 sm:px-6 sm:py-8'>
       {/* Hero Section */}
-      <section className='text-center'>
+      <section className='landing-reveal text-center'>
         <h1 className='font-display text-3xl font-semibold sm:text-4xl'>
           Public Figure Intelligence
         </h1>
@@ -134,19 +134,21 @@ export default function FigureSearchPage() {
         </section>
 
         {/* Search Form */}
-        <SearchForm
-          query={query}
-          inputError={inputError}
-          isFetching={identityFetching}
-          status={identityStatus}
-          onQueryChange={handleQueryChange}
-          onSubmit={handleSubmit}
-          onQuickSearch={handleQuickSearch}
-        />
+        <div className='landing-reveal'>
+          <SearchForm
+            query={query}
+            inputError={inputError}
+            isFetching={identityFetching}
+            status={identityStatus}
+            onQueryChange={handleQueryChange}
+            onSubmit={handleSubmit}
+            onQuickSearch={handleQuickSearch}
+          />
+        </div>
 
         {/* Error State */}
         {identityError && hasSearched && (
-          <div className='rounded-2xl border border-(--state-error) bg-(--surface-base) p-6 text-center'>
+          <div className='landing-reveal rounded-2xl border border-(--state-error) bg-(--surface-base) p-6 text-center'>
             <p className='text-sm text-(--state-error)'>
               {identityError.message || 'Failed to search. Please try again.'}
             </p>
@@ -154,21 +156,29 @@ export default function FigureSearchPage() {
         )}
 
         {/* Loading State */}
-        {isLoading && hasSearched && <SkeletonGrid />}
+        {isLoading && hasSearched && (
+          <div className='landing-reveal-soft'>
+            <SkeletonGrid />
+          </div>
+        )}
 
         {/* Disambiguation */}
         {identityData?.isDisambiguation && !identityLoading && (
-          <DisambiguationList data={identityData} onSelect={handleDisambiguationSelect} />
+          <div className='landing-reveal'>
+            <DisambiguationList data={identityData} onSelect={handleDisambiguationSelect} />
+          </div>
         )}
 
         {/* Results */}
         {hasValidPerson && identityData && !identityLoading && (
-          <div className='space-y-6'>
+          <div className='landing-reveal space-y-6'>
             {/* Profile */}
-            <ProfileCard data={identityData} title={personName} />
+            <div className='landing-reveal-soft'>
+              <ProfileCard data={identityData} title={personName} />
+            </div>
 
             {/* Main Grid */}
-            <div className='grid gap-6 lg:grid-cols-2'>
+            <div className='landing-reveal-soft grid gap-6 lg:grid-cols-2'>
               {/* News */}
               <NewsCard
                 data={news}
@@ -187,7 +197,7 @@ export default function FigureSearchPage() {
             </div>
 
             {/* Secondary Grid */}
-            <div className='grid gap-6 lg:grid-cols-3'>
+            <div className='landing-reveal-soft grid gap-6 lg:grid-cols-3'>
               {/* Activities */}
               <ActivitiesCard
                 data={news}
@@ -210,7 +220,9 @@ export default function FigureSearchPage() {
 
             {/* Quotes */}
             {news.insights.quotes.length > 0 && (
-              <QuotesCard quotes={news.insights.quotes} />
+              <div className='landing-reveal-soft'>
+                <QuotesCard quotes={news.insights.quotes} />
+              </div>
             )}
           </div>
         )}
@@ -218,7 +230,7 @@ export default function FigureSearchPage() {
         {/* Empty State */}
         {!hasSearched && (
           <div className='flex flex-1 items-center justify-center'>
-            <div className='text-center'>
+            <div className='landing-reveal text-center'>
               <Search className='mx-auto h-16 w-16 text-(--text-muted)' />
               <p className='mt-4 text-sm text-(--text-muted)'>
                 Search for a public figure to see their intelligence report
@@ -229,7 +241,7 @@ export default function FigureSearchPage() {
 
         {/* No Results */}
         {hasSearched && !identityLoading && !identityData?.person && !identityData?.isDisambiguation && !identityError && (
-          <div className='rounded-2xl border border-(--border) bg-(--surface-base) p-6 text-center'>
+          <div className='landing-reveal rounded-2xl border border-(--border) bg-(--surface-base) p-6 text-center'>
             <p className='text-sm text-(--text-muted)'>
               No results found for "{searchedQuery}". Try a different search term.
             </p>

@@ -79,15 +79,15 @@ export default function LoginPage() {
   return (
     <div className='min-h-screen bg-(--surface-background) text-(--text-primary)'>
       <div className='mx-auto flex min-h-screen w-full max-w-6xl flex-col gap-6 px-4 py-6 sm:gap-10 sm:px-6 sm:py-10'>
-        <header className='flex items-center justify-between'>
+        <header className='landing-reveal flex items-center justify-between'>
           <BrandLogo />
           <Link to='/' className='text-xs font-semibold uppercase tracking-[0.2em] text-(--text-muted) transition hover:text-(--text-primary) sm:tracking-[0.3em]'>
             Back to site
           </Link>
         </header>
 
-        <main className='flex flex-1 flex-col items-center justify-center gap-6 lg:flex-row lg:items-stretch lg:gap-8'>
-          <section className='w-full max-w-md rounded-[28px] border border-(--border) bg-(--surface-base) p-6 shadow-(--shadow) sm:p-8 lg:max-w-none lg:flex-1'>
+        <main className='landing-reveal flex flex-1 flex-col items-center justify-center gap-6 lg:flex-row lg:items-stretch lg:gap-8'>
+          <section className='landing-reveal-soft w-full max-w-md rounded-[28px] border border-(--border) bg-(--surface-base) p-6 shadow-(--shadow) sm:p-8 lg:max-w-none lg:flex-1'>
             <p className='text-xs font-semibold uppercase tracking-[0.2em] text-(--brand-accent) sm:tracking-[0.3em]'>
               Welcome
             </p>
@@ -156,7 +156,7 @@ export default function LoginPage() {
             </button>
           </section>
 
-          <aside className='hidden w-full max-w-md rounded-[28px] border border-(--border) bg-(--surface-base) p-6 shadow-(--shadow) sm:p-8 lg:block lg:max-w-none lg:flex-1'>
+          <aside className='landing-reveal-soft hidden w-full max-w-md rounded-[28px] border border-(--border) bg-(--surface-base) p-6 shadow-(--shadow) sm:p-8 lg:block lg:max-w-none lg:flex-1'>
             <h2 className='text-lg font-semibold'>What you get</h2>
             <ul className='mt-4 space-y-3 text-sm text-(--text-muted)'>
               {FEATURES.map((feature) => (

@@ -8,6 +8,7 @@ import {
   fetchProjectMetrics,
   listProjects,
   runProjectIngestion,
+  updateProjectStatus,
 } from '../api/projects'
 import { fetchMentions } from '../api/mentions'
 import { fetchAlerts, markAlertRead } from '../api/alerts'
@@ -210,6 +211,21 @@ export default function DashboardPage() {
     }
   }
 
+  const handleToggleProjectStatus = async () => {
+    if (!activeProject || actionLoading) return
+    const nextStatus = activeProject.status === 'paused' ? 'active' : 'paused'
+    setActionLoading('status')
+    setError(null)
+    try {
+      const updated = await updateProjectStatus(activeProject._id, nextStatus)
+      setProjects((prev) => prev.map((project) => (project._id === updated._id ? updated : project)))
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to update project status')
+    } finally {
+      setActionLoading(null)
+    }
+  }
+
   const handleDownloadReport = async () => {
     if (!activeProjectId || actionLoading) return
     setActionLoading('report')
@@ -272,43 +288,53 @@ export default function DashboardPage() {
         </div>
       )}
       <div className='mx-auto flex w-full max-w-7xl flex-col gap-6 px-4 py-6 sm:gap-8 sm:px-6 sm:py-8 lg:gap-10 lg:px-10 lg:py-10'>
-        <section className='grid gap-4 sm:gap-6 lg:grid-cols-[1.1fr_0.9fr]'>
+        <section className='landing-reveal grid gap-4 sm:gap-6 lg:grid-cols-[1.1fr_0.9fr]'>
           <ProjectForm
             formState={projectForm}
             onFormChange={setProjectForm}
             onSubmit={handleProjectSubmit}
             submitting={actionLoading === 'create'}
           />
-          <ProjectList
-            projects={projects}
-            activeProjectId={activeProjectId}
-            activeProject={activeProject}
-            loading={loadingProjects}
-            actionLoading={actionLoading}
-            onSelectProject={setActiveProjectId}
-            onRunIngestion={handleRunIngestion}
-            onDownloadReport={handleDownloadReport}
-            onDeleteProject={handleDeleteProject}
-          />
+            <ProjectList
+              projects={projects}
+              activeProjectId={activeProjectId}
+              activeProject={activeProject}
+              loading={loadingProjects}
+              actionLoading={actionLoading}
+              socketConnected={socketConnected}
+              onSelectProject={setActiveProjectId}
+              onRunIngestion={handleRunIngestion}
+              onDownloadReport={handleDownloadReport}
+              onToggleStatus={handleToggleProjectStatus}
+              onDeleteProject={handleDeleteProject}
+            />
         </section>
 
-        <section className='grid gap-4 sm:gap-6 xl:grid-cols-[2fr_1fr]'>
+        <section className='landing-reveal grid gap-4 sm:gap-6 xl:grid-cols-[2fr_1fr]'>
           <div className='space-y-4 sm:space-y-6'>
-            <div className='rounded-[20px] border border-(--border) bg-(--surface-base) p-4 shadow-(--shadow) sm:rounded-[28px] sm:p-6'>
+            <div className='landing-reveal-soft rounded-[20px] border border-(--border) bg-(--surface-base) p-4 shadow-(--shadow) sm:rounded-[28px] sm:p-6'>
               <DashboardFiltersBar filters={filters} onFiltersChange={setFilters} />
               <MetricsCharts metrics={metrics} loading={loadingDashboard} />
             </div>
-            <MentionsList mentions={mentions} loading={loadingDashboard} />
+            <div className='landing-reveal-soft'>
+              <MentionsList mentions={mentions} loading={loadingDashboard} />
+            </div>
           </div>
 
           <aside className='space-y-4 sm:space-y-6'>
-            <AlertsPanel
-              alerts={alerts}
-              loading={loadingDashboard}
-              onMarkRead={handleMarkAlertRead}
-            />
-            <ConnectorHealthPanel health={health} loading={loadingDashboard} />
-            <SourcePolicyPanel />
+            <div className='landing-reveal-soft'>
+              <AlertsPanel
+                alerts={alerts}
+                loading={loadingDashboard}
+                onMarkRead={handleMarkAlertRead}
+              />
+            </div>
+            <div className='landing-reveal-soft'>
+              <ConnectorHealthPanel health={health} loading={loadingDashboard} />
+            </div>
+            <div className='landing-reveal-soft'>
+              <SourcePolicyPanel />
+            </div>
           </aside>
         </section>
       </div>

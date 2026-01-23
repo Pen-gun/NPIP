@@ -2,6 +2,8 @@ import { useEffect, useMemo, useState } from 'react'
 import { Download, Pause, Play, Trash2 } from 'lucide-react'
 import type { Project } from '../../types/app'
 
+type ReportScope = 'summary' | 'all' | 'mentions' | 'last_run'
+
 interface ProjectListProps {
   projects: Project[]
   activeProjectId: string
@@ -11,7 +13,7 @@ interface ProjectListProps {
   socketConnected: boolean
   onSelectProject: (projectId: string) => void
   onRunIngestion: () => void
-  onDownloadReport: () => void
+  onDownloadReport: (scope: ReportScope) => void
   onToggleStatus: () => void
   onDeleteProject: (projectId: string) => void
 }
@@ -33,6 +35,7 @@ export default function ProjectList({
   onDeleteProject,
 }: ProjectListProps) {
   const [now, setNow] = useState(() => Date.now())
+  const [reportScope, setReportScope] = useState<ReportScope>('summary')
   const [pausedSnapshot, setPausedSnapshot] = useState<{
     projectId: string;
     timeLeftMs: number | null;
@@ -170,9 +173,22 @@ export default function ProjectList({
                   ? 'Resume'
                   : 'Pause'}
             </button>
+            <label className='sr-only' htmlFor='report-scope'>Report scope</label>
+            <select
+              id='report-scope'
+              className='rounded-full border border-(--border) bg-(--surface-base) px-3 py-1.5 text-xs font-semibold text-(--text-primary) shadow-(--shadow) focus:outline-none focus:ring-2 focus:ring-(--brand-primary)'
+              value={reportScope}
+              onChange={(event) => setReportScope(event.target.value as ReportScope)}
+              disabled={!!actionLoading}
+            >
+              <option value='summary'>Summary</option>
+              <option value='all'>All data</option>
+              <option value='mentions'>Mentions list</option>
+              <option value='last_run'>Last run only</option>
+            </select>
             <button
               className={`${ACTION_BTN_CLASS} disabled:cursor-not-allowed disabled:opacity-60`}
-              onClick={onDownloadReport}
+              onClick={() => onDownloadReport(reportScope)}
               type='button'
               disabled={!!actionLoading}
             >

@@ -24,6 +24,7 @@ const mentionSchema = new Schema(
             confidence: { type: Number, default: 0 },
         },
         similarityHash: { type: String, default: null },
+        ingestedAt: { type: Date, default: null },
     },
     { timestamps: true }
 );
@@ -31,5 +32,6 @@ const mentionSchema = new Schema(
 mentionSchema.index({ projectId: 1, source: 1, url: 1 }, { unique: true, sparse: true });
 mentionSchema.index({ projectId: 1, similarityHash: 1 }, { unique: true, sparse: true });
 mentionSchema.index({ projectId: 1, publishedAt: -1 });
+mentionSchema.index({ projectId: 1, ingestedAt: -1 });
 
 export const Mention = mongoose.model('Mention', mentionSchema);

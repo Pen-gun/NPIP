@@ -92,7 +92,7 @@ const runConnector = async (connector, project) => {
     return Array.isArray(result) ? result : [];
 };
 
-const prepareMention = async (raw, project, matchedKeyword) => {
+const prepareMention = async (raw, project, matchedKeyword, runAt) => {
     const text = `${raw.title || ''} ${raw.text || ''}`.trim();
 
     return {
@@ -111,6 +111,7 @@ const prepareMention = async (raw, project, matchedKeyword) => {
         geo: project.geoFocus || '',
         sentiment: await inferSentiment(text),
         similarityHash: createSimilarityHash(`${raw.title} ${raw.text}`) || null,
+        ingestedAt: runAt,
     };
 };
 
@@ -137,6 +138,7 @@ export const ingestProject = async (project, options = {}) => {
     const { force = false } = options;
     if (project.status !== 'active' && !force) return { inserted: 0, status: project.status };
 
+    const runAt = new Date();
     const user = await User.findById(project.userId);
     const usage = await ensureUsage(project.userId);
 
@@ -161,7 +163,7 @@ export const ingestProject = async (project, options = {}) => {
                     continue;
                 }
 
-                prepared.push(await prepareMention(raw, project, matchedKeyword));
+                prepared.push(await prepareMention(raw, project, matchedKeyword, runAt));
             }
 
             inserted += await insertMentions(prepared);
@@ -186,7 +188,7 @@ export const ingestProject = async (project, options = {}) => {
         await checkForSpike({ project, user });
     }
 
-    project.lastRunAt = new Date();
+    project.lastRunAt = runAt;
     if (options.autoPause) {
         project.status = 'paused';
     }

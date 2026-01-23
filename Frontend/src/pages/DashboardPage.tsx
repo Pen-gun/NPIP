@@ -13,6 +13,7 @@ import {
 import { fetchMentions } from '../api/mentions'
 import { fetchAlerts, markAlertRead } from '../api/alerts'
 import { downloadReport } from '../api/reports'
+import type { ReportScope } from '../api/reports'
 import { useAuth } from '../contexts/AuthContext'
 import type { AlertItem, ConnectorHealth, Mention, Project, ProjectMetrics } from '../types/app'
 import {
@@ -234,12 +235,12 @@ export default function DashboardPage() {
     }
   }
 
-  const handleDownloadReport = async () => {
+  const handleDownloadReport = async (scope: ReportScope) => {
     if (!activeProjectId || actionLoading) return
     setActionLoading('report')
     setError(null)
     try {
-      await downloadReport(activeProjectId)
+      await downloadReport(activeProjectId, scope)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to download report')
     } finally {

@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
+import { Download, Pause, Play, Trash2 } from 'lucide-react'
 import type { Project } from '../../types/app'
 
 interface ProjectListProps {
@@ -16,7 +17,7 @@ interface ProjectListProps {
 }
 
 const SKELETON_COUNT = 3
-const ACTION_BTN_CLASS = 'rounded-full border border-(--border) px-3 py-1.5 text-xs font-semibold transition hover:bg-(--surface-muted) active:scale-95'
+const ACTION_BTN_CLASS = 'inline-flex items-center gap-2 rounded-full border border-(--border) px-3 py-1.5 text-xs font-semibold transition hover:bg-(--surface-muted) active:scale-95'
 
 export default function ProjectList({
   projects,
@@ -32,6 +33,11 @@ export default function ProjectList({
   onDeleteProject,
 }: ProjectListProps) {
   const [now, setNow] = useState(() => Date.now())
+  const [pausedSnapshot, setPausedSnapshot] = useState<{
+    projectId: string;
+    timeLeftMs: number | null;
+    lastRunAtMs: number | null;
+  } | null>(null)
 
   useEffect(() => {
     const interval = window.setInterval(() => {
@@ -51,19 +57,51 @@ export default function ProjectList({
     return `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`
   }
 
+  const scheduleMinutes = useMemo(
+    () => (activeProject ? Number(activeProject.scheduleMinutes) : 0),
+    [activeProject]
+  )
+
+  const lastRunAtMs = useMemo(() => {
+    if (!activeProject?.lastRunAt) return null
+    const lastRunAt = new Date(activeProject.lastRunAt).getTime()
+    return Number.isNaN(lastRunAt) ? null : lastRunAt
+  }, [activeProject])
+
+  const timeLeftMs = useMemo(() => {
+    if (!scheduleMinutes || !lastRunAtMs) return null
+    const nextRunAt = lastRunAtMs + scheduleMinutes * 60 * 1000
+    return nextRunAt - now
+  }, [scheduleMinutes, lastRunAtMs, now])
+
+  const isPaused = activeProject?.status === 'paused'
+  const isOverdue = isPaused && typeof timeLeftMs === 'number' && timeLeftMs <= 0
+
+  useEffect(() => {
+    if (!activeProject) {
+      setPausedSnapshot(null)
+      return
+    }
+    if (activeProject.status === 'paused') {
+      setPausedSnapshot((prev) => {
+        if (prev?.projectId === activeProject._id && prev.lastRunAtMs === lastRunAtMs) return prev
+        return { projectId: activeProject._id, timeLeftMs, lastRunAtMs }
+      })
+      return
+    }
+    setPausedSnapshot(null)
+  }, [activeProject, lastRunAtMs, timeLeftMs])
+
+  const displayTimeLeftMs = isPaused ? pausedSnapshot?.timeLeftMs ?? null : timeLeftMs
+
   const nextRunLabel = useMemo(() => {
     if (!activeProject) return ''
-    if (activeProject.status === 'paused') return 'Time left: paused'
-    const scheduleMinutes = Number(activeProject.scheduleMinutes)
     if (!scheduleMinutes) return 'Time left: unknown'
-    if (!activeProject.lastRunAt) return 'Time left: pending'
-    const lastRunAt = new Date(activeProject.lastRunAt).getTime()
-    if (Number.isNaN(lastRunAt)) return 'Time left: unknown'
-    const nextRunAt = lastRunAt + scheduleMinutes * 60 * 1000
-    const diffMs = nextRunAt - now
-    if (diffMs <= 0) return 'Time left: due now'
-    return `Time left: ${formatCountdown(diffMs)}`
-  }, [activeProject, now])
+    if (!lastRunAtMs) return isPaused ? 'Time left: paused' : 'Time left: pending'
+    if (displayTimeLeftMs !== null && displayTimeLeftMs <= 0) return 'Time left: due now'
+    if (displayTimeLeftMs !== null) return `Time left: ${formatCountdown(displayTimeLeftMs)}`
+    return 'Time left: unknown'
+  }, [activeProject, displayTimeLeftMs, isPaused, lastRunAtMs, scheduleMinutes])
 
   return (
     <div className='rounded-[20px] border border-(--border) bg-(--surface-base) p-4 shadow-(--shadow) sm:rounded-[28px] sm:p-6'>
@@ -110,16 +148,22 @@ export default function ProjectList({
               className={`${ACTION_BTN_CLASS} disabled:cursor-not-allowed disabled:opacity-60`}
               onClick={onRunIngestion}
               type='button'
-              disabled={!!actionLoading || activeProject.status === 'paused'}
+              disabled={!!actionLoading || (isPaused && !isOverdue)}
             >
+              <Play className='h-4 w-4' aria-hidden='true' />
               {actionLoading === 'ingestion' ? 'Running...' : 'Run now'}
             </button>
             <button
               className={`${ACTION_BTN_CLASS} disabled:cursor-not-allowed disabled:opacity-60`}
               onClick={onToggleStatus}
               type='button'
-              disabled={!!actionLoading}
+              disabled={!!actionLoading || isOverdue}
             >
+              {activeProject.status === 'paused' ? (
+                <Play className='h-4 w-4' aria-hidden='true' />
+              ) : (
+                <Pause className='h-4 w-4' aria-hidden='true' />
+              )}
               {actionLoading === 'status'
                 ? 'Updating...'
                 : activeProject.status === 'paused'
@@ -132,6 +176,7 @@ export default function ProjectList({
               type='button'
               disabled={!!actionLoading}
             >
+              <Download className='h-4 w-4' aria-hidden='true' />
               {actionLoading === 'report' ? 'Downloading...' : 'Download PDF'}
             </button>
             <button
@@ -140,6 +185,7 @@ export default function ProjectList({
               type='button'
               disabled={!!actionLoading}
             >
+              <Trash2 className='h-4 w-4' aria-hidden='true' />
               {actionLoading === `delete-${activeProject._id}` ? 'Deleting...' : 'Delete'}
             </button>
           </div>

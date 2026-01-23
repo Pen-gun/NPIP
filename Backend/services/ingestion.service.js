@@ -134,7 +134,8 @@ const isDue = (project) => {
 };
 
 export const ingestProject = async (project, options = {}) => {
-    if (project.status !== 'active') return { inserted: 0 };
+    const { force = false } = options;
+    if (project.status !== 'active' && !force) return { inserted: 0, status: project.status };
 
     const user = await User.findById(project.userId);
     const usage = await ensureUsage(project.userId);

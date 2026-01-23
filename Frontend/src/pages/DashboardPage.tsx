@@ -204,6 +204,14 @@ export default function DashboardPage() {
     setError(null)
     try {
       await runProjectIngestion(activeProjectId)
+      const nowIso = new Date().toISOString()
+      setProjects((prev) =>
+        prev.map((project) =>
+          project._id === activeProjectId
+            ? { ...project, lastRunAt: nowIso }
+            : project
+        )
+      )
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to run ingestion')
     } finally {

@@ -77,7 +77,9 @@ export const updateProject = asyncHandler(async (req, res) => {
     if (sources) project.sources = sources;
     if (scheduleMinutes) project.scheduleMinutes = Math.max(Number(scheduleMinutes) || plan.minIntervalMinutes, plan.minIntervalMinutes);
     if (geoFocus) project.geoFocus = geoFocus;
-    if (status) project.status = status;
+    if (status) {
+        project.status = String(status);
+    }
 
     await project.save();
     return res.status(200).json(new ApiResponse(200, project, 'Project updated'));
@@ -107,7 +109,7 @@ export const runProjectIngestion = asyncHandler(async (req, res) => {
         { upsert: true, new: true }
     );
 
-    const result = await ingestProject(project);
+    const result = await ingestProject(project, { force: project.status !== 'active' });
     return res.status(200).json(new ApiResponse(200, result, 'Ingestion triggered'));
 });
 

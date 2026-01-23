@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
+import AnimatedShaderBackground from '@/components/ui/animated-shader-background'
 import BrandLogo from './BrandLogo'
 
 interface LayoutProps {
@@ -27,7 +28,8 @@ export default function Layout({ children }: LayoutProps) {
   }
 
   return (
-    <div className='min-h-screen bg-(--surface-background) text-(--text-primary)'>
+    <div className='relative min-h-screen overflow-hidden bg-(--surface-background) text-(--text-primary)'>
+      <AnimatedShaderBackground className='pointer-events-none absolute inset-0 h-full w-full opacity-60' />
       <header className='sticky top-0 z-50 border-b border-(--border) bg-(--surface-background)/80 backdrop-blur-sm'>
         <nav className='mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-4 sm:px-6'>
           <BrandLogo />
@@ -98,7 +100,7 @@ export default function Layout({ children }: LayoutProps) {
         </nav>
       </header>
 
-      <main>{children}</main>
+      <main className='relative z-10'>{children}</main>
     </div>
   )
 }

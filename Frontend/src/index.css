@@ -78,7 +78,7 @@
 body {
   margin: 0;
   font-family: var(--font-sans);
-  background: radial-gradient(circle at top left, var(--bg-1), var(--bg-2) 55%, var(--bg-3) 100%);
+  background: var(--surface-background);
   color: var(--text-primary);
   min-height: 100vh;
 }
@@ -91,6 +91,7 @@ h3 {
 
 html {
   color-scheme: light dark;
+  scroll-behavior: smooth;
 }
 
 img {

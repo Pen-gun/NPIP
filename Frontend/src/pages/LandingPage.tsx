@@ -1,6 +1,5 @@
 import { Link } from 'react-router-dom'
 import type { CSSProperties } from 'react'
-import AnimatedShaderBackground from '@/components/ui/animated-shader-background'
 import PrimaryButton from '../components/PrimaryButton'
 
 interface Highlight {
@@ -58,9 +57,7 @@ export default function LandingPage() {
     ({ '--delay': `${delay}ms` } as CSSProperties)
 
   return (
-    <div className='relative min-h-screen overflow-hidden'>
-      <AnimatedShaderBackground className='pointer-events-none absolute inset-0 h-full w-full opacity-70' />
-      <div className='landing-page relative z-10 mx-auto flex w-full max-w-6xl flex-col gap-10 px-4 py-6 sm:gap-14 sm:px-6 sm:py-10'>
+    <div className='landing-page mx-auto flex w-full max-w-6xl flex-col gap-10 px-4 py-6 sm:gap-14 sm:px-6 sm:py-10'>
         <section
           className='grid items-center gap-8 rounded-[28px] border border-(--border) p-4 lg:grid-cols-[1.2fr_0.8fr] lg:gap-10 sm:p-6'
           style={withDelay(80)}
@@ -213,7 +210,6 @@ export default function LandingPage() {
           <span>NPIP (c) 2026</span>
           <span className='text-center'>Built for Nepal&apos;s public data ecosystem.</span>
         </footer>
-      </div>
     </div>
   )
 }

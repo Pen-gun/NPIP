@@ -63,7 +63,7 @@ export default function AlertsPanel({ alerts, loading, onMarkRead }: AlertsPanel
   return (
     <div className='rounded-[20px] border border-(--border) bg-(--surface-base) p-4 shadow-(--shadow) sm:rounded-[28px] sm:p-6'>
       <h3 className='text-base font-semibold sm:text-lg'>Alerts</h3>
-      <div className='mt-3 space-y-2 sm:mt-4 sm:space-y-3'>
+      <div className='mt-3 max-h-[520px] space-y-2 overflow-y-auto sm:mt-4 sm:space-y-3'>
         {loading &&
           Array.from({ length: SKELETON_COUNT }).map((_, index) => (
             <AlertSkeleton key={`alert-skeleton-${index}`} />

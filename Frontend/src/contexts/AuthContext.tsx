@@ -4,8 +4,7 @@ import { getCurrentUser, loginUser, logoutUser, registerUser } from '../api/auth
 import type { User } from '../types/app'
 
 interface LoginPayload {
-  username?: string
-  email?: string
+  identifier: string
   password: string
 }
 

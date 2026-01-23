@@ -47,14 +47,15 @@ export default function LoginPage() {
       email: String(form.get('email') || ''),
       password: String(form.get('password') || ''),
     }
+    const loginIdentifier =
+      String(form.get('identifier') || '').trim() || payload.email.trim() || payload.username.trim()
 
     try {
       if (!isLogin) {
         await register(payload)
       }
       await login({
-        username: payload.username,
-        email: payload.email,
+        identifier: loginIdentifier,
         password: payload.password,
       })
       const from = (location.state as { from?: Location })?.from?.pathname || '/app'
@@ -107,21 +108,33 @@ export default function LoginPage() {
                   required
                 />
               )}
-              <input
-                name='username'
-                placeholder='Username'
-                autoComplete='username'
-                className='w-full rounded-xl border border-(--border) bg-(--surface-muted) px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-(--brand-primary)/20'
-                required
-              />
-              <input
-                name='email'
-                type='email'
-                placeholder='Email'
-                autoComplete='email'
-                className='w-full rounded-xl border border-(--border) bg-(--surface-muted) px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-(--brand-primary)/20'
-                required
-              />
+              {isLogin ? (
+                <input
+                  name='identifier'
+                  placeholder='Email or username'
+                  autoComplete='username'
+                  className='w-full rounded-xl border border-(--border) bg-(--surface-muted) px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-(--brand-primary)/20'
+                  required
+                />
+              ) : (
+                <>
+                  <input
+                    name='username'
+                    placeholder='Username'
+                    autoComplete='username'
+                    className='w-full rounded-xl border border-(--border) bg-(--surface-muted) px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-(--brand-primary)/20'
+                    required
+                  />
+                  <input
+                    name='email'
+                    type='email'
+                    placeholder='Email'
+                    autoComplete='email'
+                    className='w-full rounded-xl border border-(--border) bg-(--surface-muted) px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-(--brand-primary)/20'
+                    required
+                  />
+                </>
+              )}
               <input
                 name='password'
                 type='password'

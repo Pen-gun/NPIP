@@ -45,18 +45,40 @@ const registerUser = asyncHandler(async (req, res) => {
 });
 
 const loginUser = asyncHandler(async (req, res) => {
-    const { username, email, password } = req.body;
+    const { username, email, password, identifier } = req.body;
+    const trimmedUsername = username?.trim();
+    const trimmedEmail = email?.trim();
+    const trimmedIdentifier = identifier?.trim();
+    const hasLegacyCredentials = Boolean(trimmedUsername) || Boolean(trimmedEmail);
+    const hasIdentifier = Boolean(trimmedIdentifier);
 
-    if (!username && !email) {
+    if (!hasIdentifier && !hasLegacyCredentials) {
         throw new ApiError(400, 'Username or email is required');
+    }
+    if (trimmedUsername && trimmedEmail) {
+        throw new ApiError(400, 'Provide either a username or email, not both');
+    }
+    if (hasIdentifier && hasLegacyCredentials) {
+        throw new ApiError(400, 'Provide either identifier or username/email, not both');
     }
     if (!password) {
         throw new ApiError(400, 'Password is required');
     }
 
-    const user = await User.findOne({
-        $or: [{ email }, { username: username?.toLowerCase() }],
-    });
+    let user = null;
+    if (hasIdentifier) {
+        const normalizedIdentifier = trimmedIdentifier.toLowerCase();
+        user = await User.findOne({
+            $or: [{ email: normalizedIdentifier }, { username: normalizedIdentifier }],
+        });
+    } else {
+        user = await User.findOne({
+            $or: [
+                trimmedEmail && { email: trimmedEmail.toLowerCase() },
+                trimmedUsername && { username: trimmedUsername.toLowerCase() },
+            ].filter(Boolean),
+        });
+    }
 
     if (!user) {
         throw new ApiError(404, 'User not found');

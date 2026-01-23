@@ -10,6 +10,7 @@ import EventsCard from '../components/EventsCard'
 import TopicsCard from '../components/TopicsCard'
 import QuotesCard from '../components/QuotesCard'
 import SkeletonGrid from '../components/SkeletonGrid'
+import { Search } from 'lucide-react'
 
 const DATE_FORMAT_OPTIONS: Intl.DateTimeFormatOptions = Object.freeze({
   month: 'short',
@@ -218,7 +219,7 @@ export default function FigureSearchPage() {
         {!hasSearched && (
           <div className='flex flex-1 items-center justify-center'>
             <div className='text-center'>
-              <p className='text-6xl'>🔍</p>
+              <Search className='mx-auto h-16 w-16 text-(--text-muted)' />
               <p className='mt-4 text-sm text-(--text-muted)'>
                 Search for a public figure to see their intelligence report
               </p>

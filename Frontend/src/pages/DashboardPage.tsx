@@ -9,6 +9,7 @@ import {
   Search,
   SlidersHorizontal,
   Sparkles,
+  X,
 } from 'lucide-react'
 import {
   createProject,
@@ -60,10 +61,10 @@ const INITIAL_PROJECT_FORM: ProjectFormState = Object.freeze({
     localNews: true,
     youtube: true,
     reddit: true,
-    x: false,
-    meta: false,
-    tiktok: false,
-    viber: false,
+    x: true,
+    meta: true,
+    tiktok: true,
+    viber: true,
   },
 })
 
@@ -72,19 +73,6 @@ const parseKeywords = (value: string): string[] =>
     .split(',')
     .map((item) => item.trim())
     .filter(Boolean)
-
-const SOURCE_FILTERS = Object.freeze([
-  { id: 'facebook', label: 'Facebook' },
-  { id: 'instagram', label: 'Instagram' },
-  { id: 'x', label: 'X (Twitter)' },
-  { id: 'tiktok', label: 'TikTok' },
-  { id: 'videos', label: 'Videos' },
-  { id: 'news', label: 'News' },
-  { id: 'podcasts', label: 'Podcasts' },
-  { id: 'other', label: 'Other socials' },
-  { id: 'blogs', label: 'Blogs' },
-  { id: 'web', label: 'Web' },
-])
 
 const REPORT_NAV_ITEMS = Object.freeze([
   'Email reports',
@@ -104,20 +92,37 @@ const FILTER_CHIPS = Object.freeze([
   { id: 'tiktok', label: 'TikTok' },
 ])
 
+// Map raw source values to normalized IDs (keep actual source names)
 const SOURCE_MAP: Record<string, string> = Object.freeze({
   facebook: 'facebook',
   instagram: 'instagram',
   x: 'x',
   twitter: 'x',
   tiktok: 'tiktok',
-  youtube: 'videos',
-  videos: 'videos',
-  local_news: 'news',
-  news: 'news',
-  reddit: 'other',
+  youtube: 'youtube',
+  videos: 'youtube',
+  local_news: 'local_news',
+  news: 'local_news',
+  reddit: 'reddit',
   podcasts: 'podcasts',
   blogs: 'blogs',
   web: 'web',
+  viber: 'viber',
+})
+
+// Display labels for sources
+const SOURCE_LABELS: Record<string, string> = Object.freeze({
+  youtube: 'YouTube',
+  reddit: 'Reddit',
+  x: 'X (Twitter)',
+  facebook: 'Facebook',
+  instagram: 'Instagram',
+  tiktok: 'TikTok',
+  local_news: 'Local News',
+  viber: 'Viber',
+  podcasts: 'Podcasts',
+  blogs: 'Blogs',
+  web: 'Web',
 })
 
 const normalizeSentiment = (value?: string) => {
@@ -166,6 +171,7 @@ export default function DashboardPage() {
     ...INITIAL_PROJECT_FORM,
     sources: { ...INITIAL_PROJECT_FORM.sources },
   })
+  const [showProjectModal, setShowProjectModal] = useState(false)
   const [mentionSearch, setMentionSearch] = useState('')
   const [chartView, setChartView] = useState<'mentions' | 'sentiment'>('mentions')
   const [chartGranularity, setChartGranularity] = useState<'days' | 'weeks' | 'months'>('days')
@@ -551,12 +557,13 @@ export default function DashboardPage() {
               </div>
             </div>
 
-            <ProjectForm
-              formState={projectForm}
-              onFormChange={setProjectForm}
-              onSubmit={handleProjectSubmit}
-              submitting={actionLoading === 'create'}
-            />
+            <button
+              onClick={() => setShowProjectModal(true)}
+              className='flex w-full items-center justify-center gap-2 rounded-xl border-2 border-dashed border-(--border) py-3 text-sm font-medium text-(--text-muted) transition-colors hover:border-(--brand-accent) hover:text-(--brand-accent)'
+            >
+              <Plus className='h-4 w-4' />
+              Create New Project
+            </button>
 
             <ProjectList
               projects={projects}
@@ -854,34 +861,29 @@ export default function DashboardPage() {
             <div className='rounded-[20px] border border-(--border) bg-(--surface-base) p-4 text-xs shadow-(--shadow)'>
               <div className='flex items-center justify-between'>
                 <span className='font-semibold'>Sources</span>
-                <button className='text-(--brand-accent)'>Show all (1287)</button>
+                <span className='text-(--text-muted)'>Total: {mentions.length.toLocaleString()}</span>
               </div>
               <div className='mt-3 grid gap-3'>
-                {SOURCE_FILTERS.map((source) => (
-                  <label key={source.id} className='flex items-center justify-between gap-2'>
+                {/* Dynamic sources from actual mentions */}
+                {Object.entries(mentionsBySource)
+                  .sort((a, b) => b[1] - a[1])
+                  .map(([sourceId, count]) => (
+                  <label key={sourceId} className='flex items-center justify-between gap-2'>
                     <span className='flex items-center gap-2'>
                       <input
                         type='checkbox'
-                        checked={!!sourceFilters[source.id]}
-                        onChange={() => handleSourceFilterToggle(source.id)}
+                        checked={!!sourceFilters[sourceId]}
+                        onChange={() => handleSourceFilterToggle(sourceId)}
                         className='h-4 w-4 rounded border-(--border)'
                       />
-                    <span className='font-semibold'>{source.label}</span>
-                    <span className='text-[11px] text-(--text-muted)'>({mentionsBySource[source.id] || 0})</span>
+                      <span className='font-semibold'>{SOURCE_LABELS[sourceId] || sourceId}</span>
+                      <span className='text-[11px] text-(--text-muted)'>({count})</span>
                     </span>
-                    <button
-                      type='button'
-                      onClick={() => handleConnectSource(source.id)}
-                      className={`rounded-full border px-2 py-1 text-[10px] font-semibold ${
-                        connectedSources[source.id]
-                          ? 'border-(--state-success) text-(--state-success)'
-                          : 'border-(--border) text-(--text-muted)'
-                      }`}
-                    >
-                      {connectedSources[source.id] ? 'Connected' : 'Connect'}
-                    </button>
                   </label>
                 ))}
+                {Object.keys(mentionsBySource).length === 0 && (
+                  <p className='text-(--text-muted)'>No sources yet</p>
+                )}
               </div>
             </div>
 
@@ -961,6 +963,30 @@ export default function DashboardPage() {
           </aside>
         </div>
       </div>
+
+      {/* Create Project Modal */}
+      {showProjectModal && (
+        <div className='fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4'>
+          <div className='relative max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-2xl border border-(--border) bg-(--surface-base) p-6 shadow-xl'>
+            <button
+              onClick={() => setShowProjectModal(false)}
+              className='absolute right-4 top-4 rounded-lg p-1 text-(--text-muted) hover:bg-(--surface-muted) hover:text-(--text-base)'
+            >
+              <X className='h-5 w-5' />
+            </button>
+            <h2 className='mb-4 text-lg font-semibold'>Create New Project</h2>
+            <ProjectForm
+              formState={projectForm}
+              onFormChange={setProjectForm}
+              onSubmit={(e) => {
+                handleProjectSubmit(e)
+                setShowProjectModal(false)
+              }}
+              submitting={actionLoading === 'create'}
+            />
+          </div>
+        </div>
+      )}
     </>
   )
 }

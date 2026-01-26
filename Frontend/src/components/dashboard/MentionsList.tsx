@@ -173,7 +173,7 @@ export default function MentionsList({ mentions, loading, pagination, sortOrder,
           </select>
         </div>
       </div>
-      <div className='mt-3 grid max-h-96 gap-3 overflow-y-auto pr-1 sm:mt-4 sm:max-h-130 sm:gap-4 sm:pr-2'>
+      <div className='mt-3 grid max-h-[500px] gap-3 overflow-y-auto pr-1 sm:mt-4 sm:max-h-[700px] sm:gap-4 sm:pr-2'>
         {loading &&
           Array.from({ length: SKELETON_COUNT }).map((_, index) => (
             <MentionSkeleton key={`mention-skeleton-${index}`} />

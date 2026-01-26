@@ -172,3 +172,7 @@ pyvenv.cfg
 pip-selfcheck.json
 
 # End of https://www.toptal.com/developers/gitignore/api/node,react,dotenv,venv
+
+#optimization
+.agents
+.codex

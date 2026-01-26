@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import ChartCard from '../ChartCard'
 import type { ProjectMetrics } from '../../types/app'
 
@@ -27,12 +27,30 @@ const formatSentimentLabel = (label: string): string =>
 
 export default function MetricsCharts({ metrics, loading }: MetricsChartsProps) {
   const [activeChart, setActiveChart] = useState<'all' | 'volume' | 'sentiment' | 'sources'>('all')
-  const volumeLabels = metrics?.volume.map((item) => `${item._id.month}/${item._id.day}`) || []
-  const volumeData = metrics?.volume.map((item) => item.count) || []
-  const sentimentLabels = metrics?.sentimentShare.map((item) => formatSentimentLabel(item._id)) || []
-  const sentimentData = metrics?.sentimentShare.map((item) => item.count) || []
-  const sourceLabels = metrics?.topSources.map((item) => item._id) || []
-  const sourceData = metrics?.topSources.map((item) => item.count) || []
+  const volumeLabels = useMemo(
+    () => metrics?.volume.map((item) => `${item._id.month}/${item._id.day}`) || [],
+    [metrics],
+  )
+  const volumeData = useMemo(
+    () => metrics?.volume.map((item) => item.count) || [],
+    [metrics],
+  )
+  const sentimentLabels = useMemo(
+    () => metrics?.sentimentShare.map((item) => formatSentimentLabel(item._id)) || [],
+    [metrics],
+  )
+  const sentimentData = useMemo(
+    () => metrics?.sentimentShare.map((item) => item.count) || [],
+    [metrics],
+  )
+  const sourceLabels = useMemo(
+    () => metrics?.topSources.map((item) => item._id) || [],
+    [metrics],
+  )
+  const sourceData = useMemo(
+    () => metrics?.topSources.map((item) => item.count) || [],
+    [metrics],
+  )
 
   const charts = [
     {

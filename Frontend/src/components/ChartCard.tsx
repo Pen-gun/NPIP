@@ -89,11 +89,31 @@ export default function ChartCard({ title, description, type, labels, data }: Ch
   useEffect(() => {
     if (!canvasRef.current) return
 
-    chartRef.current?.destroy()
-    chartRef.current = new Chart(canvasRef.current, createChartConfig(type, title, labels, data))
+    const config = createChartConfig(type, title, labels, data)
+    const chart = chartRef.current
 
-    return () => chartRef.current?.destroy()
+    if (!chart) {
+      chartRef.current = new Chart(canvasRef.current, config)
+      return
+    }
+
+    if (chart.config.type !== config.type) {
+      chart.destroy()
+      chartRef.current = new Chart(canvasRef.current, config)
+      return
+    }
+
+    chart.data = config.data
+    chart.options = config.options
+    chart.update()
   }, [title, type, labels, data])
+
+  useEffect(() => {
+    return () => {
+      chartRef.current?.destroy()
+      chartRef.current = null
+    }
+  }, [])
 
   return (
     <div className='flex flex-col rounded-2xl border border-(--border) bg-(--surface-muted) p-4'>

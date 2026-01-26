@@ -1,5 +1,12 @@
 import { useState, useCallback } from 'react'
-import { Plus, Trash2, GripVertical, ChevronDown, Search, HelpCircle, Copy, Check } from 'lucide-react'
+import Check from 'lucide-react/dist/esm/icons/check'
+import ChevronDown from 'lucide-react/dist/esm/icons/chevron-down'
+import Copy from 'lucide-react/dist/esm/icons/copy'
+import GripVertical from 'lucide-react/dist/esm/icons/grip-vertical'
+import HelpCircle from 'lucide-react/dist/esm/icons/help-circle'
+import Plus from 'lucide-react/dist/esm/icons/plus'
+import Search from 'lucide-react/dist/esm/icons/search'
+import Trash2 from 'lucide-react/dist/esm/icons/trash-2'
 
 interface QueryCondition {
   id: string

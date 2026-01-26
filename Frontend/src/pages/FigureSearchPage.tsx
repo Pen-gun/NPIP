@@ -10,7 +10,7 @@ import EventsCard from '../components/EventsCard'
 import TopicsCard from '../components/TopicsCard'
 import QuotesCard from '../components/QuotesCard'
 import SkeletonGrid from '../components/SkeletonGrid'
-import { Search } from 'lucide-react'
+import Search from 'lucide-react/dist/esm/icons/search'
 
 const DATE_FORMAT_OPTIONS: Intl.DateTimeFormatOptions = Object.freeze({
   month: 'short',

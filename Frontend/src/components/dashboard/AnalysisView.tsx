@@ -1,5 +1,11 @@
 import { useMemo } from 'react'
-import { TrendingUp, TrendingDown, Minus, Users, MessageSquare, Share2, BarChart3 } from 'lucide-react'
+import BarChart3 from 'lucide-react/dist/esm/icons/bar-chart-3'
+import MessageSquare from 'lucide-react/dist/esm/icons/message-square'
+import Minus from 'lucide-react/dist/esm/icons/minus'
+import Share2 from 'lucide-react/dist/esm/icons/share-2'
+import TrendingDown from 'lucide-react/dist/esm/icons/trending-down'
+import TrendingUp from 'lucide-react/dist/esm/icons/trending-up'
+import Users from 'lucide-react/dist/esm/icons/users'
 import ChartCard from '../ChartCard'
 import type { Mention } from '../../types/app'
 

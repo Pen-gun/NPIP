@@ -1,4 +1,12 @@
-import { BellOff, CheckSquare, ChevronLeft, ChevronRight, ExternalLink, FileText, MoreHorizontal, Tag, Trash2 } from 'lucide-react'
+import BellOff from 'lucide-react/dist/esm/icons/bell-off'
+import CheckSquare from 'lucide-react/dist/esm/icons/check-square'
+import ChevronLeft from 'lucide-react/dist/esm/icons/chevron-left'
+import ChevronRight from 'lucide-react/dist/esm/icons/chevron-right'
+import ExternalLink from 'lucide-react/dist/esm/icons/external-link'
+import FileText from 'lucide-react/dist/esm/icons/file-text'
+import MoreHorizontal from 'lucide-react/dist/esm/icons/more-horizontal'
+import Tag from 'lucide-react/dist/esm/icons/tag'
+import Trash2 from 'lucide-react/dist/esm/icons/trash-2'
 import type { Mention } from '../../types/app'
 import type { PaginationInfo } from '../../api/mentions'
 

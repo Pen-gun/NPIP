@@ -1,5 +1,13 @@
 import { useMemo, useState } from 'react'
-import { Users, TrendingUp, ExternalLink, Star, Award, Crown, ChevronDown, ChevronUp, Filter } from 'lucide-react'
+import Award from 'lucide-react/dist/esm/icons/award'
+import ChevronDown from 'lucide-react/dist/esm/icons/chevron-down'
+import ChevronUp from 'lucide-react/dist/esm/icons/chevron-up'
+import Crown from 'lucide-react/dist/esm/icons/crown'
+import ExternalLink from 'lucide-react/dist/esm/icons/external-link'
+import Filter from 'lucide-react/dist/esm/icons/filter'
+import Star from 'lucide-react/dist/esm/icons/star'
+import TrendingUp from 'lucide-react/dist/esm/icons/trending-up'
+import Users from 'lucide-react/dist/esm/icons/users'
 import type { Mention } from '../../types/app'
 
 interface InfluencersViewProps {

@@ -1,5 +1,8 @@
 import { useEffect, useMemo, useState } from 'react'
-import { Download, Pause, Play, Trash2 } from 'lucide-react'
+import Download from 'lucide-react/dist/esm/icons/download'
+import Pause from 'lucide-react/dist/esm/icons/pause'
+import Play from 'lucide-react/dist/esm/icons/play'
+import Trash2 from 'lucide-react/dist/esm/icons/trash-2'
 import type { Project } from '../../types/app'
 
 type ReportScope = 'summary' | 'all' | 'mentions' | 'last_run'

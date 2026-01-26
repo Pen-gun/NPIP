@@ -1,16 +1,14 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import type { FormEvent } from 'react'
 import { io, Socket } from 'socket.io-client'
-import {
-  Bell,
-  ChevronDown,
-  HelpCircle,
-  Plus,
-  Search,
-  SlidersHorizontal,
-  Sparkles,
-  X,
-} from 'lucide-react'
+import Bell from 'lucide-react/dist/esm/icons/bell'
+import ChevronDown from 'lucide-react/dist/esm/icons/chevron-down'
+import HelpCircle from 'lucide-react/dist/esm/icons/help-circle'
+import Plus from 'lucide-react/dist/esm/icons/plus'
+import Search from 'lucide-react/dist/esm/icons/search'
+import SlidersHorizontal from 'lucide-react/dist/esm/icons/sliders-horizontal'
+import Sparkles from 'lucide-react/dist/esm/icons/sparkles'
+import X from 'lucide-react/dist/esm/icons/x'
 import {
   createProject,
   deleteProject,
@@ -155,6 +153,7 @@ const getDateRange = (range: string) => {
 
 export default function DashboardPage() {
   const { user } = useAuth()
+  const socketRef = useRef<Socket | null>(null)
   const [projects, setProjects] = useState<Project[]>([])
   const [activeProjectId, setActiveProjectId] = useState<string>('')
   const [metrics, setMetrics] = useState<ProjectMetrics | null>(null)
@@ -196,8 +195,8 @@ export default function DashboardPage() {
       .then((data) => {
         if (cancelled) return
         setProjects(data)
-        if (data.length && !activeProjectId) {
-          setActiveProjectId(data[0]._id)
+        if (data.length) {
+          setActiveProjectId((prev) => (prev ? prev : data[0]._id))
         }
       })
       .catch((err) => {
@@ -207,7 +206,7 @@ export default function DashboardPage() {
         if (!cancelled) setLoadingProjects(false)
       })
     return () => { cancelled = true }
-  }, [user, activeProjectId])
+  }, [user])
 
   useEffect(() => {
     if (!user || !activeProjectId) return
@@ -244,17 +243,21 @@ export default function DashboardPage() {
   }, [user, activeProjectId, filters, currentPage, sortOrder])
 
   useEffect(() => {
-    if (!user) return
+    if (!user) {
+      socketRef.current?.disconnect()
+      socketRef.current = null
+      return
+    }
     const socket: Socket = io(SOCKET_URL || window.location.origin, {
       withCredentials: true,
       reconnection: true,
       reconnectionAttempts: 5,
       reconnectionDelay: 1000,
     })
+    socketRef.current = socket
 
     socket.on('connect', () => {
       setSocketConnected(true)
-      socket.emit('join', { userId: user._id, projectId: activeProjectId })
     })
 
     socket.on('disconnect', () => {
@@ -275,6 +278,24 @@ export default function DashboardPage() {
       socket.off('connect_error')
       socket.off('alert')
       socket.disconnect()
+      socketRef.current = null
+    }
+  }, [user])
+
+  useEffect(() => {
+    if (!user || !activeProjectId) return
+    const socket = socketRef.current
+    if (!socket) return
+    if (socket.connected) {
+      socket.emit('join', { userId: user._id, projectId: activeProjectId })
+      return
+    }
+    const handleConnect = () => {
+      socket.emit('join', { userId: user._id, projectId: activeProjectId })
+    }
+    socket.on('connect', handleConnect)
+    return () => {
+      socket.off('connect', handleConnect)
     }
   }, [user, activeProjectId])
 

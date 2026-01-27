@@ -175,7 +175,7 @@ export default function MentionsList({ mentions, loading, pagination, sortOrder,
         </div>
       </div>
       <div
-        className='mt-3 grid max-h-[520px] gap-3 overflow-y-auto pr-1 sm:mt-4 sm:max-h-[720px] sm:gap-4 sm:pr-2'
+        className='mt-3 grid max-h-[520px] gap-3 overflow-y-auto pr-1 [content-visibility:auto] [contain-intrinsic-size:720px_1px] sm:mt-4 sm:max-h-[720px] sm:gap-4 sm:pr-2'
         onScroll={handleScroll}
       >
         {loading &&

@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import type { FormEvent } from 'react'
 import { io, Socket } from 'socket.io-client'
-import { ChevronDown } from 'lucide-react'
 import {
   createProject,
   deleteProject,
@@ -18,29 +17,22 @@ import { downloadReport } from '../api/reports'
 import type { ReportScope, ReportFormat } from '../api/reports'
 import { useAuth } from '../contexts/AuthContext'
 import type { AlertItem, ConnectorHealth, Mention, Project, ProjectMetrics } from '../types/app'
-import {
-  MetricsCharts,
-  MentionsList,
-  AnalysisView,
-  DashboardTopBar,
-  DashboardSidebar,
-  DashboardRightPanel,
-  DashboardQuickNavGrid,
-  ProjectDetailsPanel,
-  ProjectModal,
-} from '../components/dashboard'
-import type { ProjectFormState, DashboardFilters } from '../components/dashboard'
+import MetricsCharts from '../components/dashboard/MetricsCharts'
+import MentionsList from '../components/dashboard/MentionsList'
+import AnalysisView from '../components/dashboard/AnalysisView'
+import DashboardTopBar from '../components/dashboard/DashboardTopBar'
+import DashboardSidebar from '../components/dashboard/DashboardSidebar'
+import DashboardRightPanel from '../components/dashboard/DashboardRightPanel'
+import DashboardQuickNavGrid from '../components/dashboard/DashboardQuickNavGrid'
+import ProjectDetailsPanel from '../components/dashboard/ProjectDetailsPanel'
+import ProjectModal from '../components/dashboard/ProjectModal'
+import type { ProjectFormState } from '../components/dashboard/ProjectForm'
+import type { DashboardFilters } from '../components/dashboard/DashboardFiltersBar'
 
 type DashboardView = 'mentions' | 'analysis'
 
 const SOCKET_URL = import.meta.env.VITE_SOCKET_URL || undefined
 const ALERTS_LIMIT = 100
-
-const INITIAL_FILTERS: DashboardFilters = Object.freeze({
-  ...getDateRange('last_30_days'),
-  source: '',
-  sentiment: '',
-})
 
 const INITIAL_PROJECT_FORM: ProjectFormState = Object.freeze({
   name: '',
@@ -126,6 +118,12 @@ const getDateRange = (range: string) => {
   return { from: formatDateInput(from), to: formatDateInput(to) }
 }
 
+const INITIAL_FILTERS: DashboardFilters = Object.freeze({
+  ...getDateRange('last_30_days'),
+  source: '',
+  sentiment: '',
+})
+
 export default function DashboardPage() {
   const { user } = useAuth()
   const socketRef = useRef<Socket | null>(null)
@@ -136,6 +134,7 @@ export default function DashboardPage() {
   const [alerts, setAlerts] = useState<AlertItem[]>([])
   const [health, setHealth] = useState<ConnectorHealth[]>([])
   const [loadingDashboard, setLoadingDashboard] = useState(false)
+  const [loadingPanels, setLoadingPanels] = useState(false)
   const [loadingMore, setLoadingMore] = useState(false)
   const [loadingProjects, setLoadingProjects] = useState(false)
   const [actionLoading, setActionLoading] = useState<string | null>(null)
@@ -201,10 +200,8 @@ export default function DashboardPage() {
     Promise.all([
       fetchProjectMetrics(activeProjectId, filters.from, filters.to),
       fetchMentions(activeProjectId, mentionFilters),
-      fetchAlerts(),
-      fetchProjectHealth(activeProjectId),
     ])
-      .then(([metricData, mentionData, alertData, healthData]) => {
+      .then(([metricData, mentionData]) => {
         if (cancelled) return
         setMetrics(metricData)
         setMentions((prev) => {
@@ -220,8 +217,6 @@ export default function DashboardPage() {
           return next
         })
         setPagination(mentionData.pagination)
-        setAlerts(alertData)
-        setHealth(healthData)
       })
       .catch((err) => {
         if (!cancelled) setError(err.message || 'Failed to load dashboard data')
@@ -234,6 +229,28 @@ export default function DashboardPage() {
       })
     return () => { cancelled = true }
   }, [user, activeProjectId, filters, currentPage, sortOrder])
+
+  useEffect(() => {
+    if (!user || !activeProjectId) return
+    let cancelled = false
+    setLoadingPanels(true)
+    Promise.all([
+      fetchAlerts(),
+      fetchProjectHealth(activeProjectId),
+    ])
+      .then(([alertData, healthData]) => {
+        if (cancelled) return
+        setAlerts(alertData)
+        setHealth(healthData)
+      })
+      .catch((err) => {
+        if (!cancelled) setError(err.message || 'Failed to load panel data')
+      })
+      .finally(() => {
+        if (!cancelled) setLoadingPanels(false)
+      })
+    return () => { cancelled = true }
+  }, [user, activeProjectId])
 
   useEffect(() => {
     if (!user) {
@@ -422,7 +439,7 @@ export default function DashboardPage() {
   }
 
   // Filter persistence
-  const FILTERS_STORAGE_KEY = `npip_filters_${activeProjectId}`
+  const filtersStorageKey = `npip_filters_v1_${activeProjectId}`
   
   const handleSaveFilters = () => {
     if (!activeProjectId) return
@@ -434,7 +451,7 @@ export default function DashboardPage() {
       continentFilter,
       countryFilter,
     }
-    localStorage.setItem(FILTERS_STORAGE_KEY, JSON.stringify(savedFilters))
+    localStorage.setItem(filtersStorageKey, JSON.stringify(savedFilters))
     // Show success feedback (could add a toast here)
     alert('Filters saved!')
   }
@@ -451,14 +468,14 @@ export default function DashboardPage() {
     setMentionSearch('')
     setCurrentPage(1)
     if (activeProjectId) {
-      localStorage.removeItem(FILTERS_STORAGE_KEY)
+      localStorage.removeItem(filtersStorageKey)
     }
   }
 
   // Load saved filters when project changes
   useEffect(() => {
     if (!activeProjectId) return
-    const saved = localStorage.getItem(FILTERS_STORAGE_KEY)
+    const saved = localStorage.getItem(filtersStorageKey)
     if (saved) {
       try {
         const parsed = JSON.parse(saved)
@@ -757,7 +774,7 @@ export default function DashboardPage() {
                   onCountryFilterChange={setCountryFilter}
                   alerts={filteredAlerts}
                   health={health}
-                  loading={loadingDashboard}
+                  loading={loadingDashboard || loadingPanels}
                   onMarkAlertRead={handleMarkAlertRead}
                 />
               </div>

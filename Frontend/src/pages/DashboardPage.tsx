@@ -66,11 +66,6 @@ const parseKeywords = (value: string): string[] =>
     .map((item) => item.trim())
     .filter(Boolean)
 
-const FILTER_CHIPS = Object.freeze([
-  { id: 'x', label: 'X (Twitter)' },
-  { id: 'tiktok', label: 'TikTok' },
-])
-
 // Map raw source values to normalized IDs (keep actual source names)
 const SOURCE_MAP: Record<string, string> = Object.freeze({
   facebook: 'facebook',
@@ -546,7 +541,12 @@ export default function DashboardPage() {
       <DashboardTopBar
         mentionSearch={mentionSearch}
         onMentionSearchChange={setMentionSearch}
-        filterChips={FILTER_CHIPS}
+        mentionsBySource={mentionsBySource}
+        sourceFilters={sourceFilters}
+        sourceLabels={SOURCE_LABELS}
+        onSourceFilterToggle={handleSourceFilterToggle}
+        sentimentFilters={sentimentFilters}
+        onSentimentToggle={handleSentimentToggle}
         onClearFilters={handleClearFilters}
         onSaveFilters={handleSaveFilters}
       />

@@ -46,7 +46,7 @@ export default function DashboardSidebar({
   onViewChange,
 }: DashboardSidebarProps) {
   return (
-    <aside className='space-y-4 border-r border-(--sidebar-divider) bg-(--surface-background) px-4 py-6 text-(--text-primary) lg:pl-6'>
+    <aside className='space-y-4 border-r border-(--sidebar-divider) bg-(--surface-background) px-4 py-6 text-(--text-primary) lg:sticky lg:top-0 lg:h-screen lg:overflow-y-auto lg:pl-6'>
       <div className='pb-2'>
         <BrandLogo />
       </div>

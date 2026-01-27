@@ -50,9 +50,21 @@ export default function DashboardRightPanel({
     <aside className='space-y-4'>
       <div className='rounded-2xl border border-(--border) bg-(--surface-base) p-4 text-xs shadow-sm'>
         <div className='flex items-center justify-between'>
-          <span className='font-semibold'>Last 30 days</span>
+          <span className='font-semibold'>
+            {dateRange === 'last_7_days'
+              ? 'Last 7 days'
+              : dateRange === 'last_90_days'
+                ? 'Last 90 days'
+                : 'Last 30 days'}
+          </span>
           <button className='rounded-full border border-(--border) px-2 py-1 text-[10px]'>
-            {dateRange === 'last_30_days' ? 'Last 30 days' : 'Custom'}
+            {dateRange === 'last_30_days'
+              ? 'Last 30 days'
+              : dateRange === 'last_7_days'
+                ? 'Last 7 days'
+                : dateRange === 'last_90_days'
+                  ? 'Last 90 days'
+                  : 'Custom'}
           </button>
         </div>
         <div className='mt-3 grid gap-2'>

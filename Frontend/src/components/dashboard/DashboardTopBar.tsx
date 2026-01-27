@@ -7,6 +7,7 @@ import { useState } from 'react'
 interface DashboardTopBarProps {
   mentionSearch: string
   onMentionSearchChange: (value: string) => void
+  appliedFilters: Array<{ id: string; label: string }>
   mentionsBySource: Record<string, number>
   sourceFilters: Record<string, boolean>
   sourceLabels: Record<string, string>
@@ -20,6 +21,7 @@ interface DashboardTopBarProps {
 export default function DashboardTopBar({
   mentionSearch,
   onMentionSearchChange,
+  appliedFilters,
   mentionsBySource,
   sourceFilters,
   sourceLabels,
@@ -68,6 +70,23 @@ export default function DashboardTopBar({
               <Bell className='h-4 w-4' />
             </button>
           </div>
+        </div>
+        <div className='mx-auto w-full max-w-[1500px] px-4 pb-2 text-xs font-semibold text-(--text-muted) sm:px-6'>
+          {appliedFilters.length === 0 ? (
+            <span>No filters applied</span>
+          ) : (
+            <div className='flex flex-wrap items-center gap-2'>
+              <span className='text-[11px] font-semibold uppercase tracking-[0.2em] text-(--text-muted)'>Active filters</span>
+              {appliedFilters.map((filter) => (
+                <span
+                  key={filter.id}
+                  className='rounded-full border border-(--border) bg-(--surface-muted) px-3 py-1 text-(--text-primary)'
+                >
+                  {filter.label}
+                </span>
+              ))}
+            </div>
+          )}
         </div>
         {filtersOpen && (
           <div className='mx-auto w-full max-w-[1500px] px-4 pb-4 sm:px-6'>

@@ -37,8 +37,7 @@ const SOCKET_URL = import.meta.env.VITE_SOCKET_URL || undefined
 const ALERTS_LIMIT = 100
 
 const INITIAL_FILTERS: DashboardFilters = Object.freeze({
-  from: '',
-  to: '',
+  ...getDateRange('last_30_days'),
   source: '',
   sentiment: '',
 })
@@ -442,6 +441,8 @@ export default function DashboardPage() {
 
   const handleClearFilters = () => {
     setDateRange('last_30_days')
+    const range = getDateRange('last_30_days')
+    setFilters((prev) => ({ ...prev, from: range.from, to: range.to }))
     setSourceFilters({})
     setSentimentFilters({})
     setInfluenceScore(6)
@@ -461,7 +462,11 @@ export default function DashboardPage() {
     if (saved) {
       try {
         const parsed = JSON.parse(saved)
-        if (parsed.dateRange) setDateRange(parsed.dateRange)
+        if (parsed.dateRange) {
+          setDateRange(parsed.dateRange)
+          const range = getDateRange(parsed.dateRange)
+          setFilters((prev) => ({ ...prev, from: range.from, to: range.to }))
+        }
         if (parsed.sourceFilters) setSourceFilters(parsed.sourceFilters)
         if (parsed.sentimentFilters) setSentimentFilters(parsed.sentimentFilters)
         if (parsed.influenceScore) setInfluenceScore(parsed.influenceScore)
@@ -482,6 +487,18 @@ export default function DashboardPage() {
     })
     return counts
   }, [mentions])
+
+  const filteredAlerts = useMemo(() => {
+    if (!filters.from || !filters.to) return alerts
+    const fromMs = new Date(filters.from).getTime()
+    const toMs = new Date(filters.to).getTime() + 24 * 60 * 60 * 1000 - 1
+    if (Number.isNaN(fromMs) || Number.isNaN(toMs)) return alerts
+    return alerts.filter((alert) => {
+      const createdAtMs = new Date(alert.createdAt).getTime()
+      if (Number.isNaN(createdAtMs)) return true
+      return createdAtMs >= fromMs && createdAtMs <= toMs
+    })
+  }, [alerts, filters.from, filters.to])
 
   const filteredMentions = useMemo(() => {
     const query = mentionSearch.trim().toLowerCase()
@@ -524,6 +541,54 @@ export default function DashboardPage() {
 
     return sorted
   }, [mentionSearch, mentions, sentimentFilters, sourceFilters, sortOrder])
+
+  const appliedFilters = useMemo(() => {
+    const chips: Array<{ id: string; label: string }> = []
+
+    if (mentionSearch.trim()) {
+      chips.push({ id: 'search', label: `Search: ${mentionSearch.trim()}` })
+    }
+
+    if (dateRange !== 'last_30_days') {
+      const labelMap: Record<string, string> = {
+        last_7_days: 'Last 7 days',
+        last_30_days: 'Last 30 days',
+        last_90_days: 'Last 90 days',
+      }
+      chips.push({ id: 'date', label: `Date: ${labelMap[dateRange] || 'Custom'}` })
+    }
+
+    Object.entries(sourceFilters)
+      .filter(([, enabled]) => enabled)
+      .forEach(([sourceId]) => {
+        chips.push({
+          id: `source-${sourceId}`,
+          label: `Source: ${SOURCE_LABELS[sourceId] || sourceId}`,
+        })
+      })
+
+    Object.entries(sentimentFilters)
+      .filter(([, enabled]) => enabled)
+      .forEach(([sentiment]) => {
+        const label = sentiment.charAt(0).toUpperCase() + sentiment.slice(1)
+        chips.push({ id: `sentiment-${sentiment}`, label: `Sentiment: ${label}` })
+      })
+
+    if (influenceScore !== 6) {
+      chips.push({ id: 'influence', label: `Influence score: ${influenceScore}+` })
+    }
+
+    if (continentFilter) {
+      const label = continentFilter.replace('_', ' ')
+      chips.push({ id: 'continent', label: `Continent: ${label}` })
+    }
+
+    if (countryFilter) {
+      chips.push({ id: 'country', label: `Country: ${countryFilter}` })
+    }
+
+    return chips
+  }, [mentionSearch, dateRange, sourceFilters, sentimentFilters, influenceScore, continentFilter, countryFilter])
 
   const handleLoadMoreMentions = () => {
     if (loadingMore || loadingDashboard || !pagination?.hasNextPage) return
@@ -582,6 +647,7 @@ export default function DashboardPage() {
       <DashboardTopBar
         mentionSearch={mentionSearch}
         onMentionSearchChange={setMentionSearch}
+        appliedFilters={appliedFilters}
         mentionsBySource={mentionsBySource}
         sourceFilters={sourceFilters}
         sourceLabels={SOURCE_LABELS}
@@ -689,7 +755,7 @@ export default function DashboardPage() {
                   onContinentFilterChange={setContinentFilter}
                   countryFilter={countryFilter}
                   onCountryFilterChange={setCountryFilter}
-                  alerts={alerts}
+                  alerts={filteredAlerts}
                   health={health}
                   loading={loadingDashboard}
                   onMarkAlertRead={handleMarkAlertRead}

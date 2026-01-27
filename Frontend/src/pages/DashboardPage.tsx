@@ -137,6 +137,7 @@ export default function DashboardPage() {
   const [alerts, setAlerts] = useState<AlertItem[]>([])
   const [health, setHealth] = useState<ConnectorHealth[]>([])
   const [loadingDashboard, setLoadingDashboard] = useState(false)
+  const [loadingMore, setLoadingMore] = useState(false)
   const [loadingProjects, setLoadingProjects] = useState(false)
   const [actionLoading, setActionLoading] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
@@ -186,7 +187,12 @@ export default function DashboardPage() {
   useEffect(() => {
     if (!user || !activeProjectId) return
     let cancelled = false
-    setLoadingDashboard(true)
+    const isLoadMore = currentPage > 1
+    if (isLoadMore) {
+      setLoadingMore(true)
+    } else {
+      setLoadingDashboard(true)
+    }
     setError(null)
     const mentionFilters: MentionFilters = {
       ...filters,
@@ -203,7 +209,18 @@ export default function DashboardPage() {
       .then(([metricData, mentionData, alertData, healthData]) => {
         if (cancelled) return
         setMetrics(metricData)
-        setMentions(mentionData.mentions)
+        setMentions((prev) => {
+          if (currentPage === 1) return mentionData.mentions
+          const seen = new Set(prev.map((item) => item._id))
+          const next = [...prev]
+          mentionData.mentions.forEach((item) => {
+            if (!seen.has(item._id)) {
+              seen.add(item._id)
+              next.push(item)
+            }
+          })
+          return next
+        })
         setPagination(mentionData.pagination)
         setAlerts(alertData)
         setHealth(healthData)
@@ -212,7 +229,10 @@ export default function DashboardPage() {
         if (!cancelled) setError(err.message || 'Failed to load dashboard data')
       })
       .finally(() => {
-        if (!cancelled) setLoadingDashboard(false)
+        if (!cancelled) {
+          setLoadingDashboard(false)
+          setLoadingMore(false)
+        }
       })
     return () => { cancelled = true }
   }, [user, activeProjectId, filters, currentPage, sortOrder])
@@ -469,7 +489,7 @@ export default function DashboardPage() {
     const activeSources = Object.entries(sourceFilters).filter(([, enabled]) => enabled).map(([key]) => key)
     const activeSentiments = Object.entries(sentimentFilters).filter(([, enabled]) => enabled).map(([key]) => key)
 
-    return mentions.filter((mention) => {
+    const filtered = mentions.filter((mention) => {
       if (query) {
         const haystack = `${mention.title || ''} ${mention.text || ''} ${mention.author || ''} ${mention.url || ''}`.toLowerCase()
         if (!haystack.includes(query)) return false
@@ -487,7 +507,29 @@ export default function DashboardPage() {
 
       return true
     })
-  }, [mentionSearch, mentions, sentimentFilters, sourceFilters])
+
+    const getTimestamp = (value?: string | Date | null) => {
+      if (!value) return 0
+      const date = new Date(value)
+      return Number.isNaN(date.getTime()) ? 0 : date.getTime()
+    }
+
+    const sorted = [...filtered]
+    if (sortOrder === 'recent') {
+      sorted.sort((a, b) => getTimestamp(b.publishedAt) - getTimestamp(a.publishedAt))
+    } else if (sortOrder === 'oldest') {
+      sorted.sort((a, b) => getTimestamp(a.publishedAt) - getTimestamp(b.publishedAt))
+    } else if (sortOrder === 'reach') {
+      sorted.sort((a, b) => (b.reachEstimate || 0) - (a.reachEstimate || 0))
+    }
+
+    return sorted
+  }, [mentionSearch, mentions, sentimentFilters, sourceFilters, sortOrder])
+
+  const handleLoadMoreMentions = () => {
+    if (loadingMore || loadingDashboard || !pagination?.hasNextPage) return
+    setCurrentPage((prev) => prev + 1)
+  }
 
   const quickNavTiles = [
     {
@@ -648,18 +690,19 @@ export default function DashboardPage() {
                 </div>
 
                 {currentView === 'mentions' && (
-                  <MentionsList
-                    mentions={filteredMentions}
-                    loading={loadingDashboard}
-                    pagination={pagination ?? undefined}
-                    sortOrder={sortOrder}
-                    onSortChange={(sort) => {
-                      setSortOrder(sort)
-                      setCurrentPage(1)
-                    }}
-                    onPageChange={setCurrentPage}
-                  />
-                )}
+              <MentionsList
+                mentions={filteredMentions}
+                loading={loadingDashboard}
+                pagination={pagination ?? undefined}
+                sortOrder={sortOrder}
+                onSortChange={(sort) => {
+                  setSortOrder(sort)
+                  setCurrentPage(1)
+                }}
+                onLoadMore={handleLoadMoreMentions}
+                loadingMore={loadingMore}
+              />
+            )}
 
                 {currentView === 'analysis' && (
                   <AnalysisView

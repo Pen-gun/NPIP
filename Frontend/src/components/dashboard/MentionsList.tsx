@@ -1,12 +1,12 @@
 import BellOff from 'lucide-react/dist/esm/icons/bell-off'
 import CheckSquare from 'lucide-react/dist/esm/icons/check-square'
-import ChevronLeft from 'lucide-react/dist/esm/icons/chevron-left'
-import ChevronRight from 'lucide-react/dist/esm/icons/chevron-right'
 import ExternalLink from 'lucide-react/dist/esm/icons/external-link'
 import FileText from 'lucide-react/dist/esm/icons/file-text'
 import MoreHorizontal from 'lucide-react/dist/esm/icons/more-horizontal'
 import Tag from 'lucide-react/dist/esm/icons/tag'
 import Trash2 from 'lucide-react/dist/esm/icons/trash-2'
+import type { UIEvent } from 'react'
+import { useCallback } from 'react'
 import type { Mention } from '../../types/app'
 import type { PaginationInfo } from '../../api/mentions'
 
@@ -16,7 +16,8 @@ interface MentionsListProps {
   pagination?: PaginationInfo
   sortOrder: 'recent' | 'oldest' | 'reach'
   onSortChange: (sort: 'recent' | 'oldest' | 'reach') => void
-  onPageChange: (page: number) => void
+  onLoadMore: () => void
+  loadingMore: boolean
 }
 
 const SKELETON_COUNT = 4
@@ -141,26 +142,18 @@ function MentionSkeleton() {
   )
 }
 
-export default function MentionsList({ mentions, loading, pagination, sortOrder, onSortChange, onPageChange }: MentionsListProps) {
-  // Generate page numbers to display
-  const getPageNumbers = () => {
-    if (!pagination) return []
-    const { page, totalPages } = pagination
-    const pages: (number | 'ellipsis')[] = []
-    
-    if (totalPages <= 7) {
-      for (let i = 1; i <= totalPages; i++) pages.push(i)
-    } else {
-      pages.push(1)
-      if (page > 3) pages.push('ellipsis')
-      for (let i = Math.max(2, page - 1); i <= Math.min(totalPages - 1, page + 1); i++) {
-        pages.push(i)
+export default function MentionsList({ mentions, loading, pagination, sortOrder, onSortChange, onLoadMore, loadingMore }: MentionsListProps) {
+  const handleScroll = useCallback(
+    (event: UIEvent<HTMLDivElement>) => {
+      if (!pagination?.hasNextPage || loadingMore || loading) return
+      const target = event.currentTarget
+      const threshold = 180
+      if (target.scrollTop + target.clientHeight >= target.scrollHeight - threshold) {
+        onLoadMore()
       }
-      if (page < totalPages - 2) pages.push('ellipsis')
-      pages.push(totalPages)
-    }
-    return pages
-  }
+    },
+    [loading, loadingMore, onLoadMore, pagination?.hasNextPage],
+  )
 
   return (
     <div className='rounded-2xl border border-(--border) bg-(--surface-base) p-4 shadow-sm sm:p-6'>
@@ -181,7 +174,10 @@ export default function MentionsList({ mentions, loading, pagination, sortOrder,
           </select>
         </div>
       </div>
-      <div className='mt-3 grid max-h-[520px] gap-3 overflow-y-auto pr-1 sm:mt-4 sm:max-h-[720px] sm:gap-4 sm:pr-2'>
+      <div
+        className='mt-3 grid max-h-[520px] gap-3 overflow-y-auto pr-1 sm:mt-4 sm:max-h-[720px] sm:gap-4 sm:pr-2'
+        onScroll={handleScroll}
+      >
         {loading &&
           Array.from({ length: SKELETON_COUNT }).map((_, index) => (
             <MentionSkeleton key={`mention-skeleton-${index}`} />
@@ -190,50 +186,25 @@ export default function MentionsList({ mentions, loading, pagination, sortOrder,
           <p className='text-sm text-(--text-muted)'>No mentions yet.</p>
         )}
         {!loading && mentions.map((mention) => <MentionCard key={mention._id} mention={mention} />)}
+        {loadingMore && (
+          <div className='rounded-xl border border-(--border) bg-(--surface-base) p-4 text-xs text-(--text-muted)'>
+            Loading more...
+          </div>
+        )}
       </div>
       <div className='mt-4 flex flex-wrap items-center justify-between gap-2 text-xs font-semibold text-(--text-muted)'>
         <span>
-          {pagination 
-            ? `Showing ${((pagination.page - 1) * pagination.limit) + 1}-${Math.min(pagination.page * pagination.limit, pagination.totalCount)} of ${pagination.totalCount.toLocaleString()}`
-            : `Showing ${mentions.length} mentions`
-          }
+          {pagination
+            ? `Showing ${Math.min(pagination.page * pagination.limit, pagination.totalCount).toLocaleString()} of ${pagination.totalCount.toLocaleString()}`
+            : `Showing ${mentions.length} mentions`}
         </span>
-        {pagination && pagination.totalPages > 1 && (
-          <div className='flex items-center gap-1'>
-            <button
-              onClick={() => onPageChange(pagination.page - 1)}
-              disabled={!pagination.hasPrevPage}
-              className='flex h-7 w-7 items-center justify-center rounded-full border border-(--border) disabled:cursor-not-allowed disabled:opacity-40'
-              aria-label='Previous page'
-            >
-              <ChevronLeft className='h-4 w-4' />
-            </button>
-            {getPageNumbers().map((pageNum, idx) => 
-              pageNum === 'ellipsis' ? (
-                <span key={`ellipsis-${idx}`} className='px-1'>…</span>
-              ) : (
-                <button
-                  key={pageNum}
-                  onClick={() => onPageChange(pageNum)}
-                  className={`h-7 w-7 rounded-full border ${
-                    pageNum === pagination.page 
-                      ? 'border-(--brand-accent) bg-(--brand-accent) text-white' 
-                      : 'border-(--border) hover:bg-(--surface-muted)'
-                  }`}
-                >
-                  {pageNum}
-                </button>
-              )
-            )}
-            <button
-              onClick={() => onPageChange(pagination.page + 1)}
-              disabled={!pagination.hasNextPage}
-              className='flex h-7 w-7 items-center justify-center rounded-full border border-(--border) disabled:cursor-not-allowed disabled:opacity-40'
-              aria-label='Next page'
-            >
-              <ChevronRight className='h-4 w-4' />
-            </button>
-          </div>
+        {pagination?.hasNextPage && !loading && (
+          <button
+            onClick={onLoadMore}
+            className='rounded-full border border-(--border) px-3 py-1 hover:bg-(--surface-muted)'
+          >
+            Load more
+          </button>
         )}
       </div>
     </div>

@@ -149,7 +149,6 @@ export default function DashboardPage() {
   })
   const [showProjectModal, setShowProjectModal] = useState(false)
   const [mentionSearch, setMentionSearch] = useState('')
-  const [chartView, setChartView] = useState<'mentions' | 'sentiment'>('mentions')
   const [chartGranularity, setChartGranularity] = useState<'days' | 'weeks' | 'months'>('days')
   const [dateRange, setDateRange] = useState('last_30_days')
   const [sourceFilters, setSourceFilters] = useState<Record<string, boolean>>({})
@@ -629,31 +628,7 @@ export default function DashboardPage() {
 
                 <section className='rounded-2xl border border-(--border) bg-(--surface-base) p-4 shadow-sm sm:p-6'>
                   <div className='flex flex-wrap items-center justify-between gap-4 text-xs font-semibold text-(--text-muted)'>
-                    <div className='flex items-center gap-2'>
-                      <button
-                        type='button'
-                        onClick={() => setChartView('mentions')}
-                        className={`rounded-full border px-3 py-1 ${
-                          chartView === 'mentions'
-                            ? 'border-(--brand-accent) text-(--brand-accent)'
-                            : 'border-(--border) text-(--text-muted)'
-                        }`}
-                      >
-                        Mentions & Reach
-                      </button>
-                      <button
-                        type='button'
-                        onClick={() => setChartView('sentiment')}
-                        className={`rounded-full border px-3 py-1 ${
-                          chartView === 'sentiment'
-                            ? 'border-(--brand-accent) text-(--brand-accent)'
-                            : 'border-(--border) text-(--text-muted)'
-                        }`}
-                      >
-                        Sentiment
-                      </button>
-                    </div>
-                    <span>Click on the chart to filter by date</span>
+                    <span>Volume analysis</span>
                     <div className='flex items-center gap-2'>
                       {(['days', 'weeks', 'months'] as const).map((item) => (
                         <button
@@ -671,23 +646,8 @@ export default function DashboardPage() {
                       ))}
                     </div>
                   </div>
-                  <MetricsCharts metrics={metrics} loading={loadingDashboard} />
+                  <MetricsCharts metrics={metrics} loading={loadingDashboard} granularity={chartGranularity} />
                 </section>
-
-                <div className='flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-(--border) bg-(--surface-base) px-4 py-3 text-xs font-semibold shadow-sm'>
-                  <div className='flex items-center gap-2'>
-                    <button className='rounded-full border border-(--border) px-3 py-1.5'>
-                      Recent first
-                      <ChevronDown className='ml-2 inline h-3 w-3' />
-                    </button>
-                    <button className='rounded-full border border-(--border) px-3 py-1.5 text-(--text-muted)'>
-                      Tags
-                    </button>
-                  </div>
-                  <div className='flex items-center gap-2'>
-                    {/* Pagination is now handled by MentionsList component */}
-                  </div>
-                </div>
 
                 {currentView === 'mentions' && (
               <MentionsList

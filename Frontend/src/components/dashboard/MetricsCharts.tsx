@@ -5,6 +5,7 @@ import type { ProjectMetrics } from '../../types/app'
 interface MetricsChartsProps {
   metrics: ProjectMetrics | null
   loading: boolean
+  granularity: 'days' | 'weeks' | 'months'
 }
 
 const SKELETON_CHART_COUNT = 3
@@ -25,16 +26,68 @@ const SENTIMENT_LABELS: Record<string, string> = {
 const formatSentimentLabel = (label: string): string =>
   SENTIMENT_LABELS[label?.toLowerCase()] || SENTIMENT_LABELS[label] || label || 'Unknown'
 
-export default function MetricsCharts({ metrics, loading }: MetricsChartsProps) {
+export default function MetricsCharts({ metrics, loading, granularity }: MetricsChartsProps) {
   const [activeChart, setActiveChart] = useState<'all' | 'volume' | 'sentiment' | 'sources'>('all')
-  const volumeLabels = useMemo(
-    () => metrics?.volume.map((item) => `${item._id.month}/${item._id.day}`) || [],
-    [metrics],
-  )
-  const volumeData = useMemo(
-    () => metrics?.volume.map((item) => item.count) || [],
-    [metrics],
-  )
+  const volumeSeries = useMemo(() => {
+    if (!metrics?.volume?.length) return { labels: [], data: [] }
+
+    const buckets = new Map<string, { label: string; ts: number; count: number }>()
+
+    const toDate = (item: (typeof metrics.volume)[number]) => {
+      const year = item._id.year ?? new Date().getFullYear()
+      const month = (item._id.month ?? 1) - 1
+      const day = item._id.day ?? 1
+      return new Date(year, month, day)
+    }
+
+    const getWeekStart = (date: Date) => {
+      const start = new Date(date)
+      start.setHours(0, 0, 0, 0)
+      start.setDate(start.getDate() - start.getDay())
+      return start
+    }
+
+    metrics.volume.forEach((item) => {
+      const date = toDate(item)
+      if (Number.isNaN(date.getTime())) return
+
+      let key = ''
+      let label = ''
+      let ts = 0
+
+      if (granularity === 'months') {
+        const year = date.getFullYear()
+        const month = date.getMonth() + 1
+        key = `${year}-${month}`
+        label = `${month}/${year}`
+        ts = new Date(year, month - 1, 1).getTime()
+      } else if (granularity === 'weeks') {
+        const weekStart = getWeekStart(date)
+        key = weekStart.toISOString().slice(0, 10)
+        label = `Wk of ${weekStart.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`
+        ts = weekStart.getTime()
+      } else {
+        const month = date.getMonth() + 1
+        const day = date.getDate()
+        key = `${date.getFullYear()}-${month}-${day}`
+        label = `${month}/${day}`
+        ts = date.getTime()
+      }
+
+      const existing = buckets.get(key)
+      if (existing) {
+        existing.count += item.count
+      } else {
+        buckets.set(key, { label, ts, count: item.count })
+      }
+    })
+
+    const sorted = Array.from(buckets.values()).sort((a, b) => a.ts - b.ts)
+    return {
+      labels: sorted.map((item) => item.label),
+      data: sorted.map((item) => item.count),
+    }
+  }, [metrics, granularity])
   const sentimentLabels = useMemo(
     () => metrics?.sentimentShare.map((item) => formatSentimentLabel(item._id)) || [],
     [metrics],
@@ -58,8 +111,8 @@ export default function MetricsCharts({ metrics, loading }: MetricsChartsProps) 
       title: 'Volume',
       description: 'Mentions per day',
       type: 'line' as const,
-      labels: volumeLabels,
-      data: volumeData,
+      labels: volumeSeries.labels,
+      data: volumeSeries.data,
     },
     {
       id: 'sentiment' as const,

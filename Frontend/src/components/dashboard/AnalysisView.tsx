@@ -137,7 +137,7 @@ export default function AnalysisView({ mentions, loading }: AnalysisViewProps) {
     <div className='space-y-6'>
       {/* Key Metrics Cards */}
       <div className='grid gap-4 sm:grid-cols-2 lg:grid-cols-4'>
-        <div className='rounded-xl border border-(--border) bg-(--surface-base) p-4 shadow-(--shadow)'>
+        <div className='rounded-xl border border-(--border) bg-(--surface-base) p-4 shadow-sm'>
           <div className='flex items-center justify-between'>
             <span className='text-xs font-semibold uppercase tracking-wider text-(--text-muted)'>Total Mentions</span>
             <MessageSquare className='h-5 w-5 text-(--brand-accent)' />
@@ -149,7 +149,7 @@ export default function AnalysisView({ mentions, loading }: AnalysisViewProps) {
           </div>
         </div>
 
-        <div className='rounded-xl border border-(--border) bg-(--surface-base) p-4 shadow-(--shadow)'>
+        <div className='rounded-xl border border-(--border) bg-(--surface-base) p-4 shadow-sm'>
           <div className='flex items-center justify-between'>
             <span className='text-xs font-semibold uppercase tracking-wider text-(--text-muted)'>Est. Reach</span>
             <Users className='h-5 w-5 text-blue-500' />
@@ -161,7 +161,7 @@ export default function AnalysisView({ mentions, loading }: AnalysisViewProps) {
           </div>
         </div>
 
-        <div className='rounded-xl border border-(--border) bg-(--surface-base) p-4 shadow-(--shadow)'>
+        <div className='rounded-xl border border-(--border) bg-(--surface-base) p-4 shadow-sm'>
           <div className='flex items-center justify-between'>
             <span className='text-xs font-semibold uppercase tracking-wider text-(--text-muted)'>Total Engagement</span>
             <Share2 className='h-5 w-5 text-green-500' />
@@ -174,7 +174,7 @@ export default function AnalysisView({ mentions, loading }: AnalysisViewProps) {
           </div>
         </div>
 
-        <div className='rounded-xl border border-(--border) bg-(--surface-base) p-4 shadow-(--shadow)'>
+        <div className='rounded-xl border border-(--border) bg-(--surface-base) p-4 shadow-sm'>
           <div className='flex items-center justify-between'>
             <span className='text-xs font-semibold uppercase tracking-wider text-(--text-muted)'>Sentiment Score</span>
             <BarChart3 className='h-5 w-5 text-purple-500' />
@@ -218,7 +218,7 @@ export default function AnalysisView({ mentions, loading }: AnalysisViewProps) {
           data={sourceData}
         />
 
-        <div className='rounded-xl border border-(--border) bg-(--surface-base) p-4 shadow-(--shadow)'>
+        <div className='rounded-xl border border-(--border) bg-(--surface-base) p-4 shadow-sm'>
           <h3 className='mb-4 text-sm font-semibold'>Top Authors</h3>
           <div className='max-h-48 space-y-2 overflow-y-auto'>
             {analytics.topAuthors.length === 0 ? (
@@ -243,7 +243,7 @@ export default function AnalysisView({ mentions, loading }: AnalysisViewProps) {
       </div>
 
       {/* Sentiment Deep Dive */}
-      <div className='rounded-xl border border-(--border) bg-(--surface-base) p-4 shadow-(--shadow)'>
+      <div className='rounded-xl border border-(--border) bg-(--surface-base) p-4 shadow-sm'>
         <h3 className='mb-4 text-sm font-semibold'>Sentiment Analysis Summary</h3>
         <div className='grid gap-4 sm:grid-cols-3'>
           <div className='rounded-lg bg-green-50 p-4 dark:bg-green-900/20'>

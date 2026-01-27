@@ -36,6 +36,34 @@
   --font-headline: 'Space Grotesk', 'Segoe UI', sans-serif;
 }
 
+.dashboard-shell {
+  --brand-primary: #1d4ed8;
+  --brand-secondary: #64748b;
+  --brand-accent: #22c55e;
+
+  --surface-background: #f5f7fb;
+  --surface-base: #ffffff;
+  --surface-muted: #f1f3f6;
+
+  --text-primary: #1e293b;
+  --text-secondary: #334155;
+  --text-muted: #64748b;
+  --text-inverse: #ffffff;
+
+  --border: rgba(15, 23, 42, 0.12);
+  --divider: rgba(15, 23, 42, 0.08);
+  --shadow: 0 16px 32px rgba(15, 23, 42, 0.08);
+
+  --sidebar-bg: #18212f;
+  --sidebar-panel: #1f2a3a;
+  --sidebar-text: #d7e2f0;
+  --sidebar-muted: #9db0c9;
+  --sidebar-active: #22c55e;
+  --sidebar-divider: rgba(255, 255, 255, 0.08);
+  --topbar-border: rgba(15, 23, 42, 0.08);
+  --banner-bg: #1e6bd6;
+}
+
 @media (prefers-color-scheme: dark) {
   :root {
     --brand-primary: #8ab4f8;

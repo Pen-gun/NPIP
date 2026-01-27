@@ -25,6 +25,9 @@ export default function Layout({ children }: LayoutProps) {
   if (isLoginPage) {
     return <>{children}</>
   }
+  if (isDashboard) {
+    return <>{children}</>
+  }
 
   return (
     <div className='min-h-screen bg-(--surface-background) text-(--text-primary)'>

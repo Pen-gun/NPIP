@@ -172,7 +172,7 @@ export default function ComparisonView({
   return (
     <div className='space-y-6'>
       {/* Project Selector */}
-      <div className='rounded-xl border border-(--border) bg-(--surface-base) p-4 shadow-(--shadow)'>
+      <div className='rounded-xl border border-(--border) bg-(--surface-base) p-4 shadow-sm'>
         <h3 className='mb-3 text-sm font-semibold'>Select Projects to Compare (max 5)</h3>
         <div className='flex flex-wrap gap-2'>
           {projects.map((project) => {
@@ -208,7 +208,7 @@ export default function ComparisonView({
         {projectStats.map((stats, idx) => {
           const color = PROJECT_COLORS[idx % PROJECT_COLORS.length]
           return (
-            <div key={stats.projectId} className={`rounded-xl border ${color.border} bg-(--surface-base) p-4 shadow-(--shadow)`}>
+            <div key={stats.projectId} className={`rounded-xl border ${color.border} bg-(--surface-base) p-4 shadow-sm`}>
               <div className='mb-4 flex items-center gap-2'>
                 <span className={`h-3 w-3 rounded-full ${color.bg}`} />
                 <h3 className='font-semibold'>{stats.projectName}</h3>
@@ -337,7 +337,7 @@ export default function ComparisonView({
 
       {/* Detailed Comparison Table */}
       {selectedProjects.length >= 2 && (
-        <div className='overflow-hidden rounded-xl border border-(--border) bg-(--surface-base) shadow-(--shadow)'>
+        <div className='overflow-hidden rounded-xl border border-(--border) bg-(--surface-base) shadow-sm'>
           <div className='border-b border-(--border) p-4'>
             <h3 className='font-semibold'>Detailed Metrics Comparison</h3>
           </div>

@@ -116,7 +116,7 @@ export default function ChartCard({ title, description, type, labels, data }: Ch
   }, [])
 
   return (
-    <div className='flex flex-col rounded-2xl border border-(--border) bg-(--surface-muted) p-4'>
+    <div className='flex flex-col rounded-2xl border border-(--border) bg-(--surface-base) p-4 shadow-sm'>
       <div className='mb-3'>
         <h4 className='text-sm font-semibold'>{title}</h4>
         <p className='text-xs text-(--text-muted)'>{description}</p>

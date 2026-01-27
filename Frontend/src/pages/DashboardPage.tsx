@@ -1,14 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import type { FormEvent } from 'react'
 import { io, Socket } from 'socket.io-client'
-import Bell from 'lucide-react/dist/esm/icons/bell'
-import ChevronDown from 'lucide-react/dist/esm/icons/chevron-down'
-import HelpCircle from 'lucide-react/dist/esm/icons/help-circle'
-import Plus from 'lucide-react/dist/esm/icons/plus'
-import Search from 'lucide-react/dist/esm/icons/search'
-import SlidersHorizontal from 'lucide-react/dist/esm/icons/sliders-horizontal'
-import Sparkles from 'lucide-react/dist/esm/icons/sparkles'
-import X from 'lucide-react/dist/esm/icons/x'
+import { ChevronDown } from 'lucide-react'
 import {
   createProject,
   deleteProject,
@@ -26,14 +19,14 @@ import type { ReportScope, ReportFormat } from '../api/reports'
 import { useAuth } from '../contexts/AuthContext'
 import type { AlertItem, ConnectorHealth, Mention, Project, ProjectMetrics } from '../types/app'
 import {
-  ProjectForm,
-  ProjectList,
   MetricsCharts,
   MentionsList,
-  AlertsPanel,
-  ConnectorHealthPanel,
-  SourcePolicyPanel,
   AnalysisView,
+  DashboardTopBar,
+  DashboardSidebar,
+  DashboardRightPanel,
+  DashboardQuickNavGrid,
+  ProjectModal,
 } from '../components/dashboard'
 import type { ProjectFormState, DashboardFilters } from '../components/dashboard'
 
@@ -176,7 +169,6 @@ export default function DashboardPage() {
   const [chartGranularity, setChartGranularity] = useState<'days' | 'weeks' | 'months'>('days')
   const [dateRange, setDateRange] = useState('last_30_days')
   const [sourceFilters, setSourceFilters] = useState<Record<string, boolean>>({})
-  const [connectedSources, setConnectedSources] = useState<Record<string, boolean>>({})
   const [sentimentFilters, setSentimentFilters] = useState<Record<string, boolean>>({})
   const [influenceScore, setInfluenceScore] = useState(6)
   const [continentFilter, setContinentFilter] = useState('')
@@ -428,10 +420,6 @@ export default function DashboardPage() {
     setCurrentPage(1) // Reset to first page on filter change
   }
 
-  const handleConnectSource = (sourceId: string) => {
-    setConnectedSources((prev) => ({ ...prev, [sourceId]: !prev[sourceId] }))
-  }
-
   // Filter persistence
   const FILTERS_STORAGE_KEY = `npip_filters_${activeProjectId}`
   
@@ -518,8 +506,37 @@ export default function DashboardPage() {
     })
   }, [mentionSearch, mentions, sentimentFilters, sourceFilters])
 
+  const quickNavTiles = [
+    {
+      id: 'mentions',
+      title: 'Mentions',
+      description: 'Browse all public mentions and activity.',
+      onClick: () => setCurrentView('mentions'),
+      badge: pagination ? `${pagination.totalCount.toLocaleString()} total` : undefined,
+    },
+    {
+      id: 'analysis',
+      title: 'Analysis',
+      description: 'Switch to analytics and sentiment insights.',
+      onClick: () => setCurrentView('analysis'),
+    },
+    {
+      id: 'reports',
+      title: 'Email reports',
+      description: 'Schedule and download PDF/Excel reports.',
+      onClick: () => handleDownloadReport('summary', 'pdf'),
+      badge: 'PDF/Excel',
+    },
+    {
+      id: 'influencers',
+      title: 'Influencers & Sources',
+      description: 'Top voices and sources tracking.',
+      disabled: true,
+    },
+  ]
+
   return (
-    <>
+    <div className='dashboard-shell min-h-screen bg-(--surface-background) text-(--text-primary)'>
       {error && (
         <div className='flex items-center justify-between gap-4 bg-(--state-error) px-4 py-3 text-sm text-white'>
           <span>{error}</span>
@@ -538,241 +555,39 @@ export default function DashboardPage() {
           Real-time updates disconnected. Reconnecting...
         </div>
       )}
-      <div className='bg-[radial-gradient(circle_at_top,_rgba(56,189,248,0.08),_transparent_55%)]'>
-        <div className='mx-auto flex w-full max-w-[1400px] flex-col gap-4 px-4 py-4 sm:px-6 lg:px-8'>
-          <div className='rounded-2xl border border-(--border) bg-[#1d4ed8] px-4 py-3 text-xs font-semibold text-white shadow-lg'>
-            Trial view with limited data. Upgrade to unlock full public mentions. <button className='ml-2 underline'>Upgrade</button>
-          </div>
-        </div>
-      </div>
-      <div className='mx-auto w-full max-w-[1400px] px-4 py-6 sm:px-6 lg:px-8'>
-        <div className='grid gap-6 lg:grid-cols-[260px_minmax(0,1fr)_320px]'>
-          <aside className='space-y-4'>
-            <div className='rounded-[20px] border border-(--border) bg-(--surface-base) p-4 shadow-(--shadow)'>
-              <div className='flex items-center justify-between'>
-                <h3 className='text-sm font-semibold'>Projects</h3>
-                <button className='rounded-full border border-(--border) p-1.5 text-(--text-muted) hover:text-(--text-primary)'>
-                  <Plus className='h-4 w-4' />
-                </button>
-              </div>
-              <div className='mt-3 space-y-2'>
-                {projects.map((project) => (
-                  <button
-                    key={project._id}
-                    onClick={() => setActiveProjectId(project._id)}
-                    className={`flex w-full items-center justify-between rounded-xl px-3 py-2 text-left text-xs font-semibold transition ${
-                      activeProjectId === project._id
-                        ? 'bg-(--brand-primary) text-(--text-inverse)'
-                        : 'border border-(--border) text-(--text-primary) hover:bg-(--surface-muted)'
-                    }`}
-                  >
-                    <span>{project.name}</span>
-                    <span className='text-[10px] text-(--text-muted)'>
-                      {filteredMentions.length} new
-                    </span>
-                  </button>
-                ))}
-                {!projects.length && (
-                  <p className='text-xs text-(--text-muted)'>No projects yet.</p>
-                )}
-              </div>
-            </div>
+      <DashboardTopBar
+        mentionSearch={mentionSearch}
+        onMentionSearchChange={setMentionSearch}
+        filterChips={FILTER_CHIPS}
+        onClearFilters={handleClearFilters}
+        onSaveFilters={handleSaveFilters}
+      />
+      <div className='mx-auto w-full max-w-[1500px] px-4 py-6 sm:px-6 lg:px-8'>
+        <div className='grid gap-0 lg:grid-cols-[260px_minmax(0,1fr)_320px]'>
+          <DashboardSidebar
+            projects={projects}
+            activeProjectId={activeProjectId}
+            activeProject={activeProject}
+            loadingProjects={loadingProjects}
+            actionLoading={actionLoading}
+            socketConnected={socketConnected}
+            pagination={pagination}
+            currentView={currentView}
+            reportNavItems={REPORT_NAV_ITEMS}
+            analyticsNavItems={ANALYTICS_NAV_ITEMS}
+            onSelectProject={setActiveProjectId}
+            onRunIngestion={handleRunIngestion}
+            onDownloadReport={handleDownloadReport}
+            onToggleStatus={handleToggleProjectStatus}
+            onDeleteProject={handleDeleteProject}
+            onCreateProject={() => setShowProjectModal(true)}
+            onViewChange={setCurrentView}
+          />
 
-            <button
-              onClick={() => setShowProjectModal(true)}
-              className='flex w-full items-center justify-center gap-2 rounded-xl border-2 border-dashed border-(--border) py-3 text-sm font-medium text-(--text-muted) transition-colors hover:border-(--brand-accent) hover:text-(--brand-accent)'
-            >
-              <Plus className='h-4 w-4' />
-              Create New Project
-            </button>
+          <main className='space-y-6 border-r border-(--divider) bg-(--surface-background) px-6 py-6 lg:px-8'>
+            <DashboardQuickNavGrid tiles={quickNavTiles} />
 
-            <ProjectList
-              projects={projects}
-              activeProjectId={activeProjectId}
-              activeProject={activeProject}
-              loading={loadingProjects}
-              actionLoading={actionLoading}
-              socketConnected={socketConnected}
-              onSelectProject={setActiveProjectId}
-              onRunIngestion={handleRunIngestion}
-              onDownloadReport={handleDownloadReport}
-              onToggleStatus={handleToggleProjectStatus}
-              onDeleteProject={handleDeleteProject}
-            />
-
-            <div className='rounded-[20px] border border-(--border) bg-(--surface-base) p-4 text-xs shadow-(--shadow)'>
-              <p className='text-[11px] font-semibold uppercase tracking-[0.2em] text-(--text-muted)'>Mentions</p>
-              <div className='mt-3 space-y-2'>
-                {['Mentions', 'Analysis', 'Comparison', 'Influencers & Sources'].map((label) => {
-                  const viewMap: Record<string, DashboardView | null> = {
-                    'Mentions': 'mentions',
-                    'Analysis': 'analysis',
-                    'Comparison': null,
-                    'Influencers & Sources': null,
-                  }
-                  const targetView = viewMap[label]
-                  const isActive = targetView === currentView
-                  const isComingSoon = targetView === null
-                  
-                  const handleNavClick = () => {
-                    if (targetView) setCurrentView(targetView)
-                  }
-                  
-                  return (
-                    <button
-                      key={label}
-                      disabled={isComingSoon}
-                      onClick={handleNavClick}
-                      title={isComingSoon ? 'Coming soon' : undefined}
-                      className={`flex w-full items-center justify-between rounded-lg px-2 py-1.5 text-left font-semibold ${
-                        isActive 
-                          ? 'bg-(--surface-muted) text-(--brand-accent)' 
-                          : isComingSoon
-                            ? 'cursor-not-allowed text-(--text-muted) opacity-50'
-                            : 'text-(--text-primary) hover:bg-(--surface-muted)'
-                      }`}
-                    >
-                      <span className='flex items-center gap-2'>
-                        {label}
-                        {isComingSoon && (
-                          <span className='rounded bg-(--surface-muted) px-1.5 py-0.5 text-[9px] font-normal'>Soon</span>
-                        )}
-                      </span>
-                      {label === 'Mentions' && pagination && (
-                        <span className='rounded-full border border-(--border) px-2 py-0.5 text-[10px] text-(--text-muted)'>
-                          {pagination.totalCount.toLocaleString()}
-                        </span>
-                      )}
-                    </button>
-                  )
-                })}
-              </div>
-              <p className='mt-5 text-[11px] font-semibold uppercase tracking-[0.2em] text-(--text-muted)'>Reports</p>
-              <div className='mt-2 space-y-1'>
-                {REPORT_NAV_ITEMS.map((item) => {
-                  const isPDF = item === 'PDF report'
-                  const isExcel = item === 'Excel report'
-                  const isCSV = item === 'CSV export'
-                  const isEnabled = isPDF || isExcel
-                  const isComingSoon = !isEnabled
-                  
-                  const handleClick = () => {
-                    if (!activeProjectId) return
-                    if (isPDF) handleDownloadReport('summary', 'pdf')
-                    else if (isExcel) handleDownloadReport('all', 'excel')
-                  }
-                  
-                  return (
-                    <button
-                      key={item}
-                      disabled={isComingSoon || actionLoading === 'report'}
-                      title={isComingSoon ? 'Coming soon' : `Download ${item}`}
-                      onClick={handleClick}
-                      className={`flex w-full items-center justify-between rounded-lg px-2 py-1.5 text-left font-semibold ${
-                        isComingSoon
-                          ? 'cursor-not-allowed text-(--text-muted) opacity-50'
-                          : actionLoading === 'report'
-                            ? 'cursor-wait opacity-70'
-                            : 'text-(--text-primary) hover:bg-(--surface-muted)'
-                      }`}
-                    >
-                      <span className='flex items-center gap-2'>
-                        {item}
-                        {isComingSoon && (
-                          <span className='rounded bg-(--surface-muted) px-1.5 py-0.5 text-[9px] font-normal'>Soon</span>
-                        )}
-                      </span>
-                    </button>
-                  )
-                })}
-              </div>
-              <p className='mt-5 text-[11px] font-semibold uppercase tracking-[0.2em] text-(--text-muted)'>Advanced analytics</p>
-              <div className='mt-2 space-y-1'>
-                {ANALYTICS_NAV_ITEMS.map((item) => (
-                  <button
-                    key={item}
-                    disabled
-                    title='Coming soon'
-                    className='flex w-full cursor-not-allowed items-center justify-between rounded-lg px-2 py-1.5 text-left font-semibold text-(--text-muted) opacity-50'
-                  >
-                    <span className='flex items-center gap-2'>
-                      {item}
-                      <span className='rounded bg-(--surface-muted) px-1.5 py-0.5 text-[9px] font-normal'>Soon</span>
-                    </span>
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            <div className='rounded-[20px] border border-(--border) bg-(--surface-base) p-4 text-xs shadow-(--shadow)'>
-              <div className='flex items-center gap-2 text-sm font-semibold'>
-                <Sparkles className='h-4 w-4 text-(--brand-accent)' />
-                Upcoming webinar
-              </div>
-              <p className='mt-2 text-(--text-muted)'>Get a social listening certificate with NPIP.</p>
-              <p className='mt-2 text-(--text-muted)'>Date: Wednesday, Jan 28, 2026</p>
-              <button 
-                disabled
-                title='Coming soon'
-                className='mt-3 inline-flex cursor-not-allowed items-center gap-2 rounded-full border border-(--border) px-3 py-1.5 text-xs font-semibold opacity-50'
-              >
-                Sign up (Coming soon)
-              </button>
-            </div>
-          </aside>
-
-          <main className='space-y-6'>
-            <div className='flex flex-wrap items-center justify-between gap-3 rounded-[20px] border border-(--border) bg-(--surface-base) p-4 shadow-(--shadow)'>
-              <div className='flex flex-1 items-center gap-2 rounded-full border border-(--border) bg-(--surface-muted) px-3 py-2 text-sm'>
-                <Search className='h-4 w-4 text-(--text-muted)' />
-                <input
-                  value={mentionSearch}
-                  onChange={(event) => setMentionSearch(event.target.value)}
-                  placeholder='Search through mentions, authors & domains...'
-                  className='w-full bg-transparent text-sm outline-none'
-                />
-              </div>
-              <div className='flex items-center gap-2 text-xs font-semibold'>
-                <button className='inline-flex items-center gap-2 rounded-full border border-(--border) px-3 py-2'>
-                  <SlidersHorizontal className='h-4 w-4' />
-                  Filters
-                </button>
-                <button className='rounded-full border border-(--border) px-4 py-2 text-xs font-semibold text-(--text-primary)'>
-                  Upgrade
-                </button>
-                <button className='rounded-full border border-(--border) p-2'>
-                  <HelpCircle className='h-4 w-4' />
-                </button>
-                <button className='rounded-full border border-(--border) p-2'>
-                  <Bell className='h-4 w-4' />
-                </button>
-              </div>
-            </div>
-
-            <div className='flex flex-wrap items-center gap-2 text-xs font-semibold text-(--text-muted)'>
-              {FILTER_CHIPS.map((chip) => (
-                <span
-                  key={chip.id}
-                  className='rounded-full border border-(--border) bg-(--surface-muted) px-3 py-1'
-                >
-                  {chip.label}
-                </span>
-              ))}
-              <button 
-                onClick={handleClearFilters}
-                className='inline-flex items-center gap-1 text-(--brand-accent) hover:underline'
-              >
-                Clear filters
-              </button>
-              <button 
-                onClick={handleSaveFilters}
-                className='inline-flex items-center gap-1 text-(--brand-accent) hover:underline'
-              >
-                Save filters
-              </button>
-            </div>
-
-            <section className='rounded-[20px] border border-(--border) bg-(--surface-base) p-4 shadow-(--shadow) sm:p-6'>
+            <section className='rounded-2xl border border-(--border) bg-(--surface-base) p-4 shadow-sm sm:p-6'>
               <div className='flex flex-wrap items-center justify-between gap-4 text-xs font-semibold text-(--text-muted)'>
                 <div className='flex items-center gap-2'>
                   <button
@@ -819,7 +634,7 @@ export default function DashboardPage() {
               <MetricsCharts metrics={metrics} loading={loadingDashboard} />
             </section>
 
-            <div className='flex flex-wrap items-center justify-between gap-3 rounded-[20px] border border-(--border) bg-(--surface-base) px-4 py-3 text-xs font-semibold shadow-(--shadow)'>
+            <div className='flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-(--border) bg-(--surface-base) px-4 py-3 text-xs font-semibold shadow-sm'>
               <div className='flex items-center gap-2'>
                 <button className='rounded-full border border-(--border) px-3 py-1.5'>
                   Recent first
@@ -856,158 +671,41 @@ export default function DashboardPage() {
             )}
           </main>
 
-          <aside className='space-y-4'>
-            <div className='rounded-[20px] border border-(--border) bg-(--surface-base) p-4 text-xs shadow-(--shadow)'>
-              <div className='flex items-center justify-between'>
-                <span className='font-semibold'>Last 30 days</span>
-                <button className='rounded-full border border-(--border) px-2 py-1 text-[10px]'>
-                  {dateRange === 'last_30_days' ? 'Last 30 days' : 'Custom'}
-                  <ChevronDown className='ml-1 inline h-3 w-3' />
-                </button>
-              </div>
-              <div className='mt-3 grid gap-2'>
-                <label className='text-[11px] text-(--text-muted)'>Date range</label>
-                <select
-                  value={dateRange}
-                  onChange={(event) => handleDateRangeChange(event.target.value)}
-                  className='rounded-xl border border-(--border) bg-(--surface-muted) px-3 py-2 text-xs font-semibold'
-                >
-                  <option value='last_7_days'>Last 7 days</option>
-                  <option value='last_30_days'>Last 30 days</option>
-                  <option value='last_90_days'>Last 90 days</option>
-                </select>
-              </div>
-            </div>
-
-            <div className='rounded-[20px] border border-(--border) bg-(--surface-base) p-4 text-xs shadow-(--shadow)'>
-              <div className='flex items-center justify-between'>
-                <span className='font-semibold'>Sources</span>
-                <span className='text-(--text-muted)'>Total: {mentions.length.toLocaleString()}</span>
-              </div>
-              <div className='mt-3 grid gap-3'>
-                {/* Dynamic sources from actual mentions */}
-                {Object.entries(mentionsBySource)
-                  .sort((a, b) => b[1] - a[1])
-                  .map(([sourceId, count]) => (
-                  <label key={sourceId} className='flex items-center justify-between gap-2'>
-                    <span className='flex items-center gap-2'>
-                      <input
-                        type='checkbox'
-                        checked={!!sourceFilters[sourceId]}
-                        onChange={() => handleSourceFilterToggle(sourceId)}
-                        className='h-4 w-4 rounded border-(--border)'
-                      />
-                      <span className='font-semibold'>{SOURCE_LABELS[sourceId] || sourceId}</span>
-                      <span className='text-[11px] text-(--text-muted)'>({count})</span>
-                    </span>
-                  </label>
-                ))}
-                {Object.keys(mentionsBySource).length === 0 && (
-                  <p className='text-(--text-muted)'>No sources yet</p>
-                )}
-              </div>
-            </div>
-
-            <div className='rounded-[20px] border border-(--border) bg-(--surface-base) p-4 text-xs shadow-(--shadow)'>
-              <span className='font-semibold'>Sentiment</span>
-              <div className='mt-3 flex flex-wrap gap-3'>
-                {(['negative', 'neutral', 'positive'] as const).map((item) => (
-                  <label key={item} className='flex items-center gap-2 font-semibold capitalize'>
-                    <input
-                      type='checkbox'
-                      checked={!!sentimentFilters[item]}
-                      onChange={() => handleSentimentToggle(item)}
-                      className='h-4 w-4 rounded border-(--border)'
-                    />
-                    {item}
-                  </label>
-                ))}
-              </div>
-            </div>
-
-            <div className='rounded-[20px] border border-(--border) bg-(--surface-base) p-4 text-xs shadow-(--shadow)'>
-              <span className='font-semibold'>Influence score</span>
-              <div className='mt-3'>
-                <input
-                  type='range'
-                  min={1}
-                  max={10}
-                  value={influenceScore}
-                  onChange={(event) => setInfluenceScore(Number(event.target.value))}
-                  className='w-full'
-                />
-                <div className='mt-1 flex items-center justify-between text-[10px] text-(--text-muted)'>
-                  <span>1</span>
-                  <span>10</span>
-                </div>
-              </div>
-            </div>
-
-            <div className='rounded-[20px] border border-(--border) bg-(--surface-base) p-4 text-xs shadow-(--shadow)'>
-              <div className='flex items-center justify-between'>
-                <span className='font-semibold'>Geolocation</span>
-                <button className='text-[11px] text-(--text-muted)'>Exclude countries</button>
-              </div>
-              <div className='mt-3 grid gap-2'>
-                <select
-                  value={continentFilter}
-                  onChange={(event) => setContinentFilter(event.target.value)}
-                  className='rounded-xl border border-(--border) bg-(--surface-muted) px-3 py-2 text-xs font-semibold'
-                >
-                  <option value=''>Choose continents</option>
-                  <option value='asia'>Asia</option>
-                  <option value='europe'>Europe</option>
-                  <option value='north_america'>North America</option>
-                </select>
-                <select
-                  value={countryFilter}
-                  onChange={(event) => setCountryFilter(event.target.value)}
-                  className='rounded-xl border border-(--border) bg-(--surface-muted) px-3 py-2 text-xs font-semibold'
-                >
-                  <option value=''>Choose countries</option>
-                  <option value='nepal'>Nepal</option>
-                  <option value='india'>India</option>
-                  <option value='usa'>United States</option>
-                </select>
-              </div>
-            </div>
-
-            <div className='space-y-4'>
-              <AlertsPanel
-                alerts={alerts}
-                loading={loadingDashboard}
-                onMarkRead={handleMarkAlertRead}
-              />
-              <ConnectorHealthPanel health={health} loading={loadingDashboard} />
-              <SourcePolicyPanel />
-            </div>
-          </aside>
+          <DashboardRightPanel
+            dateRange={dateRange}
+            onDateRangeChange={handleDateRangeChange}
+            mentionsCount={mentions.length}
+            mentionsBySource={mentionsBySource}
+            sourceFilters={sourceFilters}
+            sourceLabels={SOURCE_LABELS}
+            onSourceFilterToggle={handleSourceFilterToggle}
+            sentimentFilters={sentimentFilters}
+            onSentimentToggle={handleSentimentToggle}
+            influenceScore={influenceScore}
+            onInfluenceScoreChange={setInfluenceScore}
+            continentFilter={continentFilter}
+            onContinentFilterChange={setContinentFilter}
+            countryFilter={countryFilter}
+            onCountryFilterChange={setCountryFilter}
+            alerts={alerts}
+            health={health}
+            loading={loadingDashboard}
+            onMarkAlertRead={handleMarkAlertRead}
+          />
         </div>
       </div>
 
-      {/* Create Project Modal */}
-      {showProjectModal && (
-        <div className='fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4'>
-          <div className='relative max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-2xl border border-(--border) bg-(--surface-base) p-6 shadow-xl'>
-            <button
-              onClick={() => setShowProjectModal(false)}
-              className='absolute right-4 top-4 rounded-lg p-1 text-(--text-muted) hover:bg-(--surface-muted) hover:text-(--text-base)'
-            >
-              <X className='h-5 w-5' />
-            </button>
-            <h2 className='mb-4 text-lg font-semibold'>Create New Project</h2>
-            <ProjectForm
-              formState={projectForm}
-              onFormChange={setProjectForm}
-              onSubmit={(e) => {
-                handleProjectSubmit(e)
-                setShowProjectModal(false)
-              }}
-              submitting={actionLoading === 'create'}
-            />
-          </div>
-        </div>
-      )}
-    </>
+      <ProjectModal
+        isOpen={showProjectModal}
+        formState={projectForm}
+        submitting={actionLoading === 'create'}
+        onClose={() => setShowProjectModal(false)}
+        onFormChange={setProjectForm}
+        onSubmit={(event) => {
+          handleProjectSubmit(event)
+          setShowProjectModal(false)
+        }}
+      />
+    </div>
   )
 }

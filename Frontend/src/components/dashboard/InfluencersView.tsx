@@ -218,7 +218,7 @@ export default function InfluencersView({ mentions, loading }: InfluencersViewPr
     <div className='space-y-6'>
       {/* Stats Overview */}
       <div className='grid gap-4 sm:grid-cols-2 lg:grid-cols-4'>
-        <div className='rounded-xl border border-(--border) bg-(--surface-base) p-4 shadow-(--shadow)'>
+        <div className='rounded-xl border border-(--border) bg-(--surface-base) p-4 shadow-sm'>
           <div className='flex items-center justify-between'>
             <span className='text-xs font-semibold uppercase tracking-wider text-(--text-muted)'>Total Influencers</span>
             <Users className='h-5 w-5 text-(--brand-accent)' />
@@ -226,7 +226,7 @@ export default function InfluencersView({ mentions, loading }: InfluencersViewPr
           <p className='mt-2 text-2xl font-bold'>{influencers.length}</p>
         </div>
 
-        <div className='rounded-xl border border-(--border) bg-(--surface-base) p-4 shadow-(--shadow)'>
+        <div className='rounded-xl border border-(--border) bg-(--surface-base) p-4 shadow-sm'>
           <div className='flex items-center justify-between'>
             <span className='text-xs font-semibold uppercase tracking-wider text-(--text-muted)'>Elite Tier</span>
             <Crown className='h-5 w-5 text-yellow-500' />
@@ -234,7 +234,7 @@ export default function InfluencersView({ mentions, loading }: InfluencersViewPr
           <p className='mt-2 text-2xl font-bold'>{influencers.filter(i => i.score >= 80).length}</p>
         </div>
 
-        <div className='rounded-xl border border-(--border) bg-(--surface-base) p-4 shadow-(--shadow)'>
+        <div className='rounded-xl border border-(--border) bg-(--surface-base) p-4 shadow-sm'>
           <div className='flex items-center justify-between'>
             <span className='text-xs font-semibold uppercase tracking-wider text-(--text-muted)'>Total Reach</span>
             <TrendingUp className='h-5 w-5 text-green-500' />
@@ -244,7 +244,7 @@ export default function InfluencersView({ mentions, loading }: InfluencersViewPr
           </p>
         </div>
 
-        <div className='rounded-xl border border-(--border) bg-(--surface-base) p-4 shadow-(--shadow)'>
+        <div className='rounded-xl border border-(--border) bg-(--surface-base) p-4 shadow-sm'>
           <div className='flex items-center justify-between'>
             <span className='text-xs font-semibold uppercase tracking-wider text-(--text-muted)'>Avg. Score</span>
             <Star className='h-5 w-5 text-purple-500' />
@@ -256,7 +256,7 @@ export default function InfluencersView({ mentions, loading }: InfluencersViewPr
       </div>
 
       {/* Filters */}
-      <div className='flex flex-wrap items-center gap-4 rounded-xl border border-(--border) bg-(--surface-base) p-4 shadow-(--shadow)'>
+      <div className='flex flex-wrap items-center gap-4 rounded-xl border border-(--border) bg-(--surface-base) p-4 shadow-sm'>
         <div className='flex items-center gap-2'>
           <Filter className='h-4 w-4 text-(--text-muted)' />
           <span className='text-sm font-medium'>Filters:</span>
@@ -295,7 +295,7 @@ export default function InfluencersView({ mentions, loading }: InfluencersViewPr
       </div>
 
       {/* Influencer Table */}
-      <div className='overflow-hidden rounded-xl border border-(--border) bg-(--surface-base) shadow-(--shadow)'>
+      <div className='overflow-hidden rounded-xl border border-(--border) bg-(--surface-base) shadow-sm'>
         <div className='overflow-x-auto'>
           <table className='w-full text-sm'>
             <thead className='bg-(--surface-muted)'>
@@ -438,7 +438,7 @@ export default function InfluencersView({ mentions, loading }: InfluencersViewPr
               const medals = ['🥇', '🥈', '🥉']
 
               return (
-                <div key={influencer.author} className={`rounded-xl border border-(--border) p-4 shadow-(--shadow) ${bgColors[idx]}`}>
+                <div key={influencer.author} className={`rounded-xl border border-(--border) p-4 shadow-sm ${bgColors[idx]}`}>
                   <div className='mb-3 flex items-center justify-between'>
                     <span className='text-2xl'>{medals[idx]}</span>
                     <div className={`flex items-center gap-1 ${tier.color}`}>

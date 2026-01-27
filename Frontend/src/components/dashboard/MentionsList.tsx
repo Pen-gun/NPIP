@@ -112,7 +112,7 @@ function MentionCard({ mention }: { mention: Mention }) {
         href={mention.url}
         target='_blank'
         rel='noreferrer'
-        className='rounded-xl border border-(--border) bg-(--surface-muted) p-4 transition hover:-translate-y-px hover:shadow-[0_12px_24px_rgba(15,23,42,0.08)]'
+        className='rounded-xl border border-(--border) bg-(--surface-base) p-4 transition hover:-translate-y-px hover:border-(--brand-primary) hover:bg-(--surface-muted) hover:shadow-sm'
       >
         {content}
       </a>
@@ -120,7 +120,7 @@ function MentionCard({ mention }: { mention: Mention }) {
   }
 
   return (
-    <article className='rounded-xl border border-(--border) bg-(--surface-muted) p-4'>
+    <article className='rounded-xl border border-(--border) bg-(--surface-base) p-4'>
       {content}
     </article>
   )
@@ -128,7 +128,7 @@ function MentionCard({ mention }: { mention: Mention }) {
 
 function MentionSkeleton() {
   return (
-    <div className='rounded-xl border border-(--border) bg-(--surface-muted) p-4'>
+    <div className='rounded-xl border border-(--border) bg-(--surface-base) p-4'>
       <div className='flex items-center justify-between'>
         {createSkeletonElement('h-3 w-16')}
         {createSkeletonElement('h-3 w-20')}
@@ -163,7 +163,7 @@ export default function MentionsList({ mentions, loading, pagination, sortOrder,
   }
 
   return (
-    <div className='rounded-[20px] border border-(--border) bg-(--surface-base) p-4 shadow-(--shadow) sm:rounded-[28px] sm:p-6'>
+    <div className='rounded-2xl border border-(--border) bg-(--surface-base) p-4 shadow-sm sm:p-6'>
       <div className='flex flex-wrap items-center justify-between gap-3'>
         <h3 className='text-base font-semibold sm:text-lg'>
           Mentions {pagination && <span className='text-sm font-normal text-(--text-muted)'>({pagination.totalCount.toLocaleString()} total)</span>}
@@ -181,7 +181,7 @@ export default function MentionsList({ mentions, loading, pagination, sortOrder,
           </select>
         </div>
       </div>
-      <div className='mt-3 grid max-h-[500px] gap-3 overflow-y-auto pr-1 sm:mt-4 sm:max-h-[700px] sm:gap-4 sm:pr-2'>
+      <div className='mt-3 grid max-h-[520px] gap-3 overflow-y-auto pr-1 sm:mt-4 sm:max-h-[720px] sm:gap-4 sm:pr-2'>
         {loading &&
           Array.from({ length: SKELETON_COUNT }).map((_, index) => (
             <MentionSkeleton key={`mention-skeleton-${index}`} />

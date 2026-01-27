@@ -22,7 +22,7 @@ interface ProjectListProps {
 }
 
 const SKELETON_COUNT = 3
-const ACTION_BTN_CLASS = 'inline-flex items-center gap-2 rounded-full border border-(--border) px-3 py-1.5 text-xs font-semibold transition hover:bg-(--surface-muted) active:scale-95'
+const ACTION_BTN_CLASS = 'inline-flex items-center gap-2 rounded-full border border-(--sidebar-divider) px-3 py-1.5 text-xs font-semibold transition hover:bg-[#223045] active:scale-95'
 
 export default function ProjectList({
   projects,
@@ -104,15 +104,15 @@ export default function ProjectList({
   }, [activeProject, displayTimeLeftMs, isPaused, lastRunAtMs, scheduleMinutes])
 
   return (
-    <div className='rounded-[20px] border border-(--border) bg-(--surface-base) p-4 shadow-(--shadow) sm:rounded-[28px] sm:p-6'>
-      <h2 className='text-base font-semibold sm:text-lg'>Projects</h2>
-      <p className='text-xs text-(--text-muted) sm:text-sm'>Select a project to monitor.</p>
+    <div className='rounded-2xl border border-(--sidebar-divider) bg-(--sidebar-panel) p-4 text-(--sidebar-text) sm:p-6'>
+      <h2 className='text-sm font-semibold uppercase tracking-[0.2em] text-(--sidebar-muted)'>Projects</h2>
+      <p className='text-xs text-(--sidebar-muted) sm:text-sm'>Select a project to monitor.</p>
       <div className='mt-3 flex flex-wrap gap-2 sm:mt-4'>
         {loading &&
           Array.from({ length: SKELETON_COUNT }).map((_, index) => (
             <div
               key={`project-skeleton-${index}`}
-              className='h-8 w-20 rounded-full bg-(--surface-muted) animate-pulse sm:w-24'
+              className='h-8 w-20 rounded-full bg-[#223045] animate-pulse sm:w-24'
             />
           ))}
         {!loading &&
@@ -122,8 +122,8 @@ export default function ProjectList({
               onClick={() => onSelectProject(project._id)}
               className={`rounded-full px-3 py-1.5 text-xs font-semibold transition sm:px-4 sm:py-2 ${
                 activeProjectId === project._id
-                  ? 'bg-(--brand-primary) text-(--text-inverse)'
-                  : 'border border-(--border) hover:bg-(--surface-muted)'
+                  ? 'bg-(--sidebar-active) text-[#0b1f16]'
+                  : 'border border-(--sidebar-divider) text-(--sidebar-text) hover:bg-[#223045]'
               }`}
             >
               {project.name}
@@ -132,15 +132,15 @@ export default function ProjectList({
       </div>
       {activeProject && (
         <div className='mt-3 space-y-2 sm:mt-4 sm:space-y-0'>
-          <div className='flex flex-wrap items-center gap-2 text-xs text-(--text-muted) sm:gap-3 sm:text-sm'>
+          <div className='flex flex-wrap items-center gap-2 text-xs text-(--sidebar-muted) sm:gap-3 sm:text-sm'>
             <span className='w-full sm:w-auto'>Keywords: {activeProject.keywords.join(', ') || 'None'}</span>
             <span>Schedule: {activeProject.scheduleMinutes} min</span>
             <span>{nextRunLabel}</span>
             <span>Timer: {isPaused ? 'paused' : 'running'}</span>
-            <span className='uppercase tracking-[0.12em] text-xs'>
+            <span className='uppercase tracking-[0.12em] text-xs text-(--sidebar-text)'>
               Status: {activeProject.status || 'active'}
             </span>
-            <span className={socketConnected ? 'text-(--state-success)' : 'text-(--state-warning)'}>
+            <span className={socketConnected ? 'text-emerald-300' : 'text-amber-300'}>
               Realtime: {socketConnected ? 'Connected' : 'Disconnected'}
             </span>
           </div>
@@ -174,7 +174,7 @@ export default function ProjectList({
             <label className='sr-only' htmlFor='report-scope'>Report scope</label>
             <select
               id='report-scope'
-              className='rounded-full border border-(--border) bg-(--surface-base) px-3 py-1.5 text-xs font-semibold text-(--text-primary) shadow-(--shadow) focus:outline-none focus:ring-2 focus:ring-(--brand-primary)'
+              className='rounded-full border border-(--sidebar-divider) bg-[#223045] px-3 py-1.5 text-xs font-semibold text-(--sidebar-text) focus:outline-none focus:ring-2 focus:ring-(--sidebar-active)'
               value={reportScope}
               onChange={(event) => setReportScope(event.target.value as ReportScope)}
               disabled={!!actionLoading}

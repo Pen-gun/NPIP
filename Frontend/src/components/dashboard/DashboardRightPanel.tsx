@@ -47,7 +47,7 @@ export default function DashboardRightPanel({
   onMarkAlertRead,
 }: DashboardRightPanelProps) {
   return (
-    <aside className='space-y-4 bg-(--surface-background) px-6 py-6 lg:px-8'>
+    <aside className='space-y-4'>
       <div className='rounded-2xl border border-(--border) bg-(--surface-base) p-4 text-xs shadow-sm'>
         <div className='flex items-center justify-between'>
           <span className='font-semibold'>Last 30 days</span>

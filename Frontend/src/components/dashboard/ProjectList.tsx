@@ -19,6 +19,7 @@ interface ProjectListProps {
   onDownloadReport: (scope: ReportScope) => void
   onToggleStatus: () => void
   onDeleteProject: (projectId: string) => void
+  compact?: boolean
 }
 
 const SKELETON_COUNT = 3
@@ -36,6 +37,7 @@ export default function ProjectList({
   onDownloadReport,
   onToggleStatus,
   onDeleteProject,
+  compact = false,
 }: ProjectListProps) {
   const [now, setNow] = useState(() => Date.now())
   const [reportScope, setReportScope] = useState<ReportScope>('summary')
@@ -103,8 +105,10 @@ export default function ProjectList({
     return 'Time left: unknown'
   }, [activeProject, displayTimeLeftMs, isPaused, lastRunAtMs, scheduleMinutes])
 
+  const showDetails = !compact
+
   return (
-    <div className='rounded-2xl border border-(--sidebar-divider) bg-(--sidebar-panel) p-4 text-(--sidebar-text) sm:p-6'>
+    <div className='rounded-2xl border border-(--sidebar-divider) bg-(--surface-background) p-4 text-(--text-primary) sm:p-6'>
       <h2 className='text-sm font-semibold uppercase tracking-[0.2em] text-(--sidebar-muted)'>Projects</h2>
       <p className='text-xs text-(--sidebar-muted) sm:text-sm'>Select a project to monitor.</p>
       <div className='mt-3 flex flex-wrap gap-2 sm:mt-4'>
@@ -130,7 +134,7 @@ export default function ProjectList({
             </button>
           ))}
       </div>
-      {activeProject && (
+      {showDetails && activeProject && (
         <div className='mt-3 space-y-2 sm:mt-4 sm:space-y-0'>
           <div className='flex flex-wrap items-center gap-2 text-xs text-(--sidebar-muted) sm:gap-3 sm:text-sm'>
             <span className='w-full sm:w-auto'>Keywords: {activeProject.keywords.join(', ') || 'None'}</span>

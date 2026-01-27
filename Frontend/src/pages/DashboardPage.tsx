@@ -26,6 +26,7 @@ import {
   DashboardSidebar,
   DashboardRightPanel,
   DashboardQuickNavGrid,
+  ProjectDetailsPanel,
   ProjectModal,
 } from '../components/dashboard'
 import type { ProjectFormState, DashboardFilters } from '../components/dashboard'
@@ -64,19 +65,6 @@ const parseKeywords = (value: string): string[] =>
     .split(',')
     .map((item) => item.trim())
     .filter(Boolean)
-
-const REPORT_NAV_ITEMS = Object.freeze([
-  'Email reports',
-  'PDF report',
-  'Excel report',
-  'Infographic',
-])
-
-const ANALYTICS_NAV_ITEMS = Object.freeze([
-  'Geo analysis',
-  'Influencer analysis',
-  'Emotion analysis',
-])
 
 const FILTER_CHIPS = Object.freeze([
   { id: 'x', label: 'X (Twitter)' },
@@ -563,7 +551,7 @@ export default function DashboardPage() {
         onSaveFilters={handleSaveFilters}
       />
       <div className='mx-auto w-full max-w-[1500px] px-4 py-6 sm:px-6 lg:px-8'>
-        <div className='grid gap-0 lg:grid-cols-[260px_minmax(0,1fr)_320px]'>
+        <div className='grid gap-0 lg:grid-cols-[260px_minmax(0,1fr)]'>
           <DashboardSidebar
             projects={projects}
             activeProjectId={activeProjectId}
@@ -573,8 +561,6 @@ export default function DashboardPage() {
             socketConnected={socketConnected}
             pagination={pagination}
             currentView={currentView}
-            reportNavItems={REPORT_NAV_ITEMS}
-            analyticsNavItems={ANALYTICS_NAV_ITEMS}
             onSelectProject={setActiveProjectId}
             onRunIngestion={handleRunIngestion}
             onDownloadReport={handleDownloadReport}
@@ -584,114 +570,130 @@ export default function DashboardPage() {
             onViewChange={setCurrentView}
           />
 
-          <main className='space-y-6 border-r border-(--divider) bg-(--surface-background) px-6 py-6 lg:px-8'>
-            <DashboardQuickNavGrid tiles={quickNavTiles} />
+          <main className='bg-(--surface-background) px-6 py-6 lg:px-8'>
+            <div className='grid gap-6 xl:grid-cols-[minmax(0,1fr)_320px]'>
+              <div className='space-y-6'>
+                <DashboardQuickNavGrid tiles={quickNavTiles} />
 
-            <section className='rounded-2xl border border-(--border) bg-(--surface-base) p-4 shadow-sm sm:p-6'>
-              <div className='flex flex-wrap items-center justify-between gap-4 text-xs font-semibold text-(--text-muted)'>
-                <div className='flex items-center gap-2'>
-                  <button
-                    type='button'
-                    onClick={() => setChartView('mentions')}
-                    className={`rounded-full border px-3 py-1 ${
-                      chartView === 'mentions'
-                        ? 'border-(--brand-accent) text-(--brand-accent)'
-                        : 'border-(--border) text-(--text-muted)'
-                    }`}
-                  >
-                    Mentions & Reach
-                  </button>
-                  <button
-                    type='button'
-                    onClick={() => setChartView('sentiment')}
-                    className={`rounded-full border px-3 py-1 ${
-                      chartView === 'sentiment'
-                        ? 'border-(--brand-accent) text-(--brand-accent)'
-                        : 'border-(--border) text-(--text-muted)'
-                    }`}
-                  >
-                    Sentiment
-                  </button>
-                </div>
-                <span>Click on the chart to filter by date</span>
-                <div className='flex items-center gap-2'>
-                  {(['days', 'weeks', 'months'] as const).map((item) => (
-                    <button
-                      key={item}
-                      type='button'
-                      onClick={() => setChartGranularity(item)}
-                      className={`rounded-full border px-3 py-1 ${
-                        chartGranularity === item
-                          ? 'border-(--brand-accent) text-(--brand-accent)'
-                          : 'border-(--border) text-(--text-muted)'
-                      }`}
-                    >
-                      {item.charAt(0).toUpperCase() + item.slice(1)}
+                <ProjectDetailsPanel
+                  activeProject={activeProject}
+                  actionLoading={actionLoading}
+                  socketConnected={socketConnected}
+                  onRunIngestion={handleRunIngestion}
+                  onDownloadReport={(scope) => handleDownloadReport(scope, 'pdf')}
+                  onToggleStatus={handleToggleProjectStatus}
+                  onDeleteProject={handleDeleteProject}
+                />
+
+                <section className='rounded-2xl border border-(--border) bg-(--surface-base) p-4 shadow-sm sm:p-6'>
+                  <div className='flex flex-wrap items-center justify-between gap-4 text-xs font-semibold text-(--text-muted)'>
+                    <div className='flex items-center gap-2'>
+                      <button
+                        type='button'
+                        onClick={() => setChartView('mentions')}
+                        className={`rounded-full border px-3 py-1 ${
+                          chartView === 'mentions'
+                            ? 'border-(--brand-accent) text-(--brand-accent)'
+                            : 'border-(--border) text-(--text-muted)'
+                        }`}
+                      >
+                        Mentions & Reach
+                      </button>
+                      <button
+                        type='button'
+                        onClick={() => setChartView('sentiment')}
+                        className={`rounded-full border px-3 py-1 ${
+                          chartView === 'sentiment'
+                            ? 'border-(--brand-accent) text-(--brand-accent)'
+                            : 'border-(--border) text-(--text-muted)'
+                        }`}
+                      >
+                        Sentiment
+                      </button>
+                    </div>
+                    <span>Click on the chart to filter by date</span>
+                    <div className='flex items-center gap-2'>
+                      {(['days', 'weeks', 'months'] as const).map((item) => (
+                        <button
+                          key={item}
+                          type='button'
+                          onClick={() => setChartGranularity(item)}
+                          className={`rounded-full border px-3 py-1 ${
+                            chartGranularity === item
+                              ? 'border-(--brand-accent) text-(--brand-accent)'
+                              : 'border-(--border) text-(--text-muted)'
+                          }`}
+                        >
+                          {item.charAt(0).toUpperCase() + item.slice(1)}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                  <MetricsCharts metrics={metrics} loading={loadingDashboard} />
+                </section>
+
+                <div className='flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-(--border) bg-(--surface-base) px-4 py-3 text-xs font-semibold shadow-sm'>
+                  <div className='flex items-center gap-2'>
+                    <button className='rounded-full border border-(--border) px-3 py-1.5'>
+                      Recent first
+                      <ChevronDown className='ml-2 inline h-3 w-3' />
                     </button>
-                  ))}
+                    <button className='rounded-full border border-(--border) px-3 py-1.5 text-(--text-muted)'>
+                      Tags
+                    </button>
+                  </div>
+                  <div className='flex items-center gap-2'>
+                    {/* Pagination is now handled by MentionsList component */}
+                  </div>
                 </div>
-              </div>
-              <MetricsCharts metrics={metrics} loading={loadingDashboard} />
-            </section>
 
-            <div className='flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-(--border) bg-(--surface-base) px-4 py-3 text-xs font-semibold shadow-sm'>
-              <div className='flex items-center gap-2'>
-                <button className='rounded-full border border-(--border) px-3 py-1.5'>
-                  Recent first
-                  <ChevronDown className='ml-2 inline h-3 w-3' />
-                </button>
-                <button className='rounded-full border border-(--border) px-3 py-1.5 text-(--text-muted)'>
-                  Tags
-                </button>
+                {currentView === 'mentions' && (
+                  <MentionsList
+                    mentions={filteredMentions}
+                    loading={loadingDashboard}
+                    pagination={pagination ?? undefined}
+                    sortOrder={sortOrder}
+                    onSortChange={(sort) => {
+                      setSortOrder(sort)
+                      setCurrentPage(1)
+                    }}
+                    onPageChange={setCurrentPage}
+                  />
+                )}
+
+                {currentView === 'analysis' && (
+                  <AnalysisView
+                    mentions={mentions}
+                    loading={loadingDashboard}
+                  />
+                )}
               </div>
-              <div className='flex items-center gap-2'>
-                {/* Pagination is now handled by MentionsList component */}
+
+              <div className='space-y-6'>
+                <DashboardRightPanel
+                  dateRange={dateRange}
+                  onDateRangeChange={handleDateRangeChange}
+                  mentionsCount={mentions.length}
+                  mentionsBySource={mentionsBySource}
+                  sourceFilters={sourceFilters}
+                  sourceLabels={SOURCE_LABELS}
+                  onSourceFilterToggle={handleSourceFilterToggle}
+                  sentimentFilters={sentimentFilters}
+                  onSentimentToggle={handleSentimentToggle}
+                  influenceScore={influenceScore}
+                  onInfluenceScoreChange={setInfluenceScore}
+                  continentFilter={continentFilter}
+                  onContinentFilterChange={setContinentFilter}
+                  countryFilter={countryFilter}
+                  onCountryFilterChange={setCountryFilter}
+                  alerts={alerts}
+                  health={health}
+                  loading={loadingDashboard}
+                  onMarkAlertRead={handleMarkAlertRead}
+                />
               </div>
             </div>
-
-            {currentView === 'mentions' && (
-              <MentionsList 
-                mentions={filteredMentions} 
-                loading={loadingDashboard}
-                pagination={pagination ?? undefined}
-                sortOrder={sortOrder}
-                onSortChange={(sort) => {
-                  setSortOrder(sort)
-                  setCurrentPage(1)
-                }}
-                onPageChange={setCurrentPage}
-              />
-            )}
-
-            {currentView === 'analysis' && (
-              <AnalysisView
-                mentions={mentions}
-                loading={loadingDashboard}
-              />
-            )}
           </main>
-
-          <DashboardRightPanel
-            dateRange={dateRange}
-            onDateRangeChange={handleDateRangeChange}
-            mentionsCount={mentions.length}
-            mentionsBySource={mentionsBySource}
-            sourceFilters={sourceFilters}
-            sourceLabels={SOURCE_LABELS}
-            onSourceFilterToggle={handleSourceFilterToggle}
-            sentimentFilters={sentimentFilters}
-            onSentimentToggle={handleSentimentToggle}
-            influenceScore={influenceScore}
-            onInfluenceScoreChange={setInfluenceScore}
-            continentFilter={continentFilter}
-            onContinentFilterChange={setContinentFilter}
-            countryFilter={countryFilter}
-            onCountryFilterChange={setCountryFilter}
-            alerts={alerts}
-            health={health}
-            loading={loadingDashboard}
-            onMarkAlertRead={handleMarkAlertRead}
-          />
         </div>
       </div>
 

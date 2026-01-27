@@ -12,6 +12,7 @@ export { default as InfluencersView } from './InfluencersView'
 export { default as DashboardTopBar } from './DashboardTopBar'
 export { default as DashboardSidebar } from './DashboardSidebar'
 export { default as DashboardRightPanel } from './DashboardRightPanel'
+export { default as ProjectDetailsPanel } from './ProjectDetailsPanel'
 export { default as ProjectModal } from './ProjectModal'
 export { default as DashboardQuickNavGrid } from './DashboardQuickNavGrid'
 

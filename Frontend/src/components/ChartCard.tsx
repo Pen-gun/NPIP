@@ -85,6 +85,7 @@ const createChartConfig = (type: ChartType, title: string, labels: string[], dat
 export default function ChartCard({ title, description, type, labels, data }: ChartCardProps) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null)
   const chartRef = useRef<Chart | null>(null)
+  const chartTypeRef = useRef<ChartType | null>(null)
 
   useEffect(() => {
     if (!canvasRef.current) return
@@ -94,12 +95,14 @@ export default function ChartCard({ title, description, type, labels, data }: Ch
 
     if (!chart) {
       chartRef.current = new Chart(canvasRef.current, config)
+      chartTypeRef.current = type
       return
     }
 
-    if (chart.config.type !== config.type) {
+    if (chartTypeRef.current !== type) {
       chart.destroy()
       chartRef.current = new Chart(canvasRef.current, config)
+      chartTypeRef.current = type
       return
     }
 
@@ -112,6 +115,7 @@ export default function ChartCard({ title, description, type, labels, data }: Ch
     return () => {
       chartRef.current?.destroy()
       chartRef.current = null
+      chartTypeRef.current = null
     }
   }, [])
 

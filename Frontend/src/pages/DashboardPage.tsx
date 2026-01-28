@@ -675,7 +675,7 @@ export default function DashboardPage() {
         onSaveFilters={handleSaveFilters}
       />
       <div className='mx-auto w-full max-w-[1500px] px-4 py-6 sm:px-6 lg:px-8'>
-        <div className='grid gap-0 lg:grid-cols-[260px_minmax(0,1fr)]'>
+        <div className='grid gap-6 lg:grid-cols-[260px_minmax(0,1fr)] lg:gap-0'>
           <DashboardSidebar
             projects={projects}
             activeProjectId={activeProjectId}
@@ -692,9 +692,10 @@ export default function DashboardPage() {
             onDeleteProject={handleDeleteProject}
             onCreateProject={() => setShowProjectModal(true)}
             onViewChange={setCurrentView}
+            className='order-2 lg:order-1'
           />
 
-          <main className='bg-(--surface-background) px-6 py-6 lg:px-8'>
+          <main className='order-1 bg-(--surface-background) px-0 py-0 sm:px-4 sm:py-4 lg:order-2 lg:px-8 lg:py-6'>
             <div className='grid gap-6 xl:grid-cols-[minmax(0,1fr)_320px]'>
               <div className='space-y-6'>
                 <DashboardQuickNavGrid tiles={quickNavTiles} />
@@ -733,19 +734,19 @@ export default function DashboardPage() {
                 </section>
 
                 {currentView === 'mentions' && (
-              <MentionsList
-                mentions={filteredMentions}
-                loading={loadingDashboard}
-                pagination={pagination ?? undefined}
-                sortOrder={sortOrder}
-                onSortChange={(sort) => {
-                  setSortOrder(sort)
-                  setCurrentPage(1)
-                }}
-                onLoadMore={handleLoadMoreMentions}
-                loadingMore={loadingMore}
-              />
-            )}
+                  <MentionsList
+                    mentions={filteredMentions}
+                    loading={loadingDashboard}
+                    pagination={pagination ?? undefined}
+                    sortOrder={sortOrder}
+                    onSortChange={(sort) => {
+                      setSortOrder(sort)
+                      setCurrentPage(1)
+                    }}
+                    onLoadMore={handleLoadMoreMentions}
+                    loadingMore={loadingMore}
+                  />
+                )}
 
                 {currentView === 'analysis' && (
                   <AnalysisView

@@ -14,6 +14,7 @@ interface DashboardSidebarProps {
   socketConnected: boolean
   pagination: PaginationInfo | null
   currentView: DashboardView
+  className?: string
   onSelectProject: (projectId: string) => void
   onRunIngestion: () => void
   onDownloadReport: (scope: 'summary' | 'all' | 'mentions' | 'last_run', format?: 'pdf' | 'excel') => void
@@ -37,6 +38,7 @@ export default function DashboardSidebar({
   socketConnected,
   pagination,
   currentView,
+  className,
   onSelectProject,
   onRunIngestion,
   onDownloadReport,
@@ -46,7 +48,11 @@ export default function DashboardSidebar({
   onViewChange,
 }: DashboardSidebarProps) {
   return (
-    <aside className='space-y-4 border-r border-(--sidebar-divider) bg-(--surface-background) px-4 py-6 text-(--text-primary) lg:sticky lg:top-0 lg:h-screen lg:overflow-y-auto lg:pl-6'>
+    <aside
+      className={`space-y-4 bg-(--surface-background) px-4 py-6 text-(--text-primary) lg:sticky lg:top-0 lg:h-screen lg:overflow-y-auto lg:border-r lg:border-(--sidebar-divider) lg:pl-6 ${
+        className ?? ''
+      }`}
+    >
       <div className='pb-2'>
         <BrandLogo />
       </div>

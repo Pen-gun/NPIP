@@ -49,37 +49,22 @@ export default function DashboardSidebar({
 }: DashboardSidebarProps) {
   return (
     <aside
-      className={`space-y-4 bg-(--surface-background) px-4 py-6 text-(--text-primary) lg:sticky lg:top-0 lg:h-screen lg:overflow-y-auto lg:border-r lg:border-(--sidebar-divider) lg:pl-6 ${
+      className={`flex flex-col gap-4 bg-(--surface-background) px-4 py-6 text-(--text-primary) lg:sticky lg:top-0 lg:h-screen lg:overflow-y-auto lg:border-r lg:border-(--sidebar-divider) lg:pl-6 ${
         className ?? ''
       }`}
     >
-      <div className='pb-2'>
+      <div className='order-4 hidden pb-2 lg:order-1 lg:block'>
         <BrandLogo />
       </div>
 
-      <ProjectList
-        projects={projects}
-        activeProjectId={activeProjectId}
-        activeProject={activeProject}
-        loading={loadingProjects}
-        actionLoading={actionLoading}
-        socketConnected={socketConnected}
-        onSelectProject={onSelectProject}
-        onRunIngestion={onRunIngestion}
-        onDownloadReport={(scope) => onDownloadReport(scope)}
-        onToggleStatus={onToggleStatus}
-        onDeleteProject={onDeleteProject}
-        compact
-      />
-
       <button
         onClick={onCreateProject}
-        className='flex w-full items-center justify-center gap-2 rounded-xl border border-dashed border-(--sidebar-divider) py-3 text-xs font-semibold uppercase tracking-[0.2em] text-(--sidebar-muted) transition-colors hover:border-(--sidebar-active) hover:text-(--sidebar-active)'
+        className='order-1 hidden w-full items-center justify-center gap-2 rounded-xl border border-dashed border-(--sidebar-divider) py-3 text-xs font-semibold uppercase tracking-[0.2em] text-(--sidebar-muted) transition-colors hover:border-(--sidebar-active) hover:text-(--sidebar-active) lg:order-3 lg:flex'
       >
         Create new project
       </button>
 
-      <div className='rounded-2xl border border-(--border) bg-(--surface-base) p-4 text-xs shadow-sm'>
+      <div className='order-2 hidden rounded-2xl border border-(--border) bg-(--surface-base) p-4 text-xs shadow-sm lg:order-4 lg:block'>
         <div className='flex items-center justify-between'>
           <p className='text-[11px] font-semibold uppercase tracking-[0.2em] text-(--text-muted)'>View</p>
           {pagination && currentView === 'mentions' && (
@@ -99,6 +84,23 @@ export default function DashboardSidebar({
             </option>
           ))}
         </select>
+      </div>
+
+      <div className='hidden lg:block'>
+        <ProjectList
+          projects={projects}
+          activeProjectId={activeProjectId}
+          activeProject={activeProject}
+          loading={loadingProjects}
+          actionLoading={actionLoading}
+          socketConnected={socketConnected}
+          onSelectProject={onSelectProject}
+          onRunIngestion={onRunIngestion}
+          onDownloadReport={(scope) => onDownloadReport(scope)}
+          onToggleStatus={onToggleStatus}
+          onDeleteProject={onDeleteProject}
+          compact
+        />
       </div>
     </aside>
   )

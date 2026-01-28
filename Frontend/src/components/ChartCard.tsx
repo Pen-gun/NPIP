@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import Chart from 'chart.js/auto'
 
 type ChartType = 'line' | 'doughnut' | 'bar'
@@ -22,7 +22,13 @@ const TENSION = 0.4
 const BORDER_WIDTH = 2
 const FONT_SIZE = 11
 
-const createChartConfig = (type: ChartType, title: string, labels: string[], data: number[]) => ({
+const createChartConfig = (
+  type: ChartType,
+  title: string,
+  labels: string[],
+  data: number[],
+  compactLegend: boolean,
+) => ({
   type,
   data: {
     labels,
@@ -49,7 +55,7 @@ const createChartConfig = (type: ChartType, title: string, labels: string[], dat
     plugins: {
       legend: {
         display: type === 'doughnut',
-        position: 'right' as const,
+        position: compactLegend ? ('bottom' as const) : ('right' as const),
         labels: {
           boxWidth: 12,
           padding: 8,
@@ -86,11 +92,25 @@ export default function ChartCard({ title, description, type, labels, data }: Ch
   const canvasRef = useRef<HTMLCanvasElement | null>(null)
   const chartRef = useRef<Chart | null>(null)
   const chartTypeRef = useRef<ChartType | null>(null)
+  const [compactLegend, setCompactLegend] = useState(() =>
+    typeof window !== 'undefined' ? window.innerWidth < 640 : false,
+  )
+
+  useEffect(() => {
+    const updateCompactLegend = () => {
+      if (typeof window === 'undefined') return
+      const next = window.innerWidth < 640
+      setCompactLegend((prev) => (prev === next ? prev : next))
+    }
+    updateCompactLegend()
+    window.addEventListener('resize', updateCompactLegend)
+    return () => window.removeEventListener('resize', updateCompactLegend)
+  }, [])
 
   useEffect(() => {
     if (!canvasRef.current) return
 
-    const config = createChartConfig(type, title, labels, data)
+    const config = createChartConfig(type, title, labels, data, compactLegend)
     const chart = chartRef.current
 
     if (!chart) {
@@ -109,7 +129,7 @@ export default function ChartCard({ title, description, type, labels, data }: Ch
     chart.data = config.data
     chart.options = config.options
     chart.update()
-  }, [title, type, labels, data])
+  }, [title, type, labels, data, compactLegend])
 
   useEffect(() => {
     return () => {
@@ -120,13 +140,13 @@ export default function ChartCard({ title, description, type, labels, data }: Ch
   }, [])
 
   return (
-    <div className='flex flex-col rounded-2xl border border-(--border) bg-(--surface-base) p-4 shadow-sm'>
+    <div className='flex min-w-0 flex-col overflow-hidden rounded-2xl border border-(--border) bg-(--surface-base) p-4 shadow-sm'>
       <div className='mb-3'>
         <h4 className='text-sm font-semibold'>{title}</h4>
         <p className='text-xs text-(--text-muted)'>{description}</p>
       </div>
       <div className='relative min-h-40 flex-1'>
-        <canvas ref={canvasRef} />
+        <canvas ref={canvasRef} className='block h-full w-full max-w-full' />
       </div>
     </div>
   )

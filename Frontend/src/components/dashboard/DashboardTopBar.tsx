@@ -36,7 +36,7 @@ export default function DashboardTopBar({
   return (
     <>
       <div className='border-b border-(--topbar-border) bg-(--surface-base)'>
-        <div className='mx-auto flex w-full max-w-[1500px] flex-wrap items-center gap-3 px-4 py-4 sm:px-6 lg:flex-nowrap lg:gap-6'>
+        <div className='mx-auto flex w-full max-w-[1500px] flex-col items-stretch gap-3 px-4 py-4 sm:flex-row sm:flex-wrap sm:items-center sm:px-6 lg:flex-nowrap lg:gap-6 lg:px-8'>
           <div className='flex min-w-0 flex-1 items-center gap-2 rounded-full border border-(--border) bg-(--surface-muted) px-4 py-2 text-sm sm:min-w-[240px]'>
             <Search className='h-4 w-4 text-(--text-muted)' />
             <input
@@ -46,21 +46,21 @@ export default function DashboardTopBar({
               className='w-full bg-transparent text-sm outline-none'
             />
           </div>
-          <button
-            type='button'
-            onClick={() => setFiltersOpen((prev) => !prev)}
-            className='inline-flex items-center gap-2 rounded-full border border-(--border) px-4 py-2 text-xs font-semibold text-(--text-primary)'
-          >
-            <SlidersHorizontal className='h-4 w-4' />
-            Filters
-          </button>
-          <div className='ml-auto flex items-center gap-2 text-xs font-semibold'>
+          <div className='flex w-full min-w-0 items-center justify-between gap-2 text-xs font-semibold sm:ml-auto sm:w-auto sm:justify-start'>
+            <button
+              type='button'
+              onClick={() => setFiltersOpen((prev) => !prev)}
+              className='inline-flex items-center gap-2 rounded-full border border-(--border) px-4 py-2 text-xs font-semibold text-(--text-primary)'
+            >
+              <SlidersHorizontal className='h-4 w-4' />
+              Filters
+            </button>
             <button className='rounded-full border border-(--border) p-2'>
               <HelpCircle className='h-4 w-4' />
             </button>
           </div>
         </div>
-        <div className='mx-auto w-full max-w-[1500px] px-4 pb-2 text-xs font-semibold text-(--text-muted) sm:px-6'>
+        <div className='mx-auto w-full max-w-[1500px] px-4 pb-2 text-xs font-semibold text-(--text-muted) sm:px-6 lg:px-8'>
           {appliedFilters.length === 0 ? (
             <span>No filters applied</span>
           ) : (
@@ -69,7 +69,7 @@ export default function DashboardTopBar({
               {appliedFilters.map((filter) => (
                 <span
                   key={filter.id}
-                  className='rounded-full border border-(--border) bg-(--surface-muted) px-3 py-1 text-(--text-primary)'
+                  className='max-w-full truncate rounded-full border border-(--border) bg-(--surface-muted) px-3 py-1 text-(--text-primary)'
                 >
                   {filter.label}
                 </span>
@@ -78,10 +78,10 @@ export default function DashboardTopBar({
           )}
         </div>
         {filtersOpen && (
-          <div className='mx-auto w-full max-w-[1500px] px-4 pb-4 sm:px-6'>
+          <div className='mx-auto w-full max-w-[1500px] px-4 pb-4 sm:px-6 lg:px-8'>
             <div className='rounded-2xl border border-(--border) bg-(--surface-base) p-4 text-xs shadow-sm'>
-              <div className='flex flex-wrap items-center justify-between gap-3'>
-                <div className='flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.2em] text-(--text-muted)'>
+              <div className='flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between'>
+                <div className='flex flex-wrap items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.2em] text-(--text-muted)'>
                   <button
                     type='button'
                     onClick={() => setActiveTab('sources')}
@@ -105,7 +105,7 @@ export default function DashboardTopBar({
                     Sentiment
                   </button>
                 </div>
-                <div className='flex items-center gap-3 text-xs font-semibold text-(--text-muted)'>
+                <div className='flex flex-wrap items-center gap-3 text-xs font-semibold text-(--text-muted)'>
                   <button
                     onClick={onClearFilters}
                     className='inline-flex items-center gap-1 text-(--brand-primary) hover:underline'

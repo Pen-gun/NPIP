@@ -136,7 +136,7 @@ export default function MetricsCharts({ metrics, loading, granularity }: Metrics
   const skeletonCount = activeChart === 'all' ? SKELETON_CHART_COUNT : 1
 
   return (
-    <div className='mt-6'>
+    <div className='mt-6 min-w-0'>
       <div className='flex flex-wrap items-center gap-2 text-xs font-semibold uppercase tracking-[0.2em] text-(--text-muted)'>
         <button
           type='button'
@@ -189,7 +189,7 @@ export default function MetricsCharts({ metrics, loading, granularity }: Metrics
       </div>
 
       <div
-        className={`mt-4 grid gap-4 ${
+        className={`mt-4 grid min-w-0 gap-4 ${
           visibleCharts.length === 1 ? 'sm:grid-cols-1' : 'sm:grid-cols-2 lg:grid-cols-3'
         }`}
       >

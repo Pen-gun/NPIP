@@ -1,4 +1,5 @@
 import dotenv from 'dotenv';
+import fs from 'fs';
 import http from 'http';
 import { Server } from 'socket.io';
 
@@ -7,7 +8,12 @@ import connectToDB from './db/connectToDatabase.helper.js';
 import { initSocket } from './services/socket.service.js';
 import { startIngestionScheduler } from './services/ingestion.service.js';
 
-dotenv.config({ path: './ai.env' });
+const envPath = './ai.env';
+if (fs.existsSync(envPath)) {
+    dotenv.config({ path: envPath });
+} else {
+    dotenv.config();
+}
 
 const PORT = Number(process.env.PORT) || 8000;
 const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:5173';

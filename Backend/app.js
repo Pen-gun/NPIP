@@ -34,6 +34,21 @@ app.use(cookieParser);
 app.use(morgan(process.env.NODE_ENV === 'production' ? 'combined' : 'dev'));
 app.use(rateLimiter({ windowMs: RATE_LIMIT_WINDOW_MS, max: RATE_LIMIT_MAX_REQUESTS }));
 
+app.get('/', (_req, res) => {
+    res.json({
+        service: 'NPIP backend',
+        status: 'ok',
+        docs: 'Use /health or /api/v1/* endpoints',
+    });
+});
+
+app.get('/api/v1', (_req, res) => {
+    res.json({
+        status: 'ok',
+        message: 'NPIP API v1',
+    });
+});
+
 app.get('/health', (_req, res) => res.json({ status: 'ok', timestamp: Date.now() }));
 
 app.use('/api/v1/figures', figureRoutes);

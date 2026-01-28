@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react'
+import { useState } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import BrandLogo from './BrandLogo'
@@ -15,6 +16,7 @@ export default function Layout({ children }: LayoutProps) {
   const isLandingPage = location.pathname === '/'
   const isDashboard = location.pathname === '/app'
   const isLoginPage = location.pathname === '/login'
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
 
   const handleLogout = async () => {
     await logout()
@@ -29,12 +31,27 @@ export default function Layout({ children }: LayoutProps) {
   return (
     <div className='min-h-screen bg-(--surface-background) text-(--text-primary)'>
       <header className='sticky top-0 z-50 border-b border-(--border) bg-(--surface-background)/80 backdrop-blur-sm'>
-        <nav className='mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-4 sm:px-6'>
+        <nav className='mx-auto flex w-full max-w-none flex-wrap items-center justify-between gap-3 px-4 py-4 sm:flex-nowrap sm:gap-4 sm:px-6'>
           <Link to='/' aria-label='Go to home'>
             <BrandLogo />
           </Link>
 
-          <div className='flex items-center gap-4 text-xs font-semibold uppercase tracking-[0.15em] text-(--text-muted) sm:gap-6 sm:tracking-[0.2em]'>
+          <button
+            type='button'
+            onClick={() => setMobileMenuOpen((prev) => !prev)}
+            className='ml-auto inline-flex h-10 w-10 items-center justify-center rounded-full border border-(--border) text-(--text-muted) transition hover:text-(--text-primary) sm:hidden'
+            aria-label='Toggle menu'
+            aria-expanded={mobileMenuOpen}
+          >
+            <span className='sr-only'>Menu</span>
+            <div className='flex flex-col gap-1.5'>
+              <span className='h-0.5 w-5 rounded bg-current' />
+              <span className='h-0.5 w-5 rounded bg-current' />
+              <span className='h-0.5 w-5 rounded bg-current' />
+            </div>
+          </button>
+
+          <div className='hidden w-full flex-wrap items-center justify-end gap-3 text-xs font-semibold uppercase tracking-[0.15em] text-(--text-muted) sm:flex sm:w-auto sm:gap-6 sm:tracking-[0.2em]'>
             {/* Public links - show on landing page */}
             {isLandingPage && (
               <>
@@ -94,6 +111,63 @@ export default function Layout({ children }: LayoutProps) {
             )}
           </div>
         </nav>
+        {mobileMenuOpen && (
+          <div className='absolute left-0 right-0 top-full px-4 pb-4 sm:hidden'>
+            <div className='flex flex-col gap-3 rounded-2xl border border-(--border) bg-(--surface-base) p-4 text-xs font-semibold uppercase tracking-[0.18em] text-(--text-muted) shadow-sm'>
+              {isLandingPage && (
+                <>
+                  <Link to='/search' className='transition hover:text-(--text-primary)'>
+                    Search
+                  </Link>
+                  <a href='#features' className='transition hover:text-(--text-primary)'>
+                    Features
+                  </a>
+                  <a href='#sources' className='transition hover:text-(--text-primary)'>
+                    Sources
+                  </a>
+                </>
+              )}
+
+              {!isLandingPage && !isDashboard && (
+                <Link to='/search' className='transition hover:text-(--text-primary)'>
+                  Search
+                </Link>
+              )}
+
+              {isLoading ? (
+                <div className='h-4 w-16 animate-pulse rounded bg-(--surface-muted)' />
+              ) : isAuthenticated ? (
+                <>
+                  <span className='text-(--text-primary)'>
+                    {user?.fullName || user?.username}
+                  </span>
+                  {!isDashboard && (
+                    <Link
+                      to='/app'
+                      className='rounded-full border border-(--border) px-3 py-1.5 text-center transition hover:bg-(--surface-muted)'
+                    >
+                      Dashboard
+                    </Link>
+                  )}
+                  <button
+                    type='button'
+                    onClick={handleLogout}
+                    className='rounded-full border border-(--border) px-3 py-1.5 transition hover:bg-(--surface-muted)'
+                  >
+                    Sign out
+                  </button>
+                </>
+              ) : (
+                <Link
+                  to='/login'
+                  className='rounded-full border border-(--border) px-3 py-1.5 text-center transition hover:bg-(--surface-muted)'
+                >
+                  Sign in
+                </Link>
+              )}
+            </div>
+          </div>
+        )}
       </header>
 
       <main>{children}</main>

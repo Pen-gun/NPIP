@@ -146,6 +146,5 @@ GET /api/v1/mentions
 6. **Streaming**: New mentions pushed via Socket.IO
 
 ## Notes
-
 - Connectors are opt-in per project and can be toggled in the project settings.
 - Email alerts require SMTP configuration and `ALERT_EMAIL_ENABLED=true`.

@@ -1,4 +1,5 @@
 import { useMemo } from 'react'
+import type { CSSProperties } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { useParams } from 'react-router-dom'
 import type { ReactNode } from 'react'
@@ -120,9 +121,20 @@ const renderRichText = (content: string) => {
   return nodes
 }
 
-function HeroBlock({ block }: { block: Extract<ContentBlock, { type: 'hero' }> }) {
+const withDelay = (delay: number) => ({ '--delay': `${delay}ms` } as CSSProperties)
+
+function HeroBlock({
+  block,
+  index,
+}: {
+  block: Extract<ContentBlock, { type: 'hero' }>
+  index: number
+}) {
   return (
-    <section className='relative overflow-hidden rounded-3xl border border-(--border) bg-(--surface-base) p-8 shadow-sm'>
+    <section
+      className='landing-reveal relative overflow-hidden rounded-3xl border border-(--border) bg-(--surface-base) p-8 shadow-sm'
+      style={withDelay(120 + index * 70)}
+    >
       {block.backgroundImage && (
         <img
           src={block.backgroundImage}
@@ -146,12 +158,21 @@ function HeroBlock({ block }: { block: Extract<ContentBlock, { type: 'hero' }> }
   )
 }
 
-function FeatureGrid({ block }: { block: Extract<ContentBlock, { type: 'feature_grid' }> }) {
+function FeatureGrid({
+  block,
+  index,
+}: {
+  block: Extract<ContentBlock, { type: 'feature_grid' }>
+  index: number
+}) {
   return (
-    <section className='rounded-3xl border border-(--border) bg-(--surface-base) p-8 shadow-sm'>
+    <section
+      className='landing-reveal rounded-3xl border border-(--border) bg-(--surface-base) p-8 shadow-sm'
+      style={withDelay(120 + index * 70)}
+    >
       <div className='grid gap-4 sm:grid-cols-2 lg:grid-cols-3'>
         {block.items.map((item) => (
-          <div key={item.id} className='rounded-2xl border border-(--border) bg-(--surface-muted) p-4'>
+          <div key={item.id} className='landing-reveal-soft rounded-2xl border border-(--border) bg-(--surface-muted) p-4'>
             <p className='text-xs font-semibold uppercase tracking-[0.2em] text-(--text-muted)'>
               {item.icon}
             </p>
@@ -164,12 +185,21 @@ function FeatureGrid({ block }: { block: Extract<ContentBlock, { type: 'feature_
   )
 }
 
-function Testimonials({ block }: { block: Extract<ContentBlock, { type: 'testimonials' }> }) {
+function Testimonials({
+  block,
+  index,
+}: {
+  block: Extract<ContentBlock, { type: 'testimonials' }>
+  index: number
+}) {
   return (
-    <section className='rounded-3xl border border-(--border) bg-(--surface-base) p-8 shadow-sm'>
+    <section
+      className='landing-reveal rounded-3xl border border-(--border) bg-(--surface-base) p-8 shadow-sm'
+      style={withDelay(120 + index * 70)}
+    >
       <div className='grid gap-4 lg:grid-cols-2'>
         {block.items.map((item) => (
-          <div key={item.id} className='rounded-2xl border border-(--border) bg-(--surface-muted) p-4'>
+          <div key={item.id} className='landing-reveal-soft rounded-2xl border border-(--border) bg-(--surface-muted) p-4'>
             <div className='flex items-center gap-3'>
               {item.photo ? (
                 <img src={item.photo} alt={item.name} className='h-12 w-12 rounded-full object-cover' />
@@ -189,12 +219,21 @@ function Testimonials({ block }: { block: Extract<ContentBlock, { type: 'testimo
   )
 }
 
-function Gallery({ block }: { block: Extract<ContentBlock, { type: 'gallery' }> }) {
+function Gallery({
+  block,
+  index,
+}: {
+  block: Extract<ContentBlock, { type: 'gallery' }>
+  index: number
+}) {
   return (
-    <section className='rounded-3xl border border-(--border) bg-(--surface-base) p-8 shadow-sm'>
+    <section
+      className='landing-reveal rounded-3xl border border-(--border) bg-(--surface-base) p-8 shadow-sm'
+      style={withDelay(120 + index * 70)}
+    >
       <div className='grid gap-4 sm:grid-cols-2 lg:grid-cols-3'>
         {block.items.map((item) => (
-          <figure key={item.id} className='rounded-2xl border border-(--border) bg-(--surface-muted) p-3'>
+          <figure key={item.id} className='landing-reveal-soft rounded-2xl border border-(--border) bg-(--surface-muted) p-3'>
             <img src={item.image} alt={item.caption} className='h-40 w-full rounded-lg object-cover' />
             <figcaption className='mt-2 text-xs text-(--text-muted)'>{item.caption}</figcaption>
           </figure>
@@ -204,9 +243,18 @@ function Gallery({ block }: { block: Extract<ContentBlock, { type: 'gallery' }> 
   )
 }
 
-function CtaBand({ block }: { block: Extract<ContentBlock, { type: 'cta_band' }> }) {
+function CtaBand({
+  block,
+  index,
+}: {
+  block: Extract<ContentBlock, { type: 'cta_band' }>
+  index: number
+}) {
   return (
-    <section className='rounded-3xl border border-(--border) bg-(--surface-base) p-8 shadow-sm'>
+    <section
+      className='landing-reveal rounded-3xl border border-(--border) bg-(--surface-base) p-8 shadow-sm'
+      style={withDelay(120 + index * 70)}
+    >
       <div className='flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center'>
         <p className='text-lg font-semibold text-(--text-primary)'>{block.text}</p>
         <a
@@ -220,9 +268,18 @@ function CtaBand({ block }: { block: Extract<ContentBlock, { type: 'cta_band' }>
   )
 }
 
-function RichText({ block }: { block: Extract<ContentBlock, { type: 'rich_text' }> }) {
+function RichText({
+  block,
+  index,
+}: {
+  block: Extract<ContentBlock, { type: 'rich_text' }>
+  index: number
+}) {
   return (
-    <section className='rounded-3xl border border-(--border) bg-(--surface-base) p-8 shadow-sm'>
+    <section
+      className='landing-reveal rounded-3xl border border-(--border) bg-(--surface-base) p-8 shadow-sm'
+      style={withDelay(120 + index * 70)}
+    >
       <div className='space-y-3'>{renderRichText(block.content)}</div>
     </section>
   )
@@ -280,7 +337,7 @@ export default function CmsPage({
   }
 
   return (
-    <div className='min-h-screen bg-(--surface-background) px-4 py-10 text-(--text-primary)'>
+    <div className='landing-page min-h-screen bg-(--surface-background) px-4 py-10 text-(--text-primary)'>
       <div className='mx-auto w-full max-w-5xl space-y-6'>
         {contentBlocks.length === 0 && (
           <div className='rounded-3xl border border-dashed border-(--border) bg-(--surface-base) p-8 text-center text-sm text-(--text-muted)'>
@@ -288,16 +345,16 @@ export default function CmsPage({
           </div>
         )}
         {contentBlocks.map((block, index) => {
-          if (block.type === 'hero') return <HeroBlock key={block.id ?? index} block={block} />
-          if (block.type === 'rich_text') return <RichText key={block.id ?? index} block={block} />
-          if (block.type === 'feature_grid') return <FeatureGrid key={block.id ?? index} block={block} />
-          if (block.type === 'testimonials') return <Testimonials key={block.id ?? index} block={block} />
-          if (block.type === 'gallery') return <Gallery key={block.id ?? index} block={block} />
-          if (block.type === 'cta_band') return <CtaBand key={block.id ?? index} block={block} />
+          if (block.type === 'hero') return <HeroBlock key={block.id ?? index} block={block} index={index} />
+          if (block.type === 'rich_text') return <RichText key={block.id ?? index} block={block} index={index} />
+          if (block.type === 'feature_grid') return <FeatureGrid key={block.id ?? index} block={block} index={index} />
+          if (block.type === 'testimonials') return <Testimonials key={block.id ?? index} block={block} index={index} />
+          if (block.type === 'gallery') return <Gallery key={block.id ?? index} block={block} index={index} />
+          if (block.type === 'cta_band') return <CtaBand key={block.id ?? index} block={block} index={index} />
           return (
             <div
               key={`unknown-${index}`}
-              className='rounded-3xl border border-(--border) bg-(--surface-base) p-6 text-sm text-(--text-muted)'
+              className='landing-reveal rounded-3xl border border-(--border) bg-(--surface-base) p-6 text-sm text-(--text-muted)'
             >
               Unsupported block: {blockTypeLabels[block.type] ?? block.type}
             </div>

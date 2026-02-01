@@ -51,30 +51,135 @@ const toAdminMediaDTO = (media) => ({
 });
 
 const ensureDefaultPages = async () => {
-    const existingCount = await AdminPage.countDocuments();
-    if (existingCount > 0) return;
+    const homeBlocks = [
+        {
+            id: 'home-hero',
+            type: 'hero',
+            title: 'A modern intelligence desk for Nepali media signals.',
+            subtitle:
+                'Build projects, monitor public mentions, and act on sentiment shifts with an infrastructure tuned for Nepal.',
+            ctaText: 'Start Monitoring',
+            ctaLink: '/login',
+            backgroundImage: '',
+        },
+        {
+            id: 'home-highlights',
+            type: 'feature_grid',
+            items: [
+                {
+                    id: 'highlight-1',
+                    icon: 'Radar',
+                    title: 'Public signal intake',
+                    description:
+                        'Track public mentions across Nepali news, YouTube, Reddit and optional connectors.',
+                },
+                {
+                    id: 'highlight-2',
+                    icon: 'Languages',
+                    title: 'Nepali + English sentiment',
+                    description:
+                        'Devanagari-aware language detection with multilingual sentiment scoring.',
+                },
+                {
+                    id: 'highlight-3',
+                    icon: 'Bell',
+                    title: 'Alerts & reports',
+                    description: 'Real-time spike alerts, email digests, and exportable PDF summaries.',
+                },
+            ],
+        },
+        {
+            id: 'home-sources',
+            type: 'rich_text',
+            content:
+                '### Source reality check\n\n- Local news + YouTube + Reddit are the reliable MVP sources.\n- X, Meta, TikTok, Viber remain gated or best-effort.\n- Public data only, respecting robots.txt and platform ToS.\n\n### Data sources\n\n- Local News RSS\n- YouTube API\n- Reddit API\n- X (paid)\n- Meta (owned)\n- TikTok (best-effort)',
+        },
+        {
+            id: 'home-workflow',
+            type: 'feature_grid',
+            items: [
+                {
+                    id: 'workflow-1',
+                    icon: 'ClipboardCheck',
+                    title: 'Create a project',
+                    description: 'Define keywords, boolean queries, and the sources you want to monitor.',
+                },
+                {
+                    id: 'workflow-2',
+                    icon: 'Database',
+                    title: 'Ingest mentions',
+                    description: 'Schedule connectors to collect mentions across the supported stack.',
+                },
+                {
+                    id: 'workflow-3',
+                    icon: 'TrendingUp',
+                    title: 'Act on insights',
+                    description: 'Use sentiment, top sources, and alerts to take action quickly.',
+                },
+            ],
+        },
+        {
+            id: 'home-cta',
+            type: 'cta_band',
+            text: "Ready to monitor Nepal's public conversation?",
+            buttonText: 'Start Monitoring',
+            buttonLink: '/login',
+        },
+        {
+            id: 'home-footer',
+            type: 'rich_text',
+            content:
+                "NPIP - Nepal's Public Figure Information Portal\n\nBuilt for Nepal's public data ecosystem.",
+        },
+    ];
+
+    await AdminPage.findOneAndUpdate(
+        { slug: 'home' },
+        {
+            title: 'Home',
+            slug: 'home',
+            status: 'published',
+            seo: {
+                metaTitle: "NPIP - Nepal's Public Figure Intelligence Portal",
+                metaDescription:
+                    'Build projects, monitor public mentions, and act on sentiment shifts with an infrastructure tuned for Nepal.',
+                slug: 'home',
+                canonical: '',
+                ogImage: '',
+            },
+            blocks: homeBlocks,
+        },
+        { upsert: true, new: true }
+    );
+
+    const existingSlugs = new Set(
+        (await AdminPage.find({}, { slug: 1 }).lean()).map((page) => page.slug)
+    );
 
     const defaults = [
-        { title: 'Home', slug: 'home' },
         { title: 'About', slug: 'about' },
         { title: 'Contact', slug: 'contact' },
         { title: 'FAQ', slug: 'faq' },
         { title: 'Privacy', slug: 'privacy' },
         { title: 'Terms', slug: 'terms' },
-    ].map((page) => ({
-        ...page,
-        status: 'draft',
-        seo: {
-            metaTitle: page.title,
-            metaDescription: '',
-            slug: page.slug,
-            canonical: '',
-            ogImage: '',
-        },
-        blocks: [],
-    }));
+    ]
+        .filter((page) => !existingSlugs.has(page.slug))
+        .map((page) => ({
+            ...page,
+            status: 'draft',
+            seo: {
+                metaTitle: page.title,
+                metaDescription: '',
+                slug: page.slug,
+                canonical: '',
+                ogImage: '',
+            },
+            blocks: [],
+        }));
 
-    await AdminPage.insertMany(defaults);
+    if (defaults.length) {
+        await AdminPage.insertMany(defaults);
+    }
 };
 
 export const listAdminPages = asyncHandler(async (_req, res) => {

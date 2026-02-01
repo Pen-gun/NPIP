@@ -2,12 +2,14 @@ import { Suspense, lazy } from 'react'
 import { Navigate, Route, Routes } from 'react-router-dom'
 import Layout from './components/Layout'
 import ProtectedRoute from './components/ProtectedRoute'
+import ProtectedAdminRoute from './components/ProtectedAdminRoute'
 
 const LandingPage = lazy(() => import('./pages/LandingPage'))
 const LoginPage = lazy(() => import('./pages/LoginPage'))
 const ResetPasswordPage = lazy(() => import('./pages/ResetPasswordPage'))
 const DashboardPage = lazy(() => import('./pages/DashboardPage'))
 const FigureSearchPage = lazy(() => import('./pages/FigureSearchPage'))
+const AdminCMSPage = lazy(() => import('./pages/AdminCMSPage'))
 
 export default function App() {
   return (
@@ -30,6 +32,14 @@ export default function App() {
               <ProtectedRoute>
                 <DashboardPage />
               </ProtectedRoute>
+            }
+          />
+          <Route
+            path='/admin/cms'
+            element={
+              <ProtectedAdminRoute>
+                <AdminCMSPage />
+              </ProtectedAdminRoute>
             }
           />
           <Route path='*' element={<Navigate to='/' replace />} />

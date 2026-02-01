@@ -64,6 +64,25 @@
   --banner-bg: #1e6bd6;
 }
 
+.admin-shell {
+  --brand-primary: #0f172a;
+  --brand-secondary: #64748b;
+  --brand-accent: #f97316;
+
+  --surface-background: #f7f5f0;
+  --surface-base: #ffffff;
+  --surface-muted: #f1eee8;
+
+  --text-primary: #111827;
+  --text-secondary: #1f2937;
+  --text-muted: #6b7280;
+  --text-inverse: #ffffff;
+
+  --border: rgba(15, 23, 42, 0.12);
+  --divider: rgba(15, 23, 42, 0.08);
+  --shadow: 0 18px 40px rgba(15, 23, 42, 0.12);
+}
+
 @media (prefers-color-scheme: dark) {
   :root {
     --brand-primary: #8ab4f8;

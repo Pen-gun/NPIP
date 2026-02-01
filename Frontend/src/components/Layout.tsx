@@ -16,6 +16,7 @@ export default function Layout({ children }: LayoutProps) {
   const isLandingPage = location.pathname === '/'
   const isDashboard = location.pathname === '/app'
   const isLoginPage = location.pathname === '/login'
+  const isAdminPage = location.pathname.startsWith('/admin')
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
 
   const handleLogout = async () => {
@@ -24,7 +25,7 @@ export default function Layout({ children }: LayoutProps) {
   }
 
   // Don't show navbar on login page
-  if (isLoginPage) {
+  if (isLoginPage || isAdminPage) {
     return <>{children}</>
   }
 

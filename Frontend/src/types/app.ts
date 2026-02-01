@@ -4,6 +4,8 @@ export type User = {
   username: string
   email: string
   plan: string
+  role?: 'admin' | 'editor' | 'viewer'
+  isAdmin?: boolean
 }
 
 export type Project = {

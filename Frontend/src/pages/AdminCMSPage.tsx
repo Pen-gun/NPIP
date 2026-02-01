@@ -1713,6 +1713,8 @@ function SettingsPanel({
     logoUrl: string
     footerText: string
     accentColor: string
+    footerLinks: Array<{ title: string; href: string }>
+    socialLinks: Array<{ label: string; href: string }>
   }
   loading: boolean
   saving: boolean
@@ -1722,6 +1724,8 @@ function SettingsPanel({
     logoUrl: string
     footerText: string
     accentColor: string
+    footerLinks: Array<{ title: string; href: string }>
+    socialLinks: Array<{ label: string; href: string }>
   }) => Promise<unknown>
   pushToast: (toast: Omit<Toast, 'id'>) => void
 }) {
@@ -1731,6 +1735,8 @@ function SettingsPanel({
     logoUrl: settings?.logoUrl || '',
     footerText: settings?.footerText || '',
     accentColor: settings?.accentColor || '',
+    footerLinks: settings?.footerLinks || [],
+    socialLinks: settings?.socialLinks || [],
   })
 
   useEffect(() => {
@@ -1741,11 +1747,41 @@ function SettingsPanel({
       logoUrl: settings.logoUrl || '',
       footerText: settings.footerText || '',
       accentColor: settings.accentColor || '',
+      footerLinks: settings.footerLinks || [],
+      socialLinks: settings.socialLinks || [],
     })
   }, [settings])
 
   const handleChange = (key: keyof typeof formState, value: string) => {
     setFormState((prev) => ({ ...prev, [key]: value }))
+  }
+
+  const updateFooterLink = (index: number, key: 'title' | 'href', value: string) => {
+    setFormState((prev) => ({
+      ...prev,
+      footerLinks: prev.footerLinks.map((item, i) => (i === index ? { ...item, [key]: value } : item)),
+    }))
+  }
+
+  const updateSocialLink = (index: number, key: 'label' | 'href', value: string) => {
+    setFormState((prev) => ({
+      ...prev,
+      socialLinks: prev.socialLinks.map((item, i) => (i === index ? { ...item, [key]: value } : item)),
+    }))
+  }
+
+  const addFooterLink = () => {
+    setFormState((prev) => ({
+      ...prev,
+      footerLinks: [...prev.footerLinks, { title: 'Link', href: '/' }],
+    }))
+  }
+
+  const addSocialLink = () => {
+    setFormState((prev) => ({
+      ...prev,
+      socialLinks: [...prev.socialLinks, { label: 'X', href: 'https://x.com' }],
+    }))
   }
 
   const handleSubmit = async () => {
@@ -1829,6 +1865,66 @@ function SettingsPanel({
                 className='mt-2 w-full rounded-xl border border-(--border) bg-(--surface-muted) px-3 py-2 text-sm'
               />
             </label>
+            <div className='lg:col-span-2'>
+              <div className='flex items-center justify-between'>
+                <p className='text-xs font-semibold uppercase tracking-[0.2em] text-(--text-muted)'>Footer links</p>
+                <button
+                  type='button'
+                  onClick={addFooterLink}
+                  className='text-xs font-semibold text-(--brand-accent)'
+                >
+                  Add link
+                </button>
+              </div>
+              <div className='mt-3 space-y-3'>
+                {formState.footerLinks.map((link, index) => (
+                  <div key={`footer-${index}`} className='grid gap-2 sm:grid-cols-2'>
+                    <input
+                      value={link.title}
+                      onChange={(event) => updateFooterLink(index, 'title', event.target.value)}
+                      className='rounded-xl border border-(--border) bg-(--surface-muted) px-3 py-2 text-sm'
+                      placeholder='Title'
+                    />
+                    <input
+                      value={link.href}
+                      onChange={(event) => updateFooterLink(index, 'href', event.target.value)}
+                      className='rounded-xl border border-(--border) bg-(--surface-muted) px-3 py-2 text-sm'
+                      placeholder='/path'
+                    />
+                  </div>
+                ))}
+              </div>
+            </div>
+            <div className='lg:col-span-2'>
+              <div className='flex items-center justify-between'>
+                <p className='text-xs font-semibold uppercase tracking-[0.2em] text-(--text-muted)'>Social links</p>
+                <button
+                  type='button'
+                  onClick={addSocialLink}
+                  className='text-xs font-semibold text-(--brand-accent)'
+                >
+                  Add social
+                </button>
+              </div>
+              <div className='mt-3 space-y-3'>
+                {formState.socialLinks.map((link, index) => (
+                  <div key={`social-${index}`} className='grid gap-2 sm:grid-cols-2'>
+                    <input
+                      value={link.label}
+                      onChange={(event) => updateSocialLink(index, 'label', event.target.value)}
+                      className='rounded-xl border border-(--border) bg-(--surface-muted) px-3 py-2 text-sm'
+                      placeholder='Label (X, LinkedIn)'
+                    />
+                    <input
+                      value={link.href}
+                      onChange={(event) => updateSocialLink(index, 'href', event.target.value)}
+                      className='rounded-xl border border-(--border) bg-(--surface-muted) px-3 py-2 text-sm'
+                      placeholder='https://'
+                    />
+                  </div>
+                ))}
+              </div>
+            </div>
           </div>
         )}
       </div>

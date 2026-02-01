@@ -157,16 +157,88 @@ const ensureDefaultPages = async () => {
     );
 
     const defaults = [
-        { title: 'About', slug: 'about' },
-        { title: 'Contact', slug: 'contact' },
-        { title: 'FAQ', slug: 'faq' },
-        { title: 'Privacy', slug: 'privacy' },
-        { title: 'Terms', slug: 'terms' },
+        {
+            title: 'About',
+            slug: 'about',
+            blocks: [
+                {
+                    id: 'about-hero',
+                    type: 'hero',
+                    title: 'Built for Nepal’s public data ecosystem.',
+                    subtitle:
+                        'NPIP helps teams track real-time narratives, sentiment, and media coverage with transparency.',
+                    ctaText: 'See the platform',
+                    ctaLink: '/login',
+                    backgroundImage: '',
+                },
+                {
+                    id: 'about-rich',
+                    type: 'rich_text',
+                    content:
+                        '### Our mission\n\nWe bring clarity to the public conversation by combining trusted sources with responsible AI.\n\n### What we believe\n\n- Transparency in data sourcing\n- Respect for platform ToS\n- Fast, reliable intelligence for teams',
+                },
+            ],
+        },
+        {
+            title: 'Contact',
+            slug: 'contact',
+            blocks: [
+                {
+                    id: 'contact-rich',
+                    type: 'rich_text',
+                    content:
+                        '### Get in touch\n\nFor demos, partnerships, or support, reach us at **support@npip.ai**.\n\nWe respond within 1 business day.',
+                },
+                {
+                    id: 'contact-cta',
+                    type: 'cta_band',
+                    text: 'Need a live walkthrough?',
+                    buttonText: 'Book a demo',
+                    buttonLink: '/login',
+                },
+            ],
+        },
+        {
+            title: 'FAQ',
+            slug: 'faq',
+            blocks: [
+                {
+                    id: 'faq-rich',
+                    type: 'rich_text',
+                    content:
+                        '### Frequently asked questions\n\n- **Which sources are supported?**\n  Local news, YouTube, Reddit, and optional connectors.\n- **How fresh is the data?**\n  Depends on ingest schedule; most teams use 30-60 minute cycles.\n- **Can we export reports?**\n  Yes, PDF and CSV exports are available in the dashboard.',
+                },
+            ],
+        },
+        {
+            title: 'Privacy',
+            slug: 'privacy',
+            blocks: [
+                {
+                    id: 'privacy-rich',
+                    type: 'rich_text',
+                    content:
+                        '### Privacy policy\n\nWe only process publicly available data and respect platform policies. We do not sell personal data and we maintain strict access controls.',
+                },
+            ],
+        },
+        {
+            title: 'Terms',
+            slug: 'terms',
+            blocks: [
+                {
+                    id: 'terms-rich',
+                    type: 'rich_text',
+                    content:
+                        '### Terms of service\n\nBy using NPIP, you agree to use the platform responsibly and comply with all relevant laws and platform policies.',
+                },
+            ],
+        },
     ]
         .filter((page) => !existingSlugs.has(page.slug))
         .map((page) => ({
             ...page,
-            status: 'draft',
+            status: 'published',
             seo: {
                 metaTitle: page.title,
                 metaDescription: '',
@@ -174,7 +246,6 @@ const ensureDefaultPages = async () => {
                 canonical: '',
                 ogImage: '',
             },
-            blocks: [],
         }));
 
     if (defaults.length) {

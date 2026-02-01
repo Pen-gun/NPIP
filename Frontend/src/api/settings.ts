@@ -6,6 +6,8 @@ export type SiteSettings = {
   logoUrl: string
   footerText: string
   accentColor: string
+  footerLinks: Array<{ title: string; href: string }>
+  socialLinks: Array<{ label: string; href: string }>
 }
 
 export const fetchPublicSettings = async (): Promise<SiteSettings> => {

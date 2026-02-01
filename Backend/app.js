@@ -10,6 +10,7 @@ import projectRoutes from './routes/project.route.js';
 import mentionRoutes from './routes/mention.route.js';
 import alertRoutes from './routes/alert.route.js';
 import reportRoutes from './routes/report.route.js';
+import adminRoutes from './routes/admin.route.js';
 
 const app = express();
 
@@ -51,12 +52,14 @@ app.get('/api/v1', (_req, res) => {
 
 app.get('/health', (_req, res) => res.json({ status: 'ok', timestamp: Date.now() }));
 
+app.use('/uploads', express.static('uploads'));
 app.use('/api/v1/figures', figureRoutes);
 app.use('/api/v1/auth', userRoutes);
 app.use('/api/v1/projects', projectRoutes);
 app.use('/api/v1/mentions', mentionRoutes);
 app.use('/api/v1/alerts', alertRoutes);
 app.use('/api/v1/reports', reportRoutes);
+app.use('/api/v1/admin', adminRoutes);
 
 app.use((err, _req, res, _next) => {
     res.header('Access-Control-Allow-Origin', ALLOWED_ORIGIN);

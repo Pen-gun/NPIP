@@ -11,6 +11,7 @@ import mentionRoutes from './routes/mention.route.js';
 import alertRoutes from './routes/alert.route.js';
 import reportRoutes from './routes/report.route.js';
 import adminRoutes from './routes/admin.route.js';
+import pageRoutes from './routes/page.route.js';
 
 const app = express();
 
@@ -60,6 +61,7 @@ app.use('/api/v1/mentions', mentionRoutes);
 app.use('/api/v1/alerts', alertRoutes);
 app.use('/api/v1/reports', reportRoutes);
 app.use('/api/v1/admin', adminRoutes);
+app.use('/api/v1/pages', pageRoutes);
 
 app.use((err, _req, res, _next) => {
     res.header('Access-Control-Allow-Origin', ALLOWED_ORIGIN);

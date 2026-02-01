@@ -10,6 +10,7 @@ const ResetPasswordPage = lazy(() => import('./pages/ResetPasswordPage'))
 const DashboardPage = lazy(() => import('./pages/DashboardPage'))
 const FigureSearchPage = lazy(() => import('./pages/FigureSearchPage'))
 const AdminCMSPage = lazy(() => import('./pages/AdminCMSPage'))
+const CmsPage = lazy(() => import('./pages/CmsPage'))
 
 export default function App() {
   return (
@@ -22,7 +23,7 @@ export default function App() {
         }
       >
         <Routes>
-          <Route path='/' element={<LandingPage />} />
+          <Route path='/' element={<CmsPage slug='home' fallback={<LandingPage />} />} />
           <Route path='/search' element={<FigureSearchPage />} />
           <Route path='/login' element={<LoginPage />} />
           <Route path='/reset-password' element={<ResetPasswordPage />} />
@@ -42,6 +43,7 @@ export default function App() {
               </ProtectedAdminRoute>
             }
           />
+          <Route path='/:slug' element={<CmsPage />} />
           <Route path='*' element={<Navigate to='/' replace />} />
         </Routes>
       </Suspense>

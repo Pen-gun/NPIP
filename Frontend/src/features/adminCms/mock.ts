@@ -4,7 +4,7 @@ const now = new Date().toISOString()
 
 export const mockAdminPages: AdminPage[] = [
   {
-    id: 'page-home',
+    id: 'home',
     title: 'Home',
     slug: 'home',
     status: 'published',
@@ -112,7 +112,7 @@ export const mockAdminPages: AdminPage[] = [
     ],
   },
   {
-    id: 'page-about',
+    id: 'about',
     title: 'About',
     slug: 'about',
     status: 'published',
@@ -143,7 +143,7 @@ export const mockAdminPages: AdminPage[] = [
     ],
   },
   {
-    id: 'page-contact',
+    id: 'contact',
     title: 'Contact',
     slug: 'contact',
     status: 'draft',
@@ -172,7 +172,7 @@ export const mockAdminPages: AdminPage[] = [
     ],
   },
   {
-    id: 'page-faq',
+    id: 'faq',
     title: 'FAQ',
     slug: 'faq',
     status: 'published',
@@ -194,7 +194,7 @@ export const mockAdminPages: AdminPage[] = [
     ],
   },
   {
-    id: 'page-privacy',
+    id: 'privacy',
     title: 'Privacy',
     slug: 'privacy',
     status: 'published',
@@ -216,7 +216,7 @@ export const mockAdminPages: AdminPage[] = [
     ],
   },
   {
-    id: 'page-terms',
+    id: 'terms',
     title: 'Terms',
     slug: 'terms',
     status: 'published',

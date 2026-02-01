@@ -23,7 +23,7 @@ const toAdminUser = (user) =>
         : undefined;
 
 const toAdminPageDTO = (page) => ({
-    id: page._id.toString(),
+    id: page.slug,
     title: page.title,
     slug: page.slug,
     status: page.status,
@@ -34,7 +34,7 @@ const toAdminPageDTO = (page) => ({
 });
 
 const toAdminPageSummaryDTO = (page) => ({
-    id: page._id.toString(),
+    id: page.slug,
     title: page.title,
     slug: page.slug,
     status: page.status,
@@ -110,8 +110,17 @@ export const updateAdminPage = asyncHandler(async (req, res) => {
     }
 
     const normalizedSlug = slug.toLowerCase().trim();
+    const identifier = req.params.id;
+    const query = mongoose.isValidObjectId(identifier)
+        ? { _id: identifier }
+        : { slug: identifier.toLowerCase() };
+    const currentPage = await AdminPage.findOne(query);
+    if (!currentPage) {
+        throw new ApiError(404, 'Admin page not found');
+    }
+
     const existing = await AdminPage.findOne({
-        _id: { $ne: req.params.id },
+        _id: { $ne: currentPage._id },
         slug: normalizedSlug,
     });
     if (existing) {
@@ -133,11 +142,7 @@ export const updateAdminPage = asyncHandler(async (req, res) => {
         updatedBy: req.user?._id,
     };
 
-    const identifier = req.params.id;
-    const query = mongoose.isValidObjectId(identifier)
-        ? { _id: identifier }
-        : { slug: identifier.toLowerCase() };
-    const updatedPage = await AdminPage.findOneAndUpdate(query, update, {
+    const updatedPage = await AdminPage.findByIdAndUpdate(currentPage._id, update, {
         new: true,
         runValidators: true,
     }).populate('updatedBy', 'fullName username email');

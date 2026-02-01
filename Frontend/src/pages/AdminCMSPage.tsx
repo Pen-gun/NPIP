@@ -18,14 +18,9 @@ import {
   Trash2,
   Users,
 } from 'lucide-react'
-import { FormProvider, useFieldArray, useForm, useFormContext } from 'react-hook-form'
+import { FormProvider, useFieldArray, useForm, useFormContext, useWatch } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import type { AdminPage, AdminPageSummary, ContentBlock, MediaItem, PageStatus } from '../features/adminCms/types'
-import {
-  mockAdminPageSummaries,
-  mockAdminPages,
-  mockMediaLibrary,
-} from '../features/adminCms/mock'
 import { pageFormSchema, type PageFormValues } from '../features/adminCms/schemas'
 import {
   useAdminMedia,
@@ -195,7 +190,6 @@ const createBlockDefaults = (type: ContentBlock['type']): ContentBlock => {
   }
 }
 
-const samplePayload = JSON.stringify(mockAdminPages[0], null, 2)
 
 export default function AdminCMSPage() {
   const { user, logout } = useAuth()
@@ -204,19 +198,13 @@ export default function AdminCMSPage() {
   const [toasts, setToasts] = useState<Toast[]>([])
   const [searchTerm, setSearchTerm] = useState('')
   const [pageDirty, setPageDirty] = useState(false)
-  const { data: pages = mockAdminPageSummaries, isLoading: pagesLoading } = useAdminPages({
-    initialData: mockAdminPageSummaries,
-  })
+  const { data: pages = [], isLoading: pagesLoading } = useAdminPages()
   const [activePageId, setActivePageId] = useState<string | null>(
-    pages[0]?.id ?? mockAdminPageSummaries[0]?.id ?? null,
+    pages[0]?.id ?? null,
   )
   const activePageFromList = pages.find((page) => page.id === activePageId)
-  const { data: activePage, isLoading: pageLoading } = useAdminPage(activePageId, {
-    initialData: mockAdminPages.find((page) => page.id === activePageId),
-  })
-  const { data: mediaLibrary = mockMediaLibrary, isLoading: mediaLoading } = useAdminMedia({
-    initialData: mockMediaLibrary,
-  })
+  const { data: activePage, isLoading: pageLoading } = useAdminPage(activePageId)
+  const { data: mediaLibrary = [], isLoading: mediaLoading } = useAdminMedia()
   const updatePageMutation = useUpdateAdminPage()
   const uploadMediaMutation = useUploadAdminMedia()
   const deleteMediaMutation = useDeleteAdminMedia()
@@ -700,6 +688,8 @@ function PageEditor({
   } = methods
 
   const blocksFieldArray = useFieldArray({ control, name: 'blocks' })
+  const livePayload = useWatch({ control })
+  const samplePayload = JSON.stringify(livePayload ?? {}, null, 2)
 
   useEffect(() => {
     reset(buildPageDefaults(page), { keepDirty: false })
@@ -765,7 +755,7 @@ function PageEditor({
 
   return (
     <FormProvider {...methods}>
-      <form className='space-y-6'>
+      <form className='space-y-6' aria-busy={loading}>
         <div className='rounded-2xl border border-(--border) bg-(--surface-base) p-6 shadow-sm'>
           <div className='flex flex-wrap items-center justify-between gap-4'>
             <div>

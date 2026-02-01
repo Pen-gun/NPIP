@@ -5,6 +5,7 @@ import { useParams } from 'react-router-dom'
 import type { ReactNode } from 'react'
 import { fetchPublishedPage } from '../api/pages'
 import type { ContentBlock } from '../features/adminCms/types'
+import { usePublicSiteSettings } from '../hooks/useSiteSettings'
 
 const blockTypeLabels: Record<ContentBlock['type'], string> = {
   hero: 'Hero',
@@ -294,6 +295,7 @@ export default function CmsPage({
 }) {
   const params = useParams()
   const slug = (slugProp || params.slug || '').toLowerCase()
+  const { data: settings } = usePublicSiteSettings()
 
   const { data, isLoading, isError } = useQuery({
     queryKey: ['public-page', slug],
@@ -360,6 +362,15 @@ export default function CmsPage({
             </div>
           )
         })}
+        {settings?.footerText && (
+          <footer
+            className='landing-reveal flex flex-col items-center justify-between gap-3 text-xs text-(--text-muted) sm:flex-row sm:gap-4'
+            style={withDelay(120 + contentBlocks.length * 70)}
+          >
+            <span>{settings.footerText}</span>
+            <span className='text-center'>{settings.tagline}</span>
+          </footer>
+        )}
       </div>
     </div>
   )

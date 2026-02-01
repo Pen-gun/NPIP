@@ -1,8 +1,9 @@
-import type { ReactNode } from 'react'
+import type { ReactNode, CSSProperties } from 'react'
 import { useState } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import BrandLogo from './BrandLogo'
+import { usePublicSiteSettings } from '../hooks/useSiteSettings'
 
 interface LayoutProps {
   children: ReactNode
@@ -17,6 +18,7 @@ export default function Layout({ children }: LayoutProps) {
   const isDashboard = location.pathname === '/app'
   const isLoginPage = location.pathname === '/login'
   const isAdminPage = location.pathname.startsWith('/admin')
+  const { data: settings } = usePublicSiteSettings()
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
 
   const handleLogout = async () => {
@@ -30,7 +32,10 @@ export default function Layout({ children }: LayoutProps) {
   }
 
   return (
-    <div className='min-h-screen bg-(--surface-background) text-(--text-primary)'>
+    <div
+      className='min-h-screen bg-(--surface-background) text-(--text-primary)'
+      style={settings?.accentColor ? ({ '--brand-accent': settings.accentColor } as CSSProperties) : undefined}
+    >
       <header className='sticky top-0 z-50 border-b border-(--border) bg-(--surface-background)/80 backdrop-blur-sm'>
         <nav className='mx-auto flex w-full max-w-none flex-wrap items-center justify-between gap-3 px-4 py-4 sm:flex-nowrap sm:gap-4 sm:px-6'>
           <Link to='/' aria-label='Go to home'>

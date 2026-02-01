@@ -1,5 +1,6 @@
 ﻿
 import { useEffect, useMemo, useRef, useState } from 'react'
+import type { CSSProperties } from 'react'
 import {
   BarChart3,
   Bell,
@@ -31,6 +32,7 @@ import {
   useUploadAdminMedia,
 } from '../features/adminCms/hooks'
 import { useAuth } from '../contexts/AuthContext'
+import { useAdminSiteSettings, useUpdateAdminSiteSettings } from '../hooks/useSiteSettings'
 
 type AdminSection = 'pages' | 'media' | 'seo' | 'settings' | 'analytics' | 'users'
 
@@ -208,6 +210,8 @@ export default function AdminCMSPage() {
   const updatePageMutation = useUpdateAdminPage()
   const uploadMediaMutation = useUploadAdminMedia()
   const deleteMediaMutation = useDeleteAdminMedia()
+  const { data: siteSettings, isLoading: settingsLoading } = useAdminSiteSettings()
+  const updateSettingsMutation = useUpdateAdminSiteSettings()
 
   useEffect(() => {
     if (!activePageId && pages.length) {
@@ -253,7 +257,14 @@ export default function AdminCMSPage() {
   }
 
   return (
-    <div className='admin-shell relative min-h-screen bg-(--surface-background) text-(--text-primary)'>
+    <div
+      className='admin-shell relative min-h-screen bg-(--surface-background) text-(--text-primary)'
+      style={
+        siteSettings?.accentColor
+          ? ({ '--brand-accent': siteSettings.accentColor } as CSSProperties)
+          : undefined
+      }
+    >
       <div className='pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(circle_at_top,_rgba(249,115,22,0.16),_transparent_55%)]' />
 
       <AdminSidebar
@@ -264,6 +275,8 @@ export default function AdminCMSPage() {
         }}
         sidebarOpen={sidebarOpen}
         onClose={() => setSidebarOpen(false)}
+        brandName={siteSettings?.brandName}
+        tagline={siteSettings?.tagline}
       />
 
       <div className='flex min-h-screen flex-col lg:pl-72'>
@@ -274,6 +287,7 @@ export default function AdminCMSPage() {
           onToggleSidebar={() => setSidebarOpen((prev) => !prev)}
           onPreview={handlePreview}
           onLogout={handleLogout}
+          brandName={siteSettings?.brandName}
         />
 
         <main className='flex-1 px-4 pb-12 pt-6 sm:px-6 lg:px-8'>
@@ -365,7 +379,17 @@ export default function AdminCMSPage() {
             />
           )}
 
-          {activeSection !== 'pages' && activeSection !== 'media' && (
+          {activeSection === 'settings' && (
+            <SettingsPanel
+              settings={siteSettings}
+              loading={settingsLoading}
+              onSave={updateSettingsMutation.mutateAsync}
+              saving={updateSettingsMutation.isPending}
+              pushToast={pushToast}
+            />
+          )}
+
+          {activeSection !== 'pages' && activeSection !== 'media' && activeSection !== 'settings' && (
             <div className='rounded-2xl border border-(--border) bg-(--surface-base) p-6 shadow-sm'>
               <div className='flex items-center gap-3'>
                 <div className='rounded-2xl bg-(--surface-muted) p-3 text-(--brand-accent)'>
@@ -397,11 +421,15 @@ function AdminSidebar({
   onSectionChange,
   sidebarOpen,
   onClose,
+  brandName,
+  tagline,
 }: {
   activeSection: AdminSection
   onSectionChange: (section: AdminSection) => void
   sidebarOpen: boolean
   onClose: () => void
+  brandName?: string
+  tagline?: string
 }) {
   return (
     <aside
@@ -414,7 +442,8 @@ function AdminSidebar({
         <div className='flex items-center justify-between border-b border-(--divider) px-6 py-5'>
           <div>
             <p className='text-xs font-semibold uppercase tracking-[0.3em] text-(--text-muted)'>Admin CMS</p>
-            <h1 className='text-lg font-semibold'>NPIP Content Studio</h1>
+            <h1 className='text-lg font-semibold'>{brandName ? `${brandName} Content Studio` : 'Content Studio'}</h1>
+            {tagline && <p className='mt-1 text-xs text-(--text-muted)'>{tagline}</p>}
           </div>
           <button
             type='button'
@@ -489,6 +518,7 @@ function AdminTopbar({
   onToggleSidebar,
   onPreview,
   onLogout,
+  brandName,
 }: {
   userName: string
   searchTerm: string
@@ -496,6 +526,7 @@ function AdminTopbar({
   onToggleSidebar: () => void
   onPreview: () => void
   onLogout: () => void
+  brandName?: string
 }) {
   return (
     <header className='sticky top-0 z-30 border-b border-(--divider) bg-(--surface-base)/90 px-4 py-4 backdrop-blur sm:px-6 lg:px-8'>
@@ -511,7 +542,7 @@ function AdminTopbar({
           </button>
           <div>
             <p className='text-xs font-semibold uppercase tracking-[0.3em] text-(--text-muted)'>Content Studio</p>
-            <h2 className='text-lg font-semibold'>Admin CMS</h2>
+            <h2 className='text-lg font-semibold'>{brandName ? `${brandName} Admin CMS` : 'Admin CMS'}</h2>
           </div>
         </div>
 
@@ -1665,6 +1696,142 @@ function ToastStack({ toasts }: { toasts: Toast[] }) {
           {toast.message && <p className='mt-1 text-xs text-(--text-muted)'>{toast.message}</p>}
         </div>
       ))}
+    </div>
+  )
+}
+
+function SettingsPanel({
+  settings,
+  loading,
+  saving,
+  onSave,
+  pushToast,
+}: {
+  settings?: {
+    brandName: string
+    tagline: string
+    logoUrl: string
+    footerText: string
+    accentColor: string
+  }
+  loading: boolean
+  saving: boolean
+  onSave: (payload: {
+    brandName: string
+    tagline: string
+    logoUrl: string
+    footerText: string
+    accentColor: string
+  }) => Promise<unknown>
+  pushToast: (toast: Omit<Toast, 'id'>) => void
+}) {
+  const [formState, setFormState] = useState({
+    brandName: settings?.brandName || '',
+    tagline: settings?.tagline || '',
+    logoUrl: settings?.logoUrl || '',
+    footerText: settings?.footerText || '',
+    accentColor: settings?.accentColor || '',
+  })
+
+  useEffect(() => {
+    if (!settings) return
+    setFormState({
+      brandName: settings.brandName || '',
+      tagline: settings.tagline || '',
+      logoUrl: settings.logoUrl || '',
+      footerText: settings.footerText || '',
+      accentColor: settings.accentColor || '',
+    })
+  }, [settings])
+
+  const handleChange = (key: keyof typeof formState, value: string) => {
+    setFormState((prev) => ({ ...prev, [key]: value }))
+  }
+
+  const handleSubmit = async () => {
+    try {
+      await onSave(formState)
+      pushToast({ title: 'Settings saved', tone: 'success' })
+    } catch (error) {
+      pushToast({
+        title: 'Failed to save settings',
+        message: error instanceof Error ? error.message : 'Something went wrong.',
+        tone: 'error',
+      })
+    }
+  }
+
+  return (
+    <div className='space-y-6'>
+      <div className='rounded-2xl border border-(--border) bg-(--surface-base) p-6 shadow-sm'>
+        <div className='flex items-center justify-between'>
+          <div>
+            <p className='text-xs font-semibold uppercase tracking-[0.3em] text-(--text-muted)'>Brand</p>
+            <h2 className='text-xl font-semibold'>Site settings</h2>
+          </div>
+          <button
+            type='button'
+            onClick={handleSubmit}
+            disabled={saving}
+            className='rounded-full bg-(--brand-accent) px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-white'
+          >
+            {saving ? 'Saving...' : 'Save settings'}
+          </button>
+        </div>
+        {loading ? (
+          <div className='mt-6 grid gap-4 lg:grid-cols-2'>
+            {[0, 1, 2, 3].map((item) => (
+              <div key={item} className='h-12 animate-pulse rounded-xl bg-(--surface-muted)' />
+            ))}
+          </div>
+        ) : (
+          <div className='mt-6 grid gap-4 lg:grid-cols-2'>
+            <label className='text-sm text-(--text-muted)'>
+              <span className='text-xs font-semibold uppercase tracking-[0.2em]'>Brand name</span>
+              <input
+                value={formState.brandName}
+                onChange={(event) => handleChange('brandName', event.target.value)}
+                className='mt-2 w-full rounded-xl border border-(--border) bg-(--surface-muted) px-3 py-2 text-sm'
+              />
+            </label>
+            <label className='text-sm text-(--text-muted)'>
+              <span className='text-xs font-semibold uppercase tracking-[0.2em]'>Tagline</span>
+              <input
+                value={formState.tagline}
+                onChange={(event) => handleChange('tagline', event.target.value)}
+                className='mt-2 w-full rounded-xl border border-(--border) bg-(--surface-muted) px-3 py-2 text-sm'
+              />
+            </label>
+            <label className='text-sm text-(--text-muted)'>
+              <span className='text-xs font-semibold uppercase tracking-[0.2em]'>Logo URL</span>
+              <input
+                value={formState.logoUrl}
+                onChange={(event) => handleChange('logoUrl', event.target.value)}
+                className='mt-2 w-full rounded-xl border border-(--border) bg-(--surface-muted) px-3 py-2 text-sm'
+                placeholder='https://...'
+              />
+            </label>
+            <label className='text-sm text-(--text-muted)'>
+              <span className='text-xs font-semibold uppercase tracking-[0.2em]'>Accent color</span>
+              <input
+                value={formState.accentColor}
+                onChange={(event) => handleChange('accentColor', event.target.value)}
+                className='mt-2 w-full rounded-xl border border-(--border) bg-(--surface-muted) px-3 py-2 text-sm'
+                placeholder='#d86b2c'
+              />
+            </label>
+            <label className='text-sm text-(--text-muted) lg:col-span-2'>
+              <span className='text-xs font-semibold uppercase tracking-[0.2em]'>Footer text</span>
+              <textarea
+                value={formState.footerText}
+                onChange={(event) => handleChange('footerText', event.target.value)}
+                rows={3}
+                className='mt-2 w-full rounded-xl border border-(--border) bg-(--surface-muted) px-3 py-2 text-sm'
+              />
+            </label>
+          </div>
+        )}
+      </div>
     </div>
   )
 }

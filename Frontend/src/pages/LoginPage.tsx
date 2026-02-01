@@ -1,10 +1,11 @@
 import { Link, useNavigate, useLocation } from 'react-router-dom'
 import { useState, useEffect } from 'react'
-import type { FormEvent } from 'react'
+import type { FormEvent, CSSProperties } from 'react'
 import BrandLogo from '../components/BrandLogo'
 import PrimaryButton from '../components/PrimaryButton'
 import { useAuth } from '../contexts/AuthContext'
 import { forgotPassword } from '../api/auth'
+import { usePublicSiteSettings } from '../hooks/useSiteSettings'
 
 type AuthMode = 'login' | 'register' | 'forgot'
 
@@ -25,6 +26,7 @@ export default function LoginPage() {
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
   const [busy, setBusy] = useState(false)
+  const { data: settings } = usePublicSiteSettings()
 
   // Redirect if already authenticated
   useEffect(() => {
@@ -99,14 +101,28 @@ export default function LoginPage() {
   // Show loading state while checking auth
   if (isLoading) {
     return (
-      <div className='flex min-h-screen items-center justify-center bg-(--surface-background) text-(--text-primary)'>
+      <div
+        className='flex min-h-screen items-center justify-center bg-(--surface-background) text-(--text-primary)'
+        style={
+          settings?.accentColor
+            ? ({ '--brand-accent': settings.accentColor } as CSSProperties)
+            : undefined
+        }
+      >
         <div className='h-8 w-8 animate-spin rounded-full border-4 border-(--brand-primary) border-t-transparent' />
       </div>
     )
   }
 
   return (
-    <div className='min-h-screen bg-(--surface-background) text-(--text-primary)'>
+    <div
+      className='min-h-screen bg-(--surface-background) text-(--text-primary)'
+      style={
+        settings?.accentColor
+          ? ({ '--brand-accent': settings.accentColor } as CSSProperties)
+          : undefined
+      }
+    >
       <div className='mx-auto flex min-h-screen w-full max-w-6xl flex-col gap-6 px-4 py-6 sm:gap-10 sm:px-6 sm:py-10'>
         <header className='landing-reveal flex items-center justify-between'>
           <BrandLogo />
@@ -240,6 +256,9 @@ export default function LoginPage() {
               Tip: Use boolean queries like <strong>brand AND (nepal OR kathmandu)</strong> to
               reduce noise.
             </div>
+            {settings?.footerText && (
+              <p className='mt-6 text-xs text-(--text-muted)'>{settings.footerText}</p>
+            )}
           </aside>
         </main>
       </div>

@@ -14,6 +14,7 @@ import {
     uploadAdminMedia,
     deleteAdminMedia,
 } from '../controllers/adminCms.controller.js';
+import { getAdminSettings, updateAdminSettings } from '../controllers/siteSetting.controller.js';
 
 const router = Router();
 
@@ -48,5 +49,8 @@ router.put('/pages/:id', updateAdminPage);
 router.get('/media', listAdminMedia);
 router.post('/media', upload.single('file'), uploadAdminMedia);
 router.delete('/media/:id', deleteAdminMedia);
+
+router.get('/settings', getAdminSettings);
+router.put('/settings', updateAdminSettings);
 
 export default router;

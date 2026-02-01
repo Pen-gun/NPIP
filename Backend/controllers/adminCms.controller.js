@@ -1,6 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import mongoose from 'mongoose';
 
 import asyncHandler from '../utils/asyncHandler.js';
 import ApiError from '../utils/apiError.js';
@@ -87,7 +88,11 @@ export const listAdminPages = asyncHandler(async (_req, res) => {
 });
 
 export const getAdminPage = asyncHandler(async (req, res) => {
-    const page = await AdminPage.findById(req.params.id)
+    const identifier = req.params.id;
+    const query = mongoose.isValidObjectId(identifier)
+        ? { _id: identifier }
+        : { slug: identifier.toLowerCase() };
+    const page = await AdminPage.findOne(query)
         .populate('updatedBy', 'fullName username email')
         .lean();
     if (!page) throw new ApiError(404, 'Admin page not found');
@@ -128,7 +133,11 @@ export const updateAdminPage = asyncHandler(async (req, res) => {
         updatedBy: req.user?._id,
     };
 
-    const updatedPage = await AdminPage.findByIdAndUpdate(req.params.id, update, {
+    const identifier = req.params.id;
+    const query = mongoose.isValidObjectId(identifier)
+        ? { _id: identifier }
+        : { slug: identifier.toLowerCase() };
+    const updatedPage = await AdminPage.findOneAndUpdate(query, update, {
         new: true,
         runValidators: true,
     }).populate('updatedBy', 'fullName username email');

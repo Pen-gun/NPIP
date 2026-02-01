@@ -23,6 +23,4 @@ const adminPageSchema = new Schema(
     { timestamps: true }
 );
 
-adminPageSchema.index({ slug: 1 }, { unique: true });
-
 export const AdminPage = mongoose.model('AdminPage', adminPageSchema);

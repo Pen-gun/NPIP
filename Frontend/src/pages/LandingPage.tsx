@@ -60,7 +60,7 @@ export default function LandingPage() {
   const withDelay = (delay: number): CSSProperties =>
     ({ '--delay': `${delay}ms` } as CSSProperties)
 
-  const { data: homePage } = useQuery({
+  const { data: homePage, isError: homeError } = useQuery({
     queryKey: ['public-page', 'home'],
     queryFn: () => fetchPublishedPage('home'),
     staleTime: 60_000,
@@ -128,6 +128,17 @@ export default function LandingPage() {
       dataSources: parsedSources.length ? parsedSources : DATA_SOURCES,
     }
   }, [richTextBlock?.content])
+
+  if (homeError) {
+    return (
+      <div className='min-h-screen bg-(--surface-background) px-4 py-10 text-(--text-primary)'>
+        <div className='mx-auto w-full max-w-3xl rounded-3xl border border-(--border) bg-(--surface-base) p-8 text-center shadow-sm'>
+          <p className='text-xs font-semibold uppercase tracking-[0.3em] text-(--text-muted)'>Unpublished</p>
+          <h1 className='mt-3 text-2xl font-semibold'>Home page is not published.</h1>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className='landing-page mx-auto flex w-full max-w-6xl flex-col gap-10 px-4 py-6 sm:gap-14 sm:px-6 sm:py-10'>

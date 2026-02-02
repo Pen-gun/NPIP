@@ -4,9 +4,7 @@ export type SiteSettings = {
   brandName: string
   tagline: string
   logoUrl: string
-  footerText: string
   accentColor: string
-  footerLinks: Array<{ title: string; href: string }>
   socialLinks: Array<{ label: string; href: string }>
 }
 

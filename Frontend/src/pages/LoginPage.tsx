@@ -256,9 +256,6 @@ export default function LoginPage() {
               Tip: Use boolean queries like <strong>brand AND (nepal OR kathmandu)</strong> to
               reduce noise.
             </div>
-            {settings?.footerText && (
-              <p className='mt-6 text-xs text-(--text-muted)'>{settings.footerText}</p>
-            )}
           </aside>
         </main>
       </div>

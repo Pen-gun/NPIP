@@ -6,7 +6,6 @@ import type { ReactNode } from 'react'
 import { fetchPublishedPage } from '../api/pages'
 import type { ContentBlock } from '../features/adminCms/types'
 import { usePublicSiteSettings } from '../hooks/useSiteSettings'
-import FooterSection from '../components/ui/footer'
 
 const blockTypeLabels: Record<ContentBlock['type'], string> = {
   hero: 'Hero',
@@ -363,15 +362,6 @@ export default function CmsPage({
             </div>
           )
         })}
-        {settings && settings.footerLinks?.length > 0 && (
-          <div style={withDelay(120 + contentBlocks.length * 70)} className='landing-reveal'>
-            <FooterSection
-              links={settings.footerLinks}
-              socialLinks={settings.socialLinks || []}
-              brandName={settings.brandName}
-            />
-          </div>
-        )}
       </div>
     </div>
   )

@@ -1,7 +1,6 @@
 import { Link } from 'react-router-dom'
 import type { CSSProperties } from 'react'
 import PrimaryButton from '../components/PrimaryButton'
-import { usePublicSiteSettings } from '../hooks/useSiteSettings'
 
 interface Highlight {
   title: string
@@ -56,7 +55,6 @@ const WORKFLOW_STEPS = Object.freeze([
 export default function LandingPage() {
   const withDelay = (delay: number): CSSProperties =>
     ({ '--delay': `${delay}ms` } as CSSProperties)
-  const { data: settings } = usePublicSiteSettings()
 
   return (
     <div className='landing-page mx-auto flex w-full max-w-6xl flex-col gap-10 px-4 py-6 sm:gap-14 sm:px-6 sm:py-10'>
@@ -195,13 +193,6 @@ export default function LandingPage() {
           </div>
         </section>
 
-        <footer
-          className='landing-reveal flex flex-col items-center justify-between gap-3 text-xs text-(--text-muted) sm:flex-row sm:gap-4'
-          style={withDelay(120)}
-        >
-          <span>{settings?.footerText || "NPIP - Nepal's Public Figure Information Portal"}</span>
-          <span className='text-center'>{settings?.tagline || "Built for Nepal's public data ecosystem."}</span>
-        </footer>
     </div>
   )
 }

@@ -1711,9 +1711,7 @@ function SettingsPanel({
     brandName: string
     tagline: string
     logoUrl: string
-    footerText: string
     accentColor: string
-    footerLinks: Array<{ title: string; href: string }>
     socialLinks: Array<{ label: string; href: string }>
   }
   loading: boolean
@@ -1722,9 +1720,7 @@ function SettingsPanel({
     brandName: string
     tagline: string
     logoUrl: string
-    footerText: string
     accentColor: string
-    footerLinks: Array<{ title: string; href: string }>
     socialLinks: Array<{ label: string; href: string }>
   }) => Promise<unknown>
   pushToast: (toast: Omit<Toast, 'id'>) => void
@@ -1733,9 +1729,7 @@ function SettingsPanel({
     brandName: settings?.brandName || '',
     tagline: settings?.tagline || '',
     logoUrl: settings?.logoUrl || '',
-    footerText: settings?.footerText || '',
     accentColor: settings?.accentColor || '',
-    footerLinks: settings?.footerLinks || [],
     socialLinks: settings?.socialLinks || [],
   })
 
@@ -1745,9 +1739,7 @@ function SettingsPanel({
       brandName: settings.brandName || '',
       tagline: settings.tagline || '',
       logoUrl: settings.logoUrl || '',
-      footerText: settings.footerText || '',
       accentColor: settings.accentColor || '',
-      footerLinks: settings.footerLinks || [],
       socialLinks: settings.socialLinks || [],
     })
   }, [settings])
@@ -1756,24 +1748,10 @@ function SettingsPanel({
     setFormState((prev) => ({ ...prev, [key]: value }))
   }
 
-  const updateFooterLink = (index: number, key: 'title' | 'href', value: string) => {
-    setFormState((prev) => ({
-      ...prev,
-      footerLinks: prev.footerLinks.map((item, i) => (i === index ? { ...item, [key]: value } : item)),
-    }))
-  }
-
   const updateSocialLink = (index: number, key: 'label' | 'href', value: string) => {
     setFormState((prev) => ({
       ...prev,
       socialLinks: prev.socialLinks.map((item, i) => (i === index ? { ...item, [key]: value } : item)),
-    }))
-  }
-
-  const addFooterLink = () => {
-    setFormState((prev) => ({
-      ...prev,
-      footerLinks: [...prev.footerLinks, { title: 'Link', href: '/' }],
     }))
   }
 
@@ -1856,45 +1834,6 @@ function SettingsPanel({
                 placeholder='#d86b2c'
               />
             </label>
-            <label className='text-sm text-(--text-muted) lg:col-span-2'>
-              <span className='text-xs font-semibold uppercase tracking-[0.2em]'>Footer text</span>
-              <textarea
-                value={formState.footerText}
-                onChange={(event) => handleChange('footerText', event.target.value)}
-                rows={3}
-                className='mt-2 w-full rounded-xl border border-(--border) bg-(--surface-muted) px-3 py-2 text-sm'
-              />
-            </label>
-            <div className='lg:col-span-2'>
-              <div className='flex items-center justify-between'>
-                <p className='text-xs font-semibold uppercase tracking-[0.2em] text-(--text-muted)'>Footer links</p>
-                <button
-                  type='button'
-                  onClick={addFooterLink}
-                  className='text-xs font-semibold text-(--brand-accent)'
-                >
-                  Add link
-                </button>
-              </div>
-              <div className='mt-3 space-y-3'>
-                {formState.footerLinks.map((link, index) => (
-                  <div key={`footer-${index}`} className='grid gap-2 sm:grid-cols-2'>
-                    <input
-                      value={link.title}
-                      onChange={(event) => updateFooterLink(index, 'title', event.target.value)}
-                      className='rounded-xl border border-(--border) bg-(--surface-muted) px-3 py-2 text-sm'
-                      placeholder='Title'
-                    />
-                    <input
-                      value={link.href}
-                      onChange={(event) => updateFooterLink(index, 'href', event.target.value)}
-                      className='rounded-xl border border-(--border) bg-(--surface-muted) px-3 py-2 text-sm'
-                      placeholder='/path'
-                    />
-                  </div>
-                ))}
-              </div>
-            </div>
             <div className='lg:col-span-2'>
               <div className='flex items-center justify-between'>
                 <p className='text-xs font-semibold uppercase tracking-[0.2em] text-(--text-muted)'>Social links</p>

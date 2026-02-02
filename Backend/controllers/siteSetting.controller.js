@@ -7,16 +7,7 @@ const DEFAULTS = {
     brandName: 'NPIP',
     tagline: 'Nepal is listening',
     logoUrl: '',
-    footerText: "NPIP - Nepal's Public Figure Information Portal",
     accentColor: '#d86b2c',
-    footerLinks: [
-        { title: 'Features', href: '/#features' },
-        { title: 'Sources', href: '/#sources' },
-        { title: 'Workflow', href: '/#workflow' },
-        { title: 'FAQ', href: '/faq' },
-        { title: 'Privacy', href: '/privacy' },
-        { title: 'Terms', href: '/terms' },
-    ],
     socialLinks: [
         { label: 'X', href: 'https://x.com' },
         { label: 'LinkedIn', href: 'https://linkedin.com' },
@@ -29,9 +20,7 @@ const toDTO = (setting) => ({
     brandName: setting.brandName,
     tagline: setting.tagline,
     logoUrl: setting.logoUrl,
-    footerText: setting.footerText,
     accentColor: setting.accentColor,
-    footerLinks: setting.footerLinks,
     socialLinks: setting.socialLinks,
 });
 
@@ -53,20 +42,12 @@ export const getAdminSettings = asyncHandler(async (_req, res) => {
 });
 
 export const updateAdminSettings = asyncHandler(async (req, res) => {
-    const { brandName, tagline, logoUrl, footerText, accentColor, footerLinks, socialLinks } =
-        req.body || {};
+    const { brandName, tagline, logoUrl, accentColor, socialLinks } = req.body || {};
     const update = {
         brandName: brandName?.trim() || DEFAULTS.brandName,
         tagline: tagline?.trim() || DEFAULTS.tagline,
         logoUrl: logoUrl?.trim() || '',
-        footerText: footerText?.trim() || DEFAULTS.footerText,
         accentColor: accentColor?.trim() || DEFAULTS.accentColor,
-        footerLinks: Array.isArray(footerLinks)
-            ? footerLinks.map((item) => ({
-                  title: String(item?.title || '').trim(),
-                  href: String(item?.href || '').trim(),
-              })).filter((item) => item.title && item.href)
-            : DEFAULTS.footerLinks,
         socialLinks: Array.isArray(socialLinks)
             ? socialLinks.map((item) => ({
                   label: String(item?.label || '').trim(),

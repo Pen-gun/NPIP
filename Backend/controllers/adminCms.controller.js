@@ -125,12 +125,6 @@ const ensureDefaultPages = async () => {
             buttonText: 'Start Monitoring',
             buttonLink: '/login',
         },
-        {
-            id: 'home-footer',
-            type: 'rich_text',
-            content:
-                "NPIP - Nepal's Public Figure Information Portal\n\nBuilt for Nepal's public data ecosystem.",
-        },
     ];
 
     await AdminPage.findOneAndUpdate(

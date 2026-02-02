@@ -22,11 +22,13 @@ export default function Layout({ children }: LayoutProps) {
   const isDashboard = location.pathname === '/app'
   const isLoginPage = location.pathname === '/login'
   const isAdminPage = location.pathname.startsWith('/admin')
+  const shouldFetchPublic = !(isLoginPage || isAdminPage)
   const { data: settings } = usePublicSiteSettings()
   const { data: publishedPages = [] } = useQuery({
     queryKey: ['public-pages'],
     queryFn: fetchPublishedPages,
     staleTime: 60_000,
+    enabled: shouldFetchPublic,
   })
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
 

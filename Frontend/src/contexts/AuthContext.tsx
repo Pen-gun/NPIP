@@ -1,5 +1,6 @@
-import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react'
+import { createContext, useCallback, useContext, useMemo } from 'react'
 import type { ReactNode } from 'react'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { getCurrentUser, loginUser, logoutUser, registerUser } from '../api/auth'
 import type { User } from '../types/app'
 
@@ -26,48 +27,63 @@ interface AuthContextValue {
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null)
+const authQueryKey = ['auth', 'me']
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<User | null>(null)
-  const [isLoading, setIsLoading] = useState(true)
+  const queryClient = useQueryClient()
+  const { data: user, isLoading } = useQuery({
+    queryKey: authQueryKey,
+    queryFn: getCurrentUser,
+    retry: 0,
+    staleTime: 1000 * 60 * 5,
+    gcTime: 1000 * 60 * 30,
+  })
 
-  const checkAuth = useCallback(async () => {
-    try {
-      const currentUser = await getCurrentUser()
-      setUser(currentUser)
-    } catch {
-      setUser(null)
-    } finally {
-      setIsLoading(false)
-    }
-  }, [])
+  const loginMutation = useMutation({
+    mutationFn: loginUser,
+    onSuccess: (loggedInUser) => {
+      queryClient.setQueryData(authQueryKey, loggedInUser)
+    },
+  })
 
-  useEffect(() => {
-    checkAuth()
-  }, [checkAuth])
+  const registerMutation = useMutation({
+    mutationFn: registerUser,
+  })
 
-  const login = useCallback(async (payload: LoginPayload): Promise<User> => {
-    const loggedInUser = await loginUser(payload)
-    setUser(loggedInUser)
-    return loggedInUser
-  }, [])
+  const logoutMutation = useMutation({
+    mutationFn: logoutUser,
+    onSuccess: () => {
+      queryClient.setQueryData(authQueryKey, null)
+      queryClient.invalidateQueries({ queryKey: authQueryKey })
+    },
+  })
 
-  const register = useCallback(async (payload: RegisterPayload): Promise<void> => {
-    await registerUser(payload)
-  }, [])
+  const login = useCallback(
+    async (payload: LoginPayload): Promise<User> => {
+      const loggedInUser = await loginMutation.mutateAsync(payload)
+      return loggedInUser
+    },
+    [loginMutation],
+  )
+
+  const register = useCallback(
+    async (payload: RegisterPayload): Promise<void> => {
+      await registerMutation.mutateAsync(payload)
+    },
+    [registerMutation],
+  )
 
   const logout = useCallback(async (): Promise<void> => {
-    await logoutUser()
-    setUser(null)
-  }, [])
+    await logoutMutation.mutateAsync()
+  }, [logoutMutation])
 
   const refreshUser = useCallback(async (): Promise<void> => {
-    await checkAuth()
-  }, [checkAuth])
+    await queryClient.invalidateQueries({ queryKey: authQueryKey })
+  }, [queryClient])
 
   const value = useMemo<AuthContextValue>(
     () => ({
-      user,
+      user: user ?? null,
       isLoading,
       isAuthenticated: Boolean(user),
       login,

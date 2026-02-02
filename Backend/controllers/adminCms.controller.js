@@ -8,6 +8,7 @@ import ApiError from '../utils/apiError.js';
 import ApiResponse from '../utils/apiResponse.js';
 import { AdminPage } from '../model/adminPage.model.js';
 import { AdminMedia } from '../model/adminMedia.model.js';
+import { deleteFromCloudinary, isCloudinaryEnabled, uploadToCloudinary } from '../utils/cloudinary.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -340,10 +341,30 @@ export const uploadAdminMedia = asyncHandler(async (req, res) => {
         throw new ApiError(400, 'Media file or URL is required');
     }
 
+    let mediaUrl = url;
+    let provider = req.file ? 'local' : 'external';
+    let publicId = '';
+
+    if (req.file && isCloudinaryEnabled()) {
+        try {
+            const uploaded = await uploadToCloudinary(req.file.path);
+            if (uploaded?.url) {
+                mediaUrl = uploaded.url;
+                publicId = uploaded.publicId || '';
+                provider = 'cloudinary';
+            }
+        } catch {
+            provider = 'local';
+        }
+    }
+
     const media = await AdminMedia.create({
-        url,
+        url: mediaUrl,
+        localUrl: fileUrl || '',
         title: req.body?.title || '',
         alt: req.body?.alt || '',
+        provider,
+        publicId,
         createdBy: req.user?._id,
     });
 
@@ -354,8 +375,18 @@ export const deleteAdminMedia = asyncHandler(async (req, res) => {
     const media = await AdminMedia.findByIdAndDelete(req.params.id);
     if (!media) throw new ApiError(404, 'Media not found');
 
-    if (media.url?.startsWith('/uploads/')) {
-        const filePath = path.join(uploadsDir, path.basename(media.url));
+    if (media.provider === 'cloudinary' && media.publicId) {
+        deleteFromCloudinary(media.publicId).catch(() => {});
+    }
+
+    const localPath = media.localUrl?.startsWith('/uploads/')
+        ? media.localUrl
+        : media.url?.startsWith('/uploads/')
+          ? media.url
+          : null;
+
+    if (localPath) {
+        const filePath = path.join(uploadsDir, path.basename(localPath));
         fs.promises.unlink(filePath).catch(() => {});
     }
 

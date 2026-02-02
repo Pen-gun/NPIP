@@ -26,3 +26,18 @@ export const getPublishedPage = asyncHandler(async (req, res) => {
 
     return res.status(200).json(new ApiResponse(200, toPublicPageDTO(page), 'Page fetched'));
 });
+
+export const listPublishedPages = asyncHandler(async (_req, res) => {
+    const pages = await AdminPage.find({ status: 'published' }, { title: 1, slug: 1, updatedAt: 1 })
+        .sort({ updatedAt: -1 })
+        .lean();
+
+    const data = pages.map((page) => ({
+        id: page.slug,
+        title: page.title,
+        slug: page.slug,
+        updatedAt: page.updatedAt,
+    }));
+
+    return res.status(200).json(new ApiResponse(200, data, 'Pages fetched'));
+});

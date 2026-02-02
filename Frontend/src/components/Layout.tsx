@@ -5,6 +5,9 @@ import { useAuth } from '../contexts/AuthContext'
 import BrandLogo from './BrandLogo'
 import AdminQuickAccess from './AdminQuickAccess'
 import { usePublicSiteSettings } from '../hooks/useSiteSettings'
+import { useQuery } from '@tanstack/react-query'
+import { fetchPublishedPages } from '../api/pages'
+import PublicFooter from './PublicFooter'
 
 interface LayoutProps {
   children: ReactNode
@@ -20,6 +23,11 @@ export default function Layout({ children }: LayoutProps) {
   const isLoginPage = location.pathname === '/login'
   const isAdminPage = location.pathname.startsWith('/admin')
   const { data: settings } = usePublicSiteSettings()
+  const { data: publishedPages = [] } = useQuery({
+    queryKey: ['public-pages'],
+    queryFn: fetchPublishedPages,
+    staleTime: 60_000,
+  })
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
 
   const handleLogout = async () => {
@@ -84,6 +92,7 @@ export default function Layout({ children }: LayoutProps) {
             {/* Home link when on dashboard or search */}
             {(isDashboard || location.pathname === '/search') && null}
 
+
             {/* Auth section */}
             {isLoading ? (
               <div className='h-4 w-16 animate-pulse rounded bg-(--surface-muted)' />
@@ -141,6 +150,7 @@ export default function Layout({ children }: LayoutProps) {
                 </Link>
               )}
 
+
               {isLoading ? (
                 <div className='h-4 w-16 animate-pulse rounded bg-(--surface-muted)' />
               ) : isAuthenticated ? (
@@ -178,6 +188,7 @@ export default function Layout({ children }: LayoutProps) {
       </header>
 
       <main>{children}</main>
+      <PublicFooter pages={publishedPages} />
       <AdminQuickAccess />
     </div>
   )

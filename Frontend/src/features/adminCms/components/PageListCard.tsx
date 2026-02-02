@@ -28,7 +28,7 @@ export default function PageListCard({ pages, activePageId, loading, onSelectPag
   }
 
   return (
-    <div className='rounded-2xl border border-(--border) bg-(--surface-base) p-4 shadow-sm'>
+    <div className='sticky top-24 max-h-[calc(100vh-7rem)] self-start overflow-y-auto rounded-2xl border border-(--border) bg-(--surface-base) p-4 shadow-sm'>
       <div className='flex items-center justify-between'>
         <h3 className='text-sm font-semibold'>Pages</h3>
         <span className='text-xs text-(--text-muted)'>{pages.length} total</span>

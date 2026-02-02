@@ -76,7 +76,10 @@ export default function AdminCMSPage() {
         slug: values.slug,
       },
     }
-    await updatePageMutation.mutateAsync({ pageId: activePageId, payload })
+    const updated = await updatePageMutation.mutateAsync({ pageId: activePageId, payload })
+    if (updated?.id) {
+      setActivePageId(updated.id)
+    }
   }
 
   return (

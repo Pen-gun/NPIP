@@ -1,7 +1,8 @@
 ﻿
-import { useEffect, useMemo, useState } from 'react'
+import { useMemo, useState } from 'react'
 import type { CSSProperties } from 'react'
 import type { PageStatus } from '../features/adminCms/types'
+import type { PageFormValues } from '../features/adminCms/schemas'
 import {
   useAdminMedia,
   useAdminPage,
@@ -32,23 +33,16 @@ export default function AdminCMSPage() {
   const [searchTerm, setSearchTerm] = useState('')
   const [pageDirty, setPageDirty] = useState(false)
   const { data: pages = [], isLoading: pagesLoading } = useAdminPages()
-  const [activePageId, setActivePageId] = useState<string | null>(
-    pages[0]?.id ?? null,
-  )
-  const activePageFromList = pages.find((page) => page.id === activePageId)
-  const { data: activePage, isLoading: pageLoading } = useAdminPage(activePageId)
+  const [activePageId, setActivePageId] = useState<string | null>(null)
+  const resolvedActivePageId = activePageId ?? pages[0]?.id ?? null
+  const activePageFromList = pages.find((page) => page.id === resolvedActivePageId)
+  const { data: activePage, isLoading: pageLoading } = useAdminPage(resolvedActivePageId)
   const { data: mediaLibrary = [], isLoading: mediaLoading } = useAdminMedia()
   const updatePageMutation = useUpdateAdminPage()
   const uploadMediaMutation = useUploadAdminMedia()
   const deleteMediaMutation = useDeleteAdminMedia()
   const { data: siteSettings, isLoading: settingsLoading } = useAdminSiteSettings()
   const updateSettingsMutation = useUpdateAdminSiteSettings()
-
-  useEffect(() => {
-    if (!activePageId && pages.length) {
-      setActivePageId(pages[0].id)
-    }
-  }, [activePageId, pages])
 
   const filteredPages = useMemo(() => {
     const query = searchTerm.trim().toLowerCase()
@@ -91,7 +85,7 @@ export default function AdminCMSPage() {
           : undefined
       }
     >
-      <div className='pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(circle_at_top,_rgba(249,115,22,0.16),_transparent_55%)]' />
+      <div className='pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(circle_at_top,rgba(249,115,22,0.16),transparent_55%)]' />
 
       <AdminSidebar
         activeSection={activeSection}
@@ -121,10 +115,10 @@ export default function AdminCMSPage() {
             <div className='grid gap-6 lg:grid-cols-[280px_minmax(0,1fr)]'>
               <PageListCard
                 pages={filteredPages}
-                activePageId={activePageId}
+                activePageId={resolvedActivePageId}
                 loading={pagesLoading}
                 onSelectPage={(pageId) => {
-                  if (pageDirty && pageId !== activePageId) {
+                  if (pageDirty && pageId !== resolvedActivePageId) {
                     const confirmChange = window.confirm(
                       'You have unsaved changes. Switch pages and discard them?',
                     )

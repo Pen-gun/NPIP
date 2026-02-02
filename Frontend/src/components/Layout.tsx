@@ -3,6 +3,7 @@ import { useState } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import BrandLogo from './BrandLogo'
+import AdminQuickAccess from './AdminQuickAccess'
 import { usePublicSiteSettings } from '../hooks/useSiteSettings'
 
 interface LayoutProps {
@@ -177,6 +178,7 @@ export default function Layout({ children }: LayoutProps) {
       </header>
 
       <main>{children}</main>
+      <AdminQuickAccess />
     </div>
   )
 }

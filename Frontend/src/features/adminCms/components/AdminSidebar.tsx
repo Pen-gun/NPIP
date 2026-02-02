@@ -1,14 +1,5 @@
 import type { LucideIcon } from 'lucide-react'
-import {
-  BarChart3,
-  ChevronLeft,
-  FileText,
-  Image as ImageIcon,
-  LayoutDashboard,
-  Settings,
-  Sparkles,
-  Users,
-} from 'lucide-react'
+import { BarChart3, ChevronLeft, FileText, Image as ImageIcon, Settings, Sparkles, Users } from 'lucide-react'
 import type { AdminSection } from '../uiTypes'
 
 const sectionItems: Array<{ id: AdminSection; label: string; icon: LucideIcon }> = [
@@ -20,17 +11,6 @@ const sectionItems: Array<{ id: AdminSection; label: string; icon: LucideIcon }>
   { id: 'analytics', label: 'Analytics', icon: BarChart3 },
 ]
 
-const sidebarPrimaryNav: Array<{ label: string; icon: LucideIcon }> = [
-  { label: 'Dashboard', icon: LayoutDashboard },
-  { label: 'Pages', icon: FileText },
-  { label: 'Products/Services', icon: Sparkles },
-  { label: 'Blog', icon: FileText },
-  { label: 'Media', icon: ImageIcon },
-  { label: 'SEO', icon: Sparkles },
-  { label: 'Users', icon: Users },
-  { label: 'Settings', icon: Settings },
-  { label: 'Analytics', icon: BarChart3 },
-]
 
 type AdminSidebarProps = {
   activeSection: AdminSection
@@ -74,26 +54,7 @@ export default function AdminSidebar({
         </div>
 
         <div className='flex-1 overflow-y-auto px-4 py-6'>
-          <p className='px-2 text-[11px] font-semibold uppercase tracking-[0.3em] text-(--text-muted)'>
-            Navigation
-          </p>
-          <nav className='mt-4 space-y-1'>
-            {sidebarPrimaryNav.map((item) => (
-              <div
-                key={item.label}
-                className={`flex items-center gap-3 rounded-xl px-3 py-2 text-sm transition ${
-                  item.label.toLowerCase() === activeSection
-                    ? 'bg-(--surface-muted) text-(--text-primary)'
-                    : 'text-(--text-muted) hover:text-(--text-primary)'
-                }`}
-              >
-                <item.icon className='h-4 w-4' aria-hidden />
-                <span>{item.label}</span>
-              </div>
-            ))}
-          </nav>
-
-          <div className='mt-8'>
+          <div>
             <p className='px-2 text-[11px] font-semibold uppercase tracking-[0.3em] text-(--text-muted)'>
               CMS workspace
             </p>

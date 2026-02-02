@@ -21,7 +21,7 @@ import PageListCard from '../features/adminCms/components/PageListCard'
 import PageEditor from '../features/adminCms/components/PageEditor'
 import { useToasts } from '../features/adminCms/useToasts'
 import type { AdminSection } from '../features/adminCms/uiTypes'
-
+import { Sparkles } from 'lucide-react'
 
 
 export default function AdminCMSPage() {

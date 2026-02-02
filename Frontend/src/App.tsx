@@ -23,7 +23,7 @@ export default function App() {
         }
       >
         <Routes>
-          <Route path='/' element={<CmsPage slug='home' fallback={<LandingPage />} />} />
+          <Route path='/' element={<LandingPage />} />
           <Route path='/search' element={<FigureSearchPage />} />
           <Route path='/login' element={<LoginPage />} />
           <Route path='/reset-password' element={<ResetPasswordPage />} />

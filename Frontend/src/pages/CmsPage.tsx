@@ -17,7 +17,18 @@ const blockTypeLabels: Record<ContentBlock['type'], string> = {
 
 const isContentBlock = (block: unknown): block is ContentBlock => {
   if (!block || typeof block !== 'object') return false
-  return 'type' in block
+  const typeValue = (block as { type?: unknown }).type
+  return typeof typeValue === 'string' && Object.prototype.hasOwnProperty.call(blockTypeLabels, typeValue)
+}
+
+const getUnsupportedLabel = (block: unknown): string => {
+  if (!block || typeof block !== 'object') return 'unknown'
+  const typeValue = (block as { type?: unknown }).type
+  if (typeof typeValue !== 'string') return 'unknown'
+  if (Object.prototype.hasOwnProperty.call(blockTypeLabels, typeValue)) {
+    return blockTypeLabels[typeValue as ContentBlock['type']]
+  }
+  return typeValue
 }
 
 const renderInline = (text: string): ReactNode[] => {
@@ -301,8 +312,8 @@ export default function CmsPage({
     staleTime: 60_000,
   })
 
-  const contentBlocks = useMemo<ContentBlock[]>(
-    () => (data?.blocks ?? []).filter(isContentBlock),
+  const contentBlocks = useMemo(
+    () => data?.blocks ?? [],
     [data?.blocks],
   )
 
@@ -344,6 +355,17 @@ export default function CmsPage({
           </div>
         )}
         {contentBlocks.map((block, index) => {
+          if (!isContentBlock(block)) {
+            return (
+              <div
+                key={`unknown-${index}`}
+                className='landing-reveal rounded-3xl border border-(--border) bg-(--surface-base) p-6 text-sm text-(--text-muted)'
+              >
+                Unsupported block: {getUnsupportedLabel(block)}
+              </div>
+            )
+          }
+
           if (block.type === 'hero') return <HeroBlock key={block.id ?? index} block={block} index={index} />
           if (block.type === 'rich_text') return <RichText key={block.id ?? index} block={block} index={index} />
           if (block.type === 'feature_grid') return <FeatureGrid key={block.id ?? index} block={block} index={index} />
@@ -355,7 +377,7 @@ export default function CmsPage({
               key={`unknown-${index}`}
               className='landing-reveal rounded-3xl border border-(--border) bg-(--surface-base) p-6 text-sm text-(--text-muted)'
             >
-              Unsupported block: {blockTypeLabels[block.type] ?? block.type}
+              Unsupported block: {block.type}
             </div>
           )
         })}

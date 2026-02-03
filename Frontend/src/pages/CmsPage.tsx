@@ -5,7 +5,6 @@ import { useParams } from 'react-router-dom'
 import type { ReactNode } from 'react'
 import { fetchPublishedPage } from '../api/pages'
 import type { ContentBlock } from '../features/adminCms/types'
-import { usePublicSiteSettings } from '../hooks/useSiteSettings'
 
 const blockTypeLabels: Record<ContentBlock['type'], string> = {
   hero: 'Hero',
@@ -295,8 +294,6 @@ export default function CmsPage({
 }) {
   const params = useParams()
   const slug = (slugProp || params.slug || '').toLowerCase()
-  const { data: settings } = usePublicSiteSettings()
-
   const { data, isLoading, isError } = useQuery({
     queryKey: ['public-page', slug],
     queryFn: () => fetchPublishedPage(slug),
@@ -304,7 +301,7 @@ export default function CmsPage({
     staleTime: 60_000,
   })
 
-  const contentBlocks = useMemo(
+  const contentBlocks = useMemo<ContentBlock[]>(
     () => (data?.blocks ?? []).filter(isContentBlock),
     [data?.blocks],
   )

@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react'
-import type { SiteSettings } from '../../api/settings'
+import type { SiteSettings } from '../../../api/settings'
 import type { ToastInput } from '../uiTypes'
+
+type SiteSettingsField = Exclude<keyof SiteSettings, 'socialLinks'>
 
 type SettingsPanelProps = {
   settings?: SiteSettings
@@ -17,7 +19,7 @@ export default function SettingsPanel({
   onSave,
   pushToast,
 }: SettingsPanelProps) {
-  const [formState, setFormState] = useState({
+  const [formState, setFormState] = useState<SiteSettings>({
     brandName: settings?.brandName || '',
     tagline: settings?.tagline || '',
     logoUrl: settings?.logoUrl || '',
@@ -36,7 +38,7 @@ export default function SettingsPanel({
     })
   }, [settings])
 
-  const handleChange = (key: keyof typeof formState, value: string) => {
+  const handleChange = (key: SiteSettingsField, value: string) => {
     setFormState((prev) => ({ ...prev, [key]: value }))
   }
 

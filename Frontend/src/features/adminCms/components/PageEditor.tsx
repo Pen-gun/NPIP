@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Plus } from 'lucide-react'
-import { FormProvider, useFieldArray, useForm, useWatch } from 'react-hook-form'
+import { FormProvider, useFieldArray, useForm, useWatch, type FieldPath } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import type { AdminPage, AdminPageSummary, ContentBlock, MediaItem } from '../types'
 import { pageFormSchema, type PageFormValues } from '../schemas'
@@ -42,7 +42,7 @@ export default function PageEditor({
 }: PageEditorProps) {
   const [blockTypeToAdd, setBlockTypeToAdd] = useState<ContentBlock['type']>('hero')
   const [mediaModalOpen, setMediaModalOpen] = useState(false)
-  const [mediaTargetPath, setMediaTargetPath] = useState<string | null>(null)
+  const [mediaTargetPath, setMediaTargetPath] = useState<FieldPath<PageFormValues> | null>(null)
   const [pendingAction, setPendingAction] = useState<'save' | 'publish' | 'unpublish' | null>(null)
 
   const methods = useForm<PageFormValues>({
@@ -83,12 +83,12 @@ export default function PageEditor({
 
   const handleMediaSelect = (media: MediaItem) => {
     if (!mediaTargetPath) return
-    setValue(mediaTargetPath as never, media.url, { shouldDirty: true })
+    setValue(mediaTargetPath, media.url, { shouldDirty: true })
     setMediaModalOpen(false)
     setMediaTargetPath(null)
   }
 
-  const handleMediaPickerOpen = (path: string) => {
+  const handleMediaPickerOpen = (path: FieldPath<PageFormValues>) => {
     setMediaTargetPath(path)
     setMediaModalOpen(true)
   }

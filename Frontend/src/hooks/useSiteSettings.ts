@@ -1,5 +1,4 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import type { SiteSettings } from '../api/settings'
 import { fetchAdminSettings, fetchPublicSettings, updateAdminSettings } from '../api/settings'
 
 const publicKey = ['site-settings']

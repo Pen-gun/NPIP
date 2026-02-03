@@ -1,11 +1,11 @@
 import { Plus } from 'lucide-react'
-import { useFieldArray, useFormContext } from 'react-hook-form'
+import { useFieldArray, useFormContext, type FieldPath } from 'react-hook-form'
 import type { PageFormValues } from '../../schemas'
 import { createId } from '../../utils'
 
 type GalleryBlockEditorProps = {
   index: number
-  onPickMedia: (path: string) => void
+  onPickMedia: (path: FieldPath<PageFormValues>) => void
 }
 
 export default function GalleryBlockEditor({ index, onPickMedia }: GalleryBlockEditorProps) {

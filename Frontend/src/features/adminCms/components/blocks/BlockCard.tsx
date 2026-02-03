@@ -1,5 +1,7 @@
 import { ChevronDown, ChevronUp, Trash2 } from 'lucide-react'
+import type { FieldPath } from 'react-hook-form'
 import type { ContentBlock } from '../../types'
+import type { PageFormValues } from '../../schemas'
 import { blockDescriptions, blockLabels } from '../../utils'
 import CtaBandBlockEditor from './CtaBandBlockEditor'
 import FeatureGridBlockEditor from './FeatureGridBlockEditor'
@@ -16,7 +18,7 @@ type BlockCardProps = {
   onRemove: () => void
   canMoveUp: boolean
   canMoveDown: boolean
-  onPickMedia: (path: string) => void
+  onPickMedia: (path: FieldPath<PageFormValues>) => void
 }
 
 export default function BlockCard({

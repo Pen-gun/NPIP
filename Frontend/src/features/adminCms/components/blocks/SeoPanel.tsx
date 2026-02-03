@@ -1,9 +1,9 @@
-import { useFormContext } from 'react-hook-form'
+import { useFormContext, type FieldPath } from 'react-hook-form'
 import type { PageFormValues } from '../../schemas'
 import InputField from '../fields/InputField'
 
 type SeoPanelProps = {
-  onPickMedia: (path: string) => void
+  onPickMedia: (path: FieldPath<PageFormValues>) => void
 }
 
 export default function SeoPanel({ onPickMedia }: SeoPanelProps) {

@@ -6,6 +6,7 @@ import PrimaryButton from '../components/PrimaryButton'
 import { useAuth } from '../contexts/AuthContext'
 import { forgotPassword } from '../api/auth'
 import { usePublicSiteSettings } from '../hooks/useSiteSettings'
+import { EyeIcon, EyeClosed } from 'lucide-react'
 
 type AuthMode = 'login' | 'register' | 'forgot'
 
@@ -26,6 +27,7 @@ export default function LoginPage() {
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
   const [busy, setBusy] = useState(false)
+  const [showPassword, setShowPassword] = useState(false)
   const { data: settings } = usePublicSiteSettings()
 
   // Redirect if already authenticated
@@ -194,14 +196,24 @@ export default function LoginPage() {
                       />
                     </>
                   )}
-                  <input
-                    name='password'
-                    type='password'
-                    placeholder='Password'
-                    autoComplete={isLogin ? 'current-password' : 'new-password'}
-                    className='w-full rounded-xl border border-(--border) bg-(--surface-muted) px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-(--brand-primary)/20'
-                    required
-                  />
+                  <div className='relative'>
+                    <input
+                      name='password'
+                      type={showPassword ? 'text' : 'password'}
+                      placeholder='Password'
+                      autoComplete={isLogin ? 'current-password' : 'new-password'}
+                      className='w-full rounded-xl border border-(--border) bg-(--surface-muted) px-4 py-2.5 pr-11 text-sm focus:outline-none focus:ring-2 focus:ring-(--brand-primary)/20'
+                      required
+                    />
+                    <button
+                      type='button'
+                      onClick={() => setShowPassword((prev) => !prev)}
+                      className='absolute right-3 top-1/2 -translate-y-1/2 text-(--text-muted) transition hover:text-(--text-primary)'
+                      aria-label={showPassword ? 'Hide password' : 'Show password'}
+                    >
+                      {showPassword ? <EyeClosed className='h-4 w-4' /> : <EyeIcon className='h-4 w-4' />}
+                    </button>
+                  </div>
                 </>
               )}
               {error && <p className='text-xs text-(--state-error)'>{error}</p>}

@@ -61,7 +61,8 @@ export default function AdminCMSPage() {
   }
 
   const handlePageUpdate = async (values: PageFormValues, statusOverride?: PageStatus) => {
-    if (!activePageId) return
+    const pageId = resolvedActivePageId
+    if (!pageId) return
     const payload = {
       ...values,
       status: statusOverride ?? values.status,
@@ -70,7 +71,7 @@ export default function AdminCMSPage() {
         slug: values.slug,
       },
     }
-    const updated = await updatePageMutation.mutateAsync({ pageId: activePageId, payload })
+    const updated = await updatePageMutation.mutateAsync({ pageId, payload })
     if (updated?.id) {
       setActivePageId(updated.id)
     }

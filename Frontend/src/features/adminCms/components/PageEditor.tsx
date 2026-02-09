@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Plus } from 'lucide-react'
+import { Loader2, Plus } from 'lucide-react'
 import { FormProvider, useFieldArray, useForm, useWatch, type FieldPath } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import type { AdminPage, AdminPageSummary, ContentBlock, MediaItem } from '../types'
@@ -153,26 +153,29 @@ export default function PageEditor({
               <button
                 type='button'
                 onClick={() => submitAction('save')}
-                className='rounded-full border border-(--border) px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-(--text-muted) transition hover:text-(--text-primary)'
+                className='flex items-center gap-2 rounded-full border border-(--border) px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-(--text-muted) transition hover:text-(--text-primary) disabled:opacity-50'
                 disabled={pendingAction !== null}
               >
-                Save draft
+                {pendingAction === 'save' && <Loader2 className='h-3 w-3 animate-spin' />}
+                {pendingAction === 'save' ? 'Saving...' : 'Save draft'}
               </button>
               <button
                 type='button'
                 onClick={() => submitAction('publish')}
-                className='rounded-full bg-(--brand-accent) px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-white shadow-sm transition hover:opacity-90'
+                className='flex items-center gap-2 rounded-full bg-(--brand-accent) px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-white shadow-sm transition hover:opacity-90 disabled:opacity-50'
                 disabled={pendingAction !== null}
               >
-                Publish
+                {pendingAction === 'publish' && <Loader2 className='h-3 w-3 animate-spin' />}
+                {pendingAction === 'publish' ? 'Publishing...' : 'Publish'}
               </button>
               <button
                 type='button'
                 onClick={() => handleDestructiveAction(() => submitAction('unpublish'), 'Unpublish this page?')}
-                className='rounded-full border border-(--border) px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-(--text-muted) transition hover:text-(--text-primary)'
+                className='flex items-center gap-2 rounded-full border border-(--border) px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-(--text-muted) transition hover:text-(--text-primary) disabled:opacity-50'
                 disabled={pendingAction !== null}
               >
-                Unpublish
+                {pendingAction === 'unpublish' && <Loader2 className='h-3 w-3 animate-spin' />}
+                {pendingAction === 'unpublish' ? 'Unpublishing...' : 'Unpublish'}
               </button>
             </div>
           </div>

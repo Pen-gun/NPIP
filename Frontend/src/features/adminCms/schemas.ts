@@ -5,8 +5,8 @@ const heroBlockSchema = z.object({
   type: z.literal('hero'),
   title: z.string().min(1, 'Hero title is required'),
   subtitle: z.string().min(1, 'Hero subtitle is required'),
-  ctaText: z.string().min(1, 'CTA text is required'),
-  ctaLink: z.string().min(1, 'CTA link is required'),
+  ctaText: z.string().optional().default(''),
+  ctaLink: z.string().optional().default(''),
   backgroundImage: z.string().optional(),
 })
 

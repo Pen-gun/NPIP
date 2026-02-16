@@ -15,6 +15,21 @@ import { getMonthKey } from '../utils/date.js';
 const normalizeKeywords = (keywords = []) =>
     keywords.map((word) => word.trim()).filter(Boolean);
 
+const DEFAULT_SOURCES = Object.freeze({
+    localNews: true,
+    youtube: true,
+    reddit: true,
+    x: true,
+    meta: true,
+    tiktok: false,
+    viber: false,
+});
+
+const normalizeSources = (sources = {}) => ({
+    ...DEFAULT_SOURCES,
+    ...(sources || {}),
+});
+
 export const createProject = asyncHandler(async (req, res) => {
     const { name, keywords = [], booleanQuery = '', sources = {}, scheduleMinutes, geoFocus } = req.body;
 
@@ -36,7 +51,7 @@ export const createProject = asyncHandler(async (req, res) => {
         name: name.trim(),
         keywords: keywordList,
         booleanQuery: sanitizeQuery(booleanQuery),
-        sources,
+        sources: normalizeSources(sources),
         scheduleMinutes: interval,
         geoFocus: geoFocus || 'Nepal',
     });
@@ -74,7 +89,7 @@ export const updateProject = asyncHandler(async (req, res) => {
     }
 
     if (booleanQuery !== undefined) project.booleanQuery = sanitizeQuery(booleanQuery);
-    if (sources) project.sources = sources;
+    if (sources) project.sources = normalizeSources(sources);
     if (scheduleMinutes) project.scheduleMinutes = Math.max(Number(scheduleMinutes) || plan.minIntervalMinutes, plan.minIntervalMinutes);
     if (geoFocus) project.geoFocus = geoFocus;
     if (status) {

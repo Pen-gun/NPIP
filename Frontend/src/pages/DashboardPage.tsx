@@ -159,6 +159,7 @@ export default function DashboardPage() {
   const [pagination, setPagination] = useState<PaginationInfo | null>(null)
   const [sortOrder, setSortOrder] = useState<'recent' | 'oldest' | 'reach'>('recent')
   const [currentView, setCurrentView] = useState<DashboardView>('mentions')
+  const [refreshTick, setRefreshTick] = useState(0)
 
   useEffect(() => {
     if (!user) return
@@ -229,7 +230,13 @@ export default function DashboardPage() {
         }
       })
     return () => { cancelled = true }
-  }, [user, activeProjectId, filters, currentPage, sortOrder])
+  }, [user, activeProjectId, filters, currentPage, sortOrder, refreshTick])
+
+  useEffect(() => {
+    setCurrentPage(1)
+    setMentions([])
+    setPagination(null)
+  }, [activeProjectId])
 
   useEffect(() => {
     if (!user || !activeProjectId) return
@@ -359,6 +366,8 @@ export default function DashboardPage() {
             : project
         )
       )
+      setCurrentPage(1)
+      setRefreshTick((prev) => prev + 1)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to run ingestion')
     } finally {
@@ -440,7 +449,10 @@ export default function DashboardPage() {
   }
 
   // Filter persistence
-  const filtersStorageKey = `npip_filters_v1_${activeProjectId}`
+  const filtersStorageKey = useMemo(
+    () => `npip_filters_v1_${activeProjectId}`,
+    [activeProjectId],
+  )
   
   const handleSaveFilters = () => {
     if (!activeProjectId) return
@@ -494,7 +506,7 @@ export default function DashboardPage() {
         // Ignore invalid JSON
       }
     }
-  }, [activeProjectId])
+  }, [activeProjectId, filtersStorageKey])
 
   const mentionsBySource = useMemo(() => {
     const counts: Record<string, number> = {}

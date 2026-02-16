@@ -35,11 +35,12 @@ const metaConnector = {
         limits: 'Owned pages/IG business accounts only; no global keyword search.',
     },
 
-    async run(keywords = [], booleanQuery = '') {
+    async run({ project }) {
         const accessToken = process.env.META_ACCESS_TOKEN;
         if (!accessToken) {
             return [];
         }
+        const keywords = Array.isArray(project?.keywords) ? project.keywords : [];
 
         FacebookAdsApi.init(accessToken);
         const results = [];

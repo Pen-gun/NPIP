@@ -1,27 +1,30 @@
 import { Mention } from '../model/mention.model.js';
 
-const buildDateFilter = (from, to) => {
-    const filter = { $ne: null };
-    if (from) filter.$gte = from;
-    if (to) filter.$lte = to;
-    return filter;
-};
-
 export const getProjectMetrics = async (projectId, { from, to } = {}) => {
-    const match = {
-        projectId,
-        publishedAt: buildDateFilter(from, to),
-    };
+    const basePipeline = [
+        { $match: { projectId } },
+        {
+            $addFields: {
+                metricDate: { $ifNull: ['$publishedAt', { $ifNull: ['$ingestedAt', '$createdAt'] }] },
+            },
+        },
+    ];
+    if (from || to) {
+        const dateFilter = {};
+        if (from) dateFilter.$gte = from;
+        if (to) dateFilter.$lte = to;
+        basePipeline.push({ $match: { metricDate: dateFilter } });
+    }
 
     const [volume, sentimentShare, topSources, topAuthors] = await Promise.all([
         Mention.aggregate([
-            { $match: match },
+            ...basePipeline,
             {
                 $group: {
                     _id: {
-                        year: { $year: '$publishedAt' },
-                        month: { $month: '$publishedAt' },
-                        day: { $dayOfMonth: '$publishedAt' },
+                        year: { $year: '$metricDate' },
+                        month: { $month: '$metricDate' },
+                        day: { $dayOfMonth: '$metricDate' },
                     },
                     count: { $sum: 1 },
                 },
@@ -29,22 +32,23 @@ export const getProjectMetrics = async (projectId, { from, to } = {}) => {
             { $sort: { '_id.year': 1, '_id.month': 1, '_id.day': 1 } },
         ]),
         Mention.aggregate([
-            { $match: match },
+            ...basePipeline,
             { $group: { _id: '$sentiment.label', count: { $sum: 1 } } },
         ]),
         Mention.aggregate([
-            { $match: match },
+            ...basePipeline,
             { $group: { _id: '$source', count: { $sum: 1 } } },
             { $sort: { count: -1 } },
             { $limit: 5 },
         ]),
         Mention.aggregate([
-            { $match: match },
+            ...basePipeline,
             { $group: { _id: '$author', count: { $sum: 1 } } },
             { $sort: { count: -1 } },
             { $limit: 5 },
         ]),
     ]);
 
-    return { volume, sentimentShare, topSources, topAuthors };
+    const totalMentions = volume.reduce((sum, row) => sum + (row.count || 0), 0);
+    return { totalMentions, volume, sentimentShare, topSources, topAuthors };
 };

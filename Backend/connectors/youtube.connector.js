@@ -45,7 +45,9 @@ const youtubeConnector = {
     },
     async run({ project }) {
         const apiKey = process.env.YOUTUBE_API_KEY;
-        if (!apiKey) throw new Error('Missing YOUTUBE_API_KEY');
+        if (!apiKey) {
+            return [];
+        }
 
         const query = project.keywords.join(' ') || project.booleanQuery || project.name;
         const searchData = await fetchJson(buildSearchUrl(query, apiKey));

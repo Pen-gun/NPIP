@@ -25,7 +25,9 @@ const xConnector = {
     },
     async run({ project }) {
         const bearerToken = process.env.TWITTER_BEARER_TOKEN;
-        if (!bearerToken) throw new Error('Missing TWITTER_BEARER_TOKEN');
+        if (!bearerToken) {
+            return [];
+        }
 
         const client = new TwitterApi(bearerToken);
         const query = project.keywords.join(' ') || project.booleanQuery || project.name;

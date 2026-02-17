@@ -171,6 +171,10 @@ pyvenv.cfg
 .venv
 pip-selfcheck.json
 
+# keep backend executable scripts tracked
+!Backend/scripts/
+!Backend/scripts/*.js
+
 # End of https://www.toptal.com/developers/gitignore/api/node,react,dotenv,venv
 
 #optimization

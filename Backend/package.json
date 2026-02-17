@@ -6,7 +6,10 @@
   "type": "module",
   "scripts": {
     "dev": "nodemon -r dotenv/config server.js",
-    "test": "node -e \"console.log('No tests configured')\""
+    "test": "node -e \"console.log('No tests configured')\"",
+    "seed:cms-pages": "node scripts/seedDefaultCmsPages.js",
+    "seed:cms-pages:dry": "node scripts/seedDefaultCmsPages.js --dry-run",
+    "seed:cms-pages:replace": "node scripts/seedDefaultCmsPages.js --replace"
   },
   "author": "",
   "license": "ISC",

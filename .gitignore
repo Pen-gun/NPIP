@@ -4,6 +4,8 @@
 ### dotenv ###
 .env
 ai.env
+my.env
+ambika.env
 
 ### Node ###
 # Logs

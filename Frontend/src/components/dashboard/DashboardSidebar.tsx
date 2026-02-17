@@ -1,8 +1,8 @@
-import type { PaginationInfo } from '../../api/mentions'
 import type { Project } from '../../types/app'
+import { Link } from 'react-router-dom'
 import ProjectList from './ProjectList'
 
-type DashboardView = 'mentions' | 'analysis'
+type DashboardMode = 'overview' | 'mentions' | 'analytics' | 'reports' | 'sources'
 
 interface DashboardSidebarProps {
   projects: Project[]
@@ -11,8 +11,8 @@ interface DashboardSidebarProps {
   loadingProjects: boolean
   actionLoading?: string | null
   socketConnected: boolean
-  pagination: PaginationInfo | null
-  currentView: DashboardView
+  mode: DashboardMode
+  mentionsTotal?: number
   className?: string
   onSelectProject: (projectId: string) => void
   onRunIngestion: () => void
@@ -20,12 +20,14 @@ interface DashboardSidebarProps {
   onToggleStatus: () => void
   onDeleteProject: (projectId: string) => void
   onCreateProject: () => void
-  onViewChange: (view: DashboardView) => void
 }
 
-const VIEW_OPTIONS: Array<{ label: string; value: DashboardView }> = [
-  { label: 'News (Mentions)', value: 'mentions' },
-  { label: 'Analysis', value: 'analysis' },
+const NAV_ITEMS: Array<{ to: string; label: string; mode: DashboardMode }> = [
+  { to: '/app', label: 'Overview', mode: 'overview' },
+  { to: '/app/mentions', label: 'Mentions', mode: 'mentions' },
+  { to: '/app/analytics', label: 'Analytics', mode: 'analytics' },
+  { to: '/app/reports', label: 'Reports', mode: 'reports' },
+  { to: '/app/sources', label: 'Sources', mode: 'sources' },
 ]
 
 export default function DashboardSidebar({
@@ -35,8 +37,8 @@ export default function DashboardSidebar({
   loadingProjects,
   actionLoading,
   socketConnected,
-  pagination,
-  currentView,
+  mode,
+  mentionsTotal,
   className,
   onSelectProject,
   onRunIngestion,
@@ -44,7 +46,6 @@ export default function DashboardSidebar({
   onToggleStatus,
   onDeleteProject,
   onCreateProject,
-  onViewChange,
 }: DashboardSidebarProps) {
   return (
     <aside
@@ -60,25 +61,25 @@ export default function DashboardSidebar({
       </button>
 
       <div className='order-2 hidden rounded-2xl border border-(--border) bg-(--surface-base) p-4 text-xs shadow-sm lg:order-4 lg:block'>
-        <div className='flex items-center justify-between'>
-          <p className='text-[11px] font-semibold uppercase tracking-[0.2em] text-(--text-muted)'>View</p>
-          {pagination && currentView === 'mentions' && (
-            <span className='rounded-full border border-(--border) px-2 py-0.5 text-[10px] text-(--text-muted)'>
-              {pagination.totalCount.toLocaleString()}
-            </span>
-          )}
-        </div>
-        <select
-          value={currentView}
-          onChange={(event) => onViewChange(event.target.value as DashboardView)}
-          className='mt-3 w-full rounded-xl border border-(--border) bg-(--surface-muted) px-3 py-2 text-xs font-semibold text-(--text-primary)'
-        >
-          {VIEW_OPTIONS.map((item) => (
-            <option key={item.value} value={item.value}>
-              {item.label}
-            </option>
+        <p className='text-[11px] font-semibold uppercase tracking-[0.2em] text-(--text-muted)'>Navigate</p>
+        <div className='mt-3 grid gap-2'>
+          {NAV_ITEMS.map((item) => (
+            <Link
+              key={item.to}
+              to={item.to}
+              className={`rounded-lg border px-3 py-2 text-xs font-semibold transition-colors ${
+                mode === item.mode
+                  ? 'border-(--brand-accent) text-(--brand-accent)'
+                  : 'border-(--border) text-(--text-muted) hover:text-(--text-primary)'
+              }`}
+            >
+              <span>{item.label}</span>
+              {item.mode === 'mentions' && mentionsTotal !== undefined && (
+                <span className='ml-2 text-[10px] text-(--text-muted)'>({mentionsTotal.toLocaleString()})</span>
+              )}
+            </Link>
           ))}
-        </select>
+        </div>
       </div>
 
       <div className='hidden lg:block'>

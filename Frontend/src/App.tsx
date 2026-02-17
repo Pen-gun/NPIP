@@ -31,7 +31,39 @@ export default function App() {
             path='/app'
             element={
               <ProtectedRoute>
-                <DashboardPage />
+                <DashboardPage mode='overview' />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path='/app/mentions'
+            element={
+              <ProtectedRoute>
+                <DashboardPage mode='mentions' />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path='/app/analytics'
+            element={
+              <ProtectedRoute>
+                <DashboardPage mode='analytics' />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path='/app/reports'
+            element={
+              <ProtectedRoute>
+                <DashboardPage mode='reports' />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path='/app/sources'
+            element={
+              <ProtectedRoute>
+                <DashboardPage mode='sources' />
               </ProtectedRoute>
             }
           />

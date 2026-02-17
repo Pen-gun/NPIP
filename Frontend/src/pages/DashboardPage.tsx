@@ -26,18 +26,24 @@ import DashboardQuickNavGrid from '../components/dashboard/DashboardQuickNavGrid
 import ProjectDetailsPanel from '../components/dashboard/ProjectDetailsPanel'
 import ProjectModal from '../components/dashboard/ProjectModal'
 import ProjectList from '../components/dashboard/ProjectList'
+import DashboardFigureSourceProbe from '../components/dashboard/DashboardFigureSourceProbe'
 import DashboardOnboardingGuide from '../components/dashboard/DashboardOnboardingGuide'
 import { INITIAL_PROJECT_FORM, SOURCE_LABELS, parseKeywords } from '../components/dashboard/dashboardUtils'
 import { useDashboardFilters } from '../hooks/useDashboardFilters'
 import { useDashboardSocket } from '../hooks/useDashboardSocket'
 import type { ProjectFormState } from '../components/dashboard/ProjectForm'
+import { useNavigate } from 'react-router-dom'
 
-type DashboardView = 'mentions' | 'analysis'
+type DashboardMode = 'overview' | 'mentions' | 'analytics' | 'reports' | 'sources'
+interface DashboardPageProps {
+  mode?: DashboardMode
+}
 
 const ALERTS_LIMIT = 100
 
-export default function DashboardPage() {
+export default function DashboardPage({ mode = 'overview' }: DashboardPageProps) {
   const { user } = useAuth()
+  const navigate = useNavigate()
   const [projects, setProjects] = useState<Project[]>([])
   const [activeProjectId, setActiveProjectId] = useState<string>('')
   const [metrics, setMetrics] = useState<ProjectMetrics | null>(null)
@@ -56,7 +62,6 @@ export default function DashboardPage() {
   })
   const [showProjectModal, setShowProjectModal] = useState(false)
   const [pagination, setPagination] = useState<PaginationInfo | null>(null)
-  const [currentView, setCurrentView] = useState<DashboardView>('mentions')
   const [refreshTick, setRefreshTick] = useState(0)
 
   const {
@@ -326,28 +331,22 @@ export default function DashboardPage() {
       id: 'mentions',
       title: 'Mentions',
       description: 'Browse all public mentions and activity.',
-      onClick: () => setCurrentView('mentions'),
+      onClick: () => navigate('/app/mentions'),
       badge: pagination ? `${pagination.totalCount.toLocaleString()} total` : undefined,
     },
     {
       id: 'analysis',
       title: 'Analysis',
       description: 'Switch to analytics and sentiment insights.',
-      onClick: () => setCurrentView('analysis'),
+      onClick: () => navigate('/app/analytics'),
     },
     {
       id: 'reports',
-      title: 'Email reports',
-      description: 'Schedule and download PDF/Excel reports.',
-      onClick: () => handleDownloadReport('summary', 'pdf'),
-      badge: 'PDF/Excel',
+      title: 'Reports',
+      description: 'Open reports workspace and export options.',
+      onClick: () => navigate('/app/reports'),
     },
-    {
-      id: 'influencers',
-      title: 'Influencers & Sources',
-      description: 'Top voices and sources tracking.',
-      disabled: true,
-    },
+    { id: 'sources', title: 'Sources', description: 'Open source availability and coverage.', onClick: () => navigate('/app/sources') },
   ]
 
   return (
@@ -370,19 +369,21 @@ export default function DashboardPage() {
           Real-time updates disconnected. Reconnecting...
         </div>
       )}
-      <DashboardTopBar
-        mentionSearch={mentionSearch}
-        onMentionSearchChange={setMentionSearch}
-        appliedFilters={appliedFilters}
-        mentionsBySource={mentionsBySource}
-        sourceFilters={sourceFilters}
-        sourceLabels={SOURCE_LABELS}
-        onSourceFilterToggle={handleSourceFilterToggle}
-        sentimentFilters={sentimentFilters}
-        onSentimentToggle={handleSentimentToggle}
-        onClearFilters={handleClearFilters}
-        onSaveFilters={handleSaveFilters}
-      />
+      {(mode === 'overview' || mode === 'mentions' || mode === 'analytics') && (
+        <DashboardTopBar
+          mentionSearch={mentionSearch}
+          onMentionSearchChange={setMentionSearch}
+          appliedFilters={appliedFilters}
+          mentionsBySource={mentionsBySource}
+          sourceFilters={sourceFilters}
+          sourceLabels={SOURCE_LABELS}
+          onSourceFilterToggle={handleSourceFilterToggle}
+          sentimentFilters={sentimentFilters}
+          onSentimentToggle={handleSentimentToggle}
+          onClearFilters={handleClearFilters}
+          onSaveFilters={handleSaveFilters}
+        />
+      )}
       <div className='mx-auto w-full max-w-[1500px] px-4 pb-2 sm:px-6 lg:hidden'>
         <div className='space-y-4'>
           <ProjectList
@@ -407,26 +408,26 @@ export default function DashboardPage() {
             Create new project
           </button>
 
-          <div className='rounded-2xl border border-(--border) bg-(--surface-base) p-4 text-xs shadow-sm'>
-            <div className='flex items-center justify-between'>
-              <p className='text-[11px] font-semibold uppercase tracking-[0.2em] text-(--text-muted)'>View</p>
-              {pagination && currentView === 'mentions' && (
-                <span className='rounded-full border border-(--border) px-2 py-0.5 text-[10px] text-(--text-muted)'>
-                  {pagination.totalCount.toLocaleString()}
-                </span>
-              )}
-            </div>
-            <select
-              value={currentView}
-              onChange={(event) => setCurrentView(event.target.value as DashboardView)}
-              className='mt-3 w-full rounded-xl border border-(--border) bg-(--surface-muted) px-3 py-2 text-xs font-semibold text-(--text-primary)'
-            >
-              {(['mentions', 'analysis'] as const).map((item) => (
-                <option key={item} value={item}>
-                  {item === 'mentions' ? 'News (Mentions)' : 'Analysis'}
-                </option>
-              ))}
-            </select>
+          <div className='grid grid-cols-2 gap-2 rounded-2xl border border-(--border) bg-(--surface-base) p-4 text-xs shadow-sm'>
+            {[
+              { label: 'Overview', path: '/app', key: 'overview' as DashboardMode },
+              { label: 'Mentions', path: '/app/mentions', key: 'mentions' as DashboardMode },
+              { label: 'Analytics', path: '/app/analytics', key: 'analytics' as DashboardMode },
+              { label: 'Reports', path: '/app/reports', key: 'reports' as DashboardMode },
+            ].map((item) => (
+              <button
+                key={item.path}
+                type='button'
+                onClick={() => navigate(item.path)}
+                className={`rounded-lg border px-3 py-2 text-xs font-semibold ${
+                  mode === item.key
+                    ? 'border-(--brand-accent) text-(--brand-accent)'
+                    : 'border-(--border) text-(--text-muted)'
+                }`}
+              >
+                {item.label}
+              </button>
+            ))}
           </div>
         </div>
       </div>
@@ -439,57 +440,62 @@ export default function DashboardPage() {
             loadingProjects={loadingProjects}
             actionLoading={actionLoading}
             socketConnected={socketConnected}
-            pagination={pagination}
-            currentView={currentView}
+            mode={mode}
+            mentionsTotal={pagination?.totalCount}
             onSelectProject={setActiveProjectId}
             onRunIngestion={handleRunIngestion}
             onDownloadReport={handleDownloadReport}
             onToggleStatus={handleToggleProjectStatus}
             onDeleteProject={handleDeleteProject}
             onCreateProject={() => setShowProjectModal(true)}
-            onViewChange={setCurrentView}
             className='order-2 lg:order-1'
           />
 
           <main className='order-1 min-w-0 bg-(--surface-background) px-0 py-0 sm:px-4 sm:py-4 lg:order-2 lg:px-8 lg:py-6'>
-            <div className='grid min-w-0 gap-6 xl:grid-cols-[minmax(0,1fr)_320px]'>
+            <div className={`grid min-w-0 gap-6 ${mode === 'overview' || mode === 'mentions' || mode === 'analytics' ? 'xl:grid-cols-[minmax(0,1fr)_320px]' : ''}`}>
               <div className='min-w-0 space-y-6'>
-                <DashboardQuickNavGrid tiles={quickNavTiles} />
+                {(mode === 'overview' || mode === 'mentions' || mode === 'analytics') && (
+                  <DashboardQuickNavGrid tiles={quickNavTiles} />
+                )}
 
-                <ProjectDetailsPanel
-                  activeProject={activeProject}
-                  actionLoading={actionLoading}
-                  socketConnected={socketConnected}
-                  onRunIngestion={handleRunIngestion}
-                  onDownloadReport={(scope) => handleDownloadReport(scope, 'pdf')}
-                  onToggleStatus={handleToggleProjectStatus}
-                  onDeleteProject={handleDeleteProject}
-                />
+                {(mode === 'overview' || mode === 'mentions' || mode === 'analytics' || mode === 'reports') && (
+                  <ProjectDetailsPanel
+                    activeProject={activeProject}
+                    actionLoading={actionLoading}
+                    socketConnected={socketConnected}
+                    onRunIngestion={handleRunIngestion}
+                    onDownloadReport={(scope) => handleDownloadReport(scope, 'pdf')}
+                    onToggleStatus={handleToggleProjectStatus}
+                    onDeleteProject={handleDeleteProject}
+                  />
+                )}
 
-                <section className='rounded-2xl border border-(--border) bg-(--surface-base) p-4 shadow-sm sm:p-6'>
-                  <div className='flex flex-wrap items-center justify-between gap-4 text-xs font-semibold text-(--text-muted)'>
-                    <span>Volume analysis</span>
-                    <div className='flex items-center gap-2'>
-                      {(['days', 'weeks', 'months'] as const).map((item) => (
-                        <button
-                          key={item}
-                          type='button'
-                          onClick={() => setChartGranularity(item)}
-                          className={`rounded-full border px-3 py-1 ${
-                            chartGranularity === item
-                              ? 'border-(--brand-accent) text-(--brand-accent)'
-                              : 'border-(--border) text-(--text-muted)'
-                          }`}
-                        >
-                          {item.charAt(0).toUpperCase() + item.slice(1)}
-                        </button>
-                      ))}
+                {(mode === 'overview' || mode === 'analytics') && (
+                  <section className='rounded-2xl border border-(--border) bg-(--surface-base) p-4 shadow-sm sm:p-6'>
+                    <div className='flex flex-wrap items-center justify-between gap-4 text-xs font-semibold text-(--text-muted)'>
+                      <span>Volume analysis</span>
+                      <div className='flex items-center gap-2'>
+                        {(['days', 'weeks', 'months'] as const).map((item) => (
+                          <button
+                            key={item}
+                            type='button'
+                            onClick={() => setChartGranularity(item)}
+                            className={`rounded-full border px-3 py-1 ${
+                              chartGranularity === item
+                                ? 'border-(--brand-accent) text-(--brand-accent)'
+                                : 'border-(--border) text-(--text-muted)'
+                            }`}
+                          >
+                            {item.charAt(0).toUpperCase() + item.slice(1)}
+                          </button>
+                        ))}
+                      </div>
                     </div>
-                  </div>
-                  <MetricsCharts metrics={metrics} loading={loadingDashboard} granularity={chartGranularity} />
-                </section>
+                    <MetricsCharts metrics={metrics} loading={loadingDashboard} granularity={chartGranularity} />
+                  </section>
+                )}
 
-                {currentView === 'mentions' && (
+                {mode === 'mentions' && (
                   <MentionsList
                     mentions={filteredMentions}
                     loading={loadingDashboard}
@@ -504,31 +510,62 @@ export default function DashboardPage() {
                   />
                 )}
 
-                {currentView === 'analysis' && (
+                {mode === 'analytics' && (
                   <AnalysisView
                     mentions={mentions}
                     loading={loadingDashboard}
                   />
                 )}
+
+                {mode === 'reports' && (
+                  <section className='rounded-2xl border border-(--border) bg-(--surface-base) p-4 shadow-sm sm:p-6'>
+                    <h3 className='text-base font-semibold sm:text-lg'>Reports</h3>
+                    <p className='mt-2 text-sm text-(--text-muted)'>
+                      Download report exports for the active project.
+                    </p>
+                    <div className='mt-4 grid gap-3 sm:grid-cols-2'>
+                      {([
+                        { scope: 'summary', label: 'Summary Report' },
+                        { scope: 'all', label: 'Full Report' },
+                        { scope: 'mentions', label: 'Mentions Export' },
+                        { scope: 'last_run', label: 'Last Run Report' },
+                      ] as const).map((item) => (
+                        <button
+                          key={item.scope}
+                          type='button'
+                          onClick={() => handleDownloadReport(item.scope, 'pdf')}
+                          disabled={actionLoading === 'report' || !activeProjectId}
+                          className='rounded-xl border border-(--border) bg-(--surface-muted) px-4 py-3 text-left text-sm font-semibold text-(--text-primary) hover:border-(--brand-accent) disabled:opacity-60'
+                        >
+                          {item.label}
+                        </button>
+                      ))}
+                    </div>
+                  </section>
+                )}
+
+                {mode === 'sources' && <DashboardFigureSourceProbe activeProject={activeProject} />}
               </div>
 
-              <div className='min-w-0 space-y-6'>
-                <DashboardRightPanel
-                  dateRange={dateRange}
-                  onDateRangeChange={handleDateRangeChange}
-                  mentionsCount={pagination?.totalCount ?? mentions.length}
-                  mentionsBySource={mentionsBySource}
-                  sourceFilters={sourceFilters}
-                  sourceLabels={SOURCE_LABELS}
-                  onSourceFilterToggle={handleSourceFilterToggle}
-                  sentimentFilters={sentimentFilters}
-                  onSentimentToggle={handleSentimentToggle}
-                  alerts={filteredAlerts}
-                  health={health}
-                  loading={loadingPanels}
-                  onMarkAlertRead={handleMarkAlertRead}
-                />
-              </div>
+              {(mode === 'overview' || mode === 'mentions' || mode === 'analytics') && (
+                <div className='min-w-0 space-y-6'>
+                  <DashboardRightPanel
+                    dateRange={dateRange}
+                    onDateRangeChange={handleDateRangeChange}
+                    mentionsCount={pagination?.totalCount ?? mentions.length}
+                    mentionsBySource={mentionsBySource}
+                    sourceFilters={sourceFilters}
+                    sourceLabels={SOURCE_LABELS}
+                    onSourceFilterToggle={handleSourceFilterToggle}
+                    sentimentFilters={sentimentFilters}
+                    onSentimentToggle={handleSentimentToggle}
+                    alerts={filteredAlerts}
+                    health={health}
+                    loading={loadingPanels}
+                    onMarkAlertRead={handleMarkAlertRead}
+                  />
+                </div>
+              )}
             </div>
           </main>
         </div>

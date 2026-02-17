@@ -19,7 +19,7 @@ export default function Layout({ children }: LayoutProps) {
   const { user, isAuthenticated, isLoading, logout } = useAuth()
 
   const isLandingPage = location.pathname === '/'
-  const isDashboard = location.pathname === '/app'
+  const isDashboard = location.pathname.startsWith('/app')
   const isLoginPage = location.pathname === '/login'
   const isAdminPage = location.pathname.startsWith('/admin')
   const shouldFetchPublic = !(isLoginPage || isAdminPage)

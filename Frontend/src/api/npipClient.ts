@@ -23,7 +23,18 @@ const npipClient = axios.create({
 
 npipClient.interceptors.response.use(
   (response) => response,
-  (error) => Promise.reject(new Error(extractErrorMessage(error))),
+  (error: unknown) => {
+    if (isAxiosError(error)) {
+      error.message = extractErrorMessage(error)
+      return Promise.reject(error)
+    }
+
+    if (error instanceof Error) {
+      return Promise.reject(error)
+    }
+
+    return Promise.reject(new Error(DEFAULT_ERROR_MESSAGE))
+  },
 )
 
 export default npipClient

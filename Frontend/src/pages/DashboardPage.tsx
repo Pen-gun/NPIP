@@ -87,7 +87,12 @@ export default function DashboardPage({ mode = 'overview' }: DashboardPageProps)
   } = useDashboardFilters({ activeProjectId, mentions })
 
   const handleSocketAlert = useCallback((alert: AlertItem) => {
-    setAlerts((prev) => [alert, ...prev].slice(0, ALERTS_LIMIT))
+    setAlerts((prev) => {
+      if (prev.some((item) => item._id === alert._id)) {
+        return prev
+      }
+      return [alert, ...prev].slice(0, ALERTS_LIMIT)
+    })
   }, [])
 
   const { socketConnected } = useDashboardSocket({

@@ -20,13 +20,39 @@ const formatDate = (value) => {
     return date.toLocaleString('en-US', FORMAT_DATE_OPTIONS);
 };
 
-const escapeCSV = (value) => {
+const sanitizeSpreadsheetCell = (value) => {
     if (value == null) return '';
     const str = String(value);
+    const firstChar = str.trimStart().charAt(0);
+    if (['=', '+', '-', '@'].includes(firstChar) || firstChar === '\t' || firstChar === '\r') {
+        return `'${str}`;
+    }
+    return str;
+};
+
+const escapeCSV = (value) => {
+    if (value == null) return '';
+    const str = sanitizeSpreadsheetCell(value);
     if (str.includes(',') || str.includes('"') || str.includes('\n') || str.includes('\r')) {
         return `"${str.replace(/"/g, '""')}"`;
     }
     return str;
+};
+
+const escapeHtml = (value) =>
+    String(value ?? '')
+        .replaceAll('&', '&amp;')
+        .replaceAll('<', '&lt;')
+        .replaceAll('>', '&gt;')
+        .replaceAll('"', '&quot;')
+        .replaceAll("'", '&#39;');
+
+const sanitizeFilenamePart = (value, fallback = 'report') => {
+    const cleaned = String(value ?? '')
+        .trim()
+        .replace(/[^a-zA-Z0-9._-]+/g, '_')
+        .replace(/^_+|_+$/g, '');
+    return cleaned || fallback;
 };
 
 const buildMentionsQuery = (projectId, scope, lastRunAt) => {
@@ -42,6 +68,7 @@ export const downloadReport = asyncHandler(async (req, res) => {
     if (!project) {
         throw new ApiError(404, 'Project not found');
     }
+    const safeProjectName = sanitizeFilenamePart(project.name, 'project');
 
     const allowedScopes = new Set(['summary', 'all', 'mentions', 'last_run']);
     const rawScope = String(req.query?.scope || 'summary');
@@ -60,7 +87,7 @@ export const downloadReport = asyncHandler(async (req, res) => {
     const doc = new PDFDocument();
 
     res.setHeader('Content-Type', 'application/pdf');
-    res.setHeader('Content-Disposition', `attachment; filename="${project.name}-report.pdf"`);
+    res.setHeader('Content-Disposition', `attachment; filename="${safeProjectName}-report.pdf"`);
     doc.pipe(res);
 
     doc.fontSize(18).text(`NPIP Report: ${project.name}`, { underline: true });
@@ -126,6 +153,7 @@ export const downloadCSV = asyncHandler(async (req, res) => {
     if (!project) {
         throw new ApiError(404, 'Project not found');
     }
+    const safeProjectName = sanitizeFilenamePart(project.name, 'project');
 
     const allowedScopes = new Set(['all', 'mentions', 'last_run']);
     const rawScope = String(req.query?.scope || 'all');
@@ -181,7 +209,7 @@ export const downloadCSV = asyncHandler(async (req, res) => {
     const csvContent = [headers.join(','), ...rows].join('\n');
 
     res.setHeader('Content-Type', 'text/csv; charset=utf-8');
-    res.setHeader('Content-Disposition', `attachment; filename="${project.name}-mentions.csv"`);
+    res.setHeader('Content-Disposition', `attachment; filename="${safeProjectName}-mentions.csv"`);
     res.send(csvContent);
 });
 
@@ -190,6 +218,7 @@ export const downloadExcel = asyncHandler(async (req, res) => {
     if (!project) {
         throw new ApiError(404, 'Project not found');
     }
+    const safeProjectName = sanitizeFilenamePart(project.name, 'project');
 
     const allowedScopes = new Set(['summary', 'all', 'mentions', 'last_run']);
     const rawScope = String(req.query?.scope || 'all');
@@ -211,12 +240,12 @@ export const downloadExcel = asyncHandler(async (req, res) => {
 <html>
 <head>
 <meta charset="UTF-8">
-<title>${project.name} Report</title>
+<title>${escapeHtml(project.name)} Report</title>
 </head>
 <body>
-<h1>NPIP Report: ${project.name}</h1>
-<p>Generated: ${formatDate(new Date())}</p>
-<p>Scope: ${scope}</p>
+<h1>NPIP Report: ${escapeHtml(project.name)}</h1>
+<p>Generated: ${escapeHtml(formatDate(new Date()))}</p>
+<p>Scope: ${escapeHtml(scope)}</p>
 `;
 
     if (includeMetrics && metrics) {
@@ -224,25 +253,25 @@ export const downloadExcel = asyncHandler(async (req, res) => {
 <h2>Volume Over Time</h2>
 <table border="1">
 <tr><th>Date</th><th>Count</th></tr>
-${metrics.volume.map(row => `<tr><td>${row._id.year}-${row._id.month}-${row._id.day}</td><td>${row.count}</td></tr>`).join('')}
+${metrics.volume.map(row => `<tr><td>${escapeHtml(`${row._id.year}-${row._id.month}-${row._id.day}`)}</td><td>${escapeHtml(row.count)}</td></tr>`).join('')}
 </table>
 
 <h2>Sentiment Share</h2>
 <table border="1">
 <tr><th>Sentiment</th><th>Count</th></tr>
-${metrics.sentimentShare.map(row => `<tr><td>${row._id || 'unknown'}</td><td>${row.count}</td></tr>`).join('')}
+${metrics.sentimentShare.map(row => `<tr><td>${escapeHtml(row._id || 'unknown')}</td><td>${escapeHtml(row.count)}</td></tr>`).join('')}
 </table>
 
 <h2>Top Sources</h2>
 <table border="1">
 <tr><th>Source</th><th>Count</th></tr>
-${metrics.topSources.map(row => `<tr><td>${row._id}</td><td>${row.count}</td></tr>`).join('')}
+${metrics.topSources.map(row => `<tr><td>${escapeHtml(row._id)}</td><td>${escapeHtml(row.count)}</td></tr>`).join('')}
 </table>
 
 <h2>Top Authors</h2>
 <table border="1">
 <tr><th>Author</th><th>Count</th></tr>
-${metrics.topAuthors.map(row => `<tr><td>${row._id || 'unknown'}</td><td>${row.count}</td></tr>`).join('')}
+${metrics.topAuthors.map(row => `<tr><td>${escapeHtml(row._id || 'unknown')}</td><td>${escapeHtml(row.count)}</td></tr>`).join('')}
 </table>
 `;
     }
@@ -261,13 +290,13 @@ ${metrics.topAuthors.map(row => `<tr><td>${row._id || 'unknown'}</td><td>${row.c
 <th>URL</th>
 </tr>
 ${mentions.map(m => `<tr>
-<td>${escapeCSV(m.title || 'Untitled')}</td>
-<td>${escapeCSV(m.source)}</td>
-<td>${escapeCSV(m.author)}</td>
-<td>${formatDate(m.publishedAt)}</td>
-<td>${escapeCSV(m.sentiment?.label)}</td>
-<td>${m.reachEstimate || 0}</td>
-<td>${escapeCSV(m.url)}</td>
+<td>${escapeHtml(m.title || 'Untitled')}</td>
+<td>${escapeHtml(m.source)}</td>
+<td>${escapeHtml(m.author)}</td>
+<td>${escapeHtml(formatDate(m.publishedAt))}</td>
+<td>${escapeHtml(m.sentiment?.label)}</td>
+<td>${escapeHtml(m.reachEstimate || 0)}</td>
+<td>${escapeHtml(m.url)}</td>
 </tr>`).join('')}
 </table>
 `;
@@ -277,6 +306,6 @@ ${mentions.map(m => `<tr>
 
     // Excel can open HTML files directly
     res.setHeader('Content-Type', 'application/vnd.ms-excel');
-    res.setHeader('Content-Disposition', `attachment; filename="${project.name}-report.xls"`);
+    res.setHeader('Content-Disposition', `attachment; filename="${safeProjectName}-report.xls"`);
     res.send(html);
 });

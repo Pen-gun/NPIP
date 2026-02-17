@@ -1,6 +1,6 @@
 import { Alert } from '../model/alert.model.js';
 import { Mention } from '../model/mention.model.js';
-import { emitToUser, emitToProject } from './socket.service.js';
+import { getSocket } from './socket.service.js';
 import { sendEmail, sendAlertEmail } from './email.service.js';
 import { User } from '../model/user.model.js';
 
@@ -39,8 +39,24 @@ const DEFAULT_THRESHOLDS = {
  * Emit alert via websocket to user and project rooms
  */
 const notifyRealtime = (alert) => {
-    emitToUser(alert.userId, 'alert', alert);
-    emitToProject(alert.projectId, 'alert', alert);
+    const io = getSocket();
+    if (!io) return;
+
+    const userRoom = alert.userId ? `user:${alert.userId}` : '';
+    const projectRoom = alert.projectId ? `project:${alert.projectId}` : '';
+
+    if (userRoom && projectRoom) {
+        // Emit once to the union of rooms to avoid duplicate deliveries.
+        io.to(userRoom).to(projectRoom).emit('alert', alert);
+        return;
+    }
+    if (userRoom) {
+        io.to(userRoom).emit('alert', alert);
+        return;
+    }
+    if (projectRoom) {
+        io.to(projectRoom).emit('alert', alert);
+    }
 };
 
 /**

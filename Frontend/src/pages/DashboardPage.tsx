@@ -204,9 +204,9 @@ export default function DashboardPage({ mode = 'overview' }: DashboardPageProps)
     [projects, activeProjectId],
   )
 
-  const handleProjectSubmit = async (event: FormEvent<HTMLFormElement>) => {
+  const handleProjectSubmit = async (event: FormEvent<HTMLFormElement>): Promise<boolean> => {
     event.preventDefault()
-    if (!user || actionLoading) return
+    if (!user || actionLoading) return false
     setActionLoading('create')
     setError(null)
     try {
@@ -227,8 +227,10 @@ export default function DashboardPage({ mode = 'overview' }: DashboardPageProps)
         keywords: '',
         booleanQuery: '',
       }))
+      return true
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to create project')
+      return false
     } finally {
       setActionLoading(null)
     }
@@ -555,8 +557,11 @@ export default function DashboardPage({ mode = 'overview' }: DashboardPageProps)
         onClose={() => setShowProjectModal(false)}
         onFormChange={setProjectForm}
         onSubmit={(event) => {
-          handleProjectSubmit(event)
-          setShowProjectModal(false)
+          void handleProjectSubmit(event).then((wasCreated) => {
+            if (wasCreated) {
+              setShowProjectModal(false)
+            }
+          })
         }}
       />
       <DashboardOnboardingGuide userId={user?._id} />

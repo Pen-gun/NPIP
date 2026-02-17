@@ -116,7 +116,7 @@ export const useFigureNews = (
 ): UseQueryResult<FigureNewsResponse, Error> => {
   // Memoize aliases string to prevent unnecessary query key changes
   const aliasesKey = useMemo(
-    () => params.aliases?.sort().join(','),
+    () => params.aliases ? [...params.aliases].sort().join(',') : undefined,
     [params.aliases],
   )
 

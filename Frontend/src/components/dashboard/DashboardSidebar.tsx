@@ -1,6 +1,5 @@
 import type { PaginationInfo } from '../../api/mentions'
 import type { Project } from '../../types/app'
-import BrandLogo from '../BrandLogo'
 import ProjectList from './ProjectList'
 
 type DashboardView = 'mentions' | 'analysis'
@@ -53,10 +52,6 @@ export default function DashboardSidebar({
         className ?? ''
       }`}
     >
-      <div className='order-4 hidden pb-2 lg:order-1 lg:block'>
-        <BrandLogo />
-      </div>
-
       <button
         onClick={onCreateProject}
         className='order-1 hidden w-full items-center justify-center gap-2 rounded-xl border border-dashed border-(--sidebar-divider) py-3 text-xs font-semibold uppercase tracking-[0.2em] text-(--sidebar-muted) transition-colors hover:border-(--sidebar-active) hover:text-(--sidebar-active) lg:order-3 lg:flex'

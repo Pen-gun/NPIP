@@ -1,6 +1,10 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useFigureIdentity, useFigureNews, useFigureVideos } from '../../hooks/useFigureSearch'
 import type { Project } from '../../types/app'
+import ProfileCard from '../ProfileCard'
+import NewsCard from '../NewsCard'
+import VideosCard from '../VideosCard'
+import type { FigureIdentityResponse, FigureNewsResponse, FigureVideosResponse } from '../../types/figure'
 
 interface DashboardFigureSourceProbeProps {
   activeProject: Project | null
@@ -31,6 +35,49 @@ const STATUS_STYLES: Record<SourceStatus, string> = {
   ok: 'bg-emerald-100 text-emerald-700',
   no_data: 'bg-amber-100 text-amber-700',
   unavailable: 'bg-rose-100 text-rose-700',
+}
+
+const DATE_FORMAT_OPTIONS: Intl.DateTimeFormatOptions = Object.freeze({
+  month: 'short',
+  day: 'numeric',
+  year: 'numeric',
+})
+
+const formatDate = (value?: string): string => {
+  if (!value) return 'Unknown'
+  const date = new Date(value)
+  if (Number.isNaN(date.getTime())) return 'Unknown'
+  return date.toLocaleDateString('en-US', DATE_FORMAT_OPTIONS)
+}
+
+const EMPTY_NEWS_DATA: FigureNewsResponse = {
+  query: '',
+  name: '',
+  recentActivities: [],
+  recentLocations: [],
+  news: [],
+  events: [],
+  insights: { topics: [], quotes: [], locations: [] },
+  metadata: {
+    newsProvider: '',
+    warning: null,
+    sources: {
+      gnews: { ok: false, warning: null },
+      rss: { ok: false, warning: null },
+    },
+  },
+}
+
+const EMPTY_VIDEOS_DATA: FigureVideosResponse = {
+  name: '',
+  videos: [],
+  insights: { topics: [], quotes: [], locations: [] },
+  metadata: {
+    warning: null,
+    sources: {
+      youtube: { ok: false, warning: null },
+    },
+  },
 }
 
 export default function DashboardFigureSourceProbe({ activeProject }: DashboardFigureSourceProbeProps) {
@@ -90,6 +137,25 @@ export default function DashboardFigureSourceProbe({ activeProject }: DashboardF
   )
 
   const youtubeItems = useMemo(() => (videosData?.videos || []).slice(0, 8), [videosData?.videos])
+  const identityPayload: FigureIdentityResponse = useMemo(
+    () => identityData ?? { query: searchedQuery, person: null, candidates: [], isDisambiguation: false },
+    [identityData, searchedQuery],
+  )
+  const videosPayload: FigureVideosResponse = useMemo(
+    () => videosData ?? { ...EMPTY_VIDEOS_DATA, name: personName || searchedQuery },
+    [videosData, personName, searchedQuery],
+  )
+  const localNewsData: FigureNewsResponse = useMemo(() => {
+    const base = newsData ?? { ...EMPTY_NEWS_DATA, name: personName || searchedQuery, query: searchedQuery }
+    const filteredEvents = (base.events || []).filter((event) =>
+      (event.sources || []).some((source) => RSS_SOURCE_NAMES.has(source)),
+    )
+    return {
+      ...base,
+      news: localNewsItems,
+      events: filteredEvents,
+    }
+  }, [newsData, personName, searchedQuery, localNewsItems])
 
   const rows = useMemo<SourceRow[]>(() => {
     const localNewsCount = localNewsItems.length
@@ -260,65 +326,20 @@ export default function DashboardFigureSourceProbe({ activeProject }: DashboardF
           {loading && <p className='mt-2 text-xs text-(--text-muted)'>Loading results...</p>}
 
           {!loading && selectedResultSource === 'wiki' && (
-            <div className='mt-2 text-sm'>
-              {identityData?.person ? (
-                <div className='space-y-2'>
-                  <p className='font-semibold text-(--text-primary)'>{identityData.person.name}</p>
-                  {identityData.person.description && (
-                    <p className='text-(--text-muted)'>{identityData.person.description}</p>
-                  )}
-                  {identityData.person.wikipediaUrl && (
-                    <a
-                      href={identityData.person.wikipediaUrl}
-                      target='_blank'
-                      rel='noreferrer'
-                      className='text-(--brand-accent) hover:underline'
-                    >
-                      Open Wikipedia profile
-                    </a>
-                  )}
-                </div>
-              ) : (
-                <p className='text-(--text-muted)'>No wiki profile found for this query.</p>
-              )}
+            <div className='mt-2'>
+              <ProfileCard data={identityPayload} title={identityPayload.person?.name || searchedQuery} />
             </div>
           )}
 
           {!loading && selectedResultSource === 'local_news' && (
-            <div className='mt-2 space-y-2 text-sm'>
-              {localNewsItems.length === 0 && (
-                <p className='text-(--text-muted)'>No local news results found.</p>
-              )}
-              {localNewsItems.map((item) => (
-                <a
-                  key={item.url}
-                  href={item.url}
-                  target='_blank'
-                  rel='noreferrer'
-                  className='block rounded-lg border border-(--border) bg-(--surface-base) px-3 py-2 hover:border-(--brand-accent)'
-                >
-                  <p className='font-semibold text-(--text-primary)'>{item.title}</p>
-                  <p className='text-xs text-(--text-muted)'>{item.source}</p>
-                </a>
-              ))}
+            <div className='mt-2'>
+              <NewsCard data={localNewsData} formatDate={formatDate} isLoading={loading} />
             </div>
           )}
 
           {!loading && selectedResultSource === 'youtube' && (
-            <div className='mt-2 space-y-2 text-sm'>
-              {youtubeItems.length === 0 && <p className='text-(--text-muted)'>No YouTube results found.</p>}
-              {youtubeItems.map((item) => (
-                <a
-                  key={item.id || item.url}
-                  href={item.url}
-                  target='_blank'
-                  rel='noreferrer'
-                  className='block rounded-lg border border-(--border) bg-(--surface-base) px-3 py-2 hover:border-(--brand-accent)'
-                >
-                  <p className='font-semibold text-(--text-primary)'>{item.title}</p>
-                  <p className='text-xs text-(--text-muted)'>{item.channelTitle}</p>
-                </a>
-              ))}
+            <div className='mt-2'>
+              <VideosCard data={videosPayload} formatDate={formatDate} isLoading={loading} />
             </div>
           )}
 

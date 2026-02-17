@@ -22,7 +22,6 @@ import AnalysisView from '../components/dashboard/AnalysisView'
 import DashboardTopBar from '../components/dashboard/DashboardTopBar'
 import DashboardSidebar from '../components/dashboard/DashboardSidebar'
 import DashboardRightPanel from '../components/dashboard/DashboardRightPanel'
-import DashboardQuickNavGrid from '../components/dashboard/DashboardQuickNavGrid'
 import ProjectDetailsPanel from '../components/dashboard/ProjectDetailsPanel'
 import ProjectModal from '../components/dashboard/ProjectModal'
 import ProjectList from '../components/dashboard/ProjectList'
@@ -326,29 +325,6 @@ export default function DashboardPage({ mode = 'overview' }: DashboardPageProps)
     setCurrentPage((prev) => prev + 1)
   }
 
-  const quickNavTiles = [
-    {
-      id: 'mentions',
-      title: 'Mentions',
-      description: 'Browse all public mentions and activity.',
-      onClick: () => navigate('/app/mentions'),
-      badge: pagination ? `${pagination.totalCount.toLocaleString()} total` : undefined,
-    },
-    {
-      id: 'analysis',
-      title: 'Analysis',
-      description: 'Switch to analytics and sentiment insights.',
-      onClick: () => navigate('/app/analytics'),
-    },
-    {
-      id: 'reports',
-      title: 'Reports',
-      description: 'Open reports workspace and export options.',
-      onClick: () => navigate('/app/reports'),
-    },
-    { id: 'sources', title: 'Sources', description: 'Open source availability and coverage.', onClick: () => navigate('/app/sources') },
-  ]
-
   return (
     <div className='dashboard-shell min-h-screen bg-(--surface-background) text-(--text-primary)'>
       {error && (
@@ -454,10 +430,6 @@ export default function DashboardPage({ mode = 'overview' }: DashboardPageProps)
           <main className='order-1 min-w-0 bg-(--surface-background) px-0 py-0 sm:px-4 sm:py-4 lg:order-2 lg:px-8 lg:py-6'>
             <div className={`grid min-w-0 gap-6 ${mode === 'overview' || mode === 'mentions' || mode === 'analytics' ? 'xl:grid-cols-[minmax(0,1fr)_320px]' : ''}`}>
               <div className='min-w-0 space-y-6'>
-                {(mode === 'overview' || mode === 'mentions' || mode === 'analytics') && (
-                  <DashboardQuickNavGrid tiles={quickNavTiles} />
-                )}
-
                 {(mode === 'overview' || mode === 'mentions' || mode === 'analytics' || mode === 'reports') && (
                   <ProjectDetailsPanel
                     activeProject={activeProject}

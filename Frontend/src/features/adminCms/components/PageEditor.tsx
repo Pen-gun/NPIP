@@ -8,7 +8,6 @@ import type { ToastInput } from '../uiTypes'
 import { blockLabels, buildPageDefaults, createBlockDefaults, formatDateTime } from '../utils'
 import MediaModal from './MediaModal'
 import BlockCard from './blocks/BlockCard'
-import SeoPanel from './blocks/SeoPanel'
 import InputField from './fields/InputField'
 
 type PageEditorProps = {
@@ -270,8 +269,6 @@ export default function PageEditor({
               </div>
             </div>
 
-            <SeoPanel onPickMedia={handleMediaPickerOpen} />
-
             <div className='rounded-2xl border border-(--border) bg-(--surface-base) p-6 shadow-sm'>
               <h3 className='text-lg font-semibold'>API payload preview</h3>
               <p className='mt-1 text-xs text-(--text-muted)'>
@@ -287,7 +284,7 @@ export default function PageEditor({
                       <strong>blocks</strong> renders each block editor (hero, rich text, grid, etc).
                     </li>
                     <li>
-                      <strong>seo</strong> populates the SEO fields and preview snippet.
+                      <strong>seo</strong> is managed from the dedicated SEO tab.
                     </li>
                     <li>
                       <strong>status</strong> powers Draft/Published state and workflow buttons.

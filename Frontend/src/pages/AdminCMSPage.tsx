@@ -1,7 +1,7 @@
 ﻿
 import { useMemo, useState } from 'react'
 import type { CSSProperties } from 'react'
-import type { PageStatus } from '../features/adminCms/types'
+import type { PageStatus, SeoFields } from '../features/adminCms/types'
 import type { PageFormValues } from '../features/adminCms/schemas'
 import {
   useAdminMedia,
@@ -20,6 +20,7 @@ import SettingsPanel from '../features/adminCms/components/SettingsPanel'
 import ToastStack from '../features/adminCms/components/ToastStack'
 import PageListCard from '../features/adminCms/components/PageListCard'
 import PageEditor from '../features/adminCms/components/PageEditor'
+import SeoWorkspace from '../features/adminCms/components/SeoWorkspace'
 import { useToasts } from '../features/adminCms/useToasts'
 import type { AdminSection } from '../features/adminCms/uiTypes'
 import { Sparkles } from 'lucide-react'
@@ -32,6 +33,7 @@ export default function AdminCMSPage() {
   const { toasts, pushToast } = useToasts()
   const [searchTerm, setSearchTerm] = useState('')
   const [pageDirty, setPageDirty] = useState(false)
+  const [seoDirty, setSeoDirty] = useState(false)
   const { data: pages = [], isLoading: pagesLoading } = useAdminPages()
   const [activePageId, setActivePageId] = useState<string | null>(null)
   const resolvedActivePageId = activePageId ?? pages[0]?.id ?? null
@@ -70,6 +72,28 @@ export default function AdminCMSPage() {
         ...values.seo,
         slug: values.slug,
       },
+    }
+    const updated = await updatePageMutation.mutateAsync({ pageId, payload })
+    if (updated?.id) {
+      setActivePageId(updated.id)
+    }
+  }
+
+  const handleSeoUpdate = async (values: SeoFields, publish = false) => {
+    const pageId = resolvedActivePageId
+    if (!pageId || !activePage) return
+    const payload = {
+      title: activePage.title,
+      slug: activePage.slug,
+      status: publish ? 'published' : activePage.status,
+      seo: {
+        metaTitle: values.metaTitle.trim() || activePage.title,
+        metaDescription: values.metaDescription.trim(),
+        slug: activePage.slug,
+        canonical: values.canonical?.trim() || '',
+        ogImage: values.ogImage?.trim() || '',
+      },
+      blocks: Array.isArray(activePage.blocks) ? activePage.blocks : [],
     }
     const updated = await updatePageMutation.mutateAsync({ pageId, payload })
     if (updated?.id) {
@@ -210,7 +234,40 @@ export default function AdminCMSPage() {
             />
           )}
 
-          {activeSection !== 'pages' && activeSection !== 'media' && activeSection !== 'settings' && (
+          {activeSection === 'seo' && (
+            <div className='grid gap-6 lg:grid-cols-[280px_minmax(0,1fr)]'>
+              <PageListCard
+                pages={filteredPages}
+                activePageId={resolvedActivePageId}
+                loading={pagesLoading}
+                onSelectPage={(pageId) => {
+                  if (seoDirty && pageId !== resolvedActivePageId) {
+                    const confirmChange = window.confirm(
+                      'You have unsaved SEO changes. Switch pages and discard them?',
+                    )
+                    if (!confirmChange) return
+                  }
+                  setActivePageId(pageId)
+                }}
+              />
+              <SeoWorkspace
+                page={activePage ?? null}
+                pageSummary={activePageFromList}
+                loading={pageLoading}
+                saving={updatePageMutation.isPending}
+                onSave={(values) => handleSeoUpdate(values, false)}
+                onPublish={(values) => handleSeoUpdate(values, true)}
+                mediaLibrary={mediaLibrary}
+                mediaLoading={mediaLoading}
+                onUploadMedia={uploadMediaMutation.mutateAsync}
+                onDeleteMedia={deleteMediaMutation.mutateAsync}
+                pushToast={pushToast}
+                onDirtyChange={setSeoDirty}
+              />
+            </div>
+          )}
+
+          {activeSection !== 'pages' && activeSection !== 'media' && activeSection !== 'settings' && activeSection !== 'seo' && (
             <div className='rounded-2xl border border-(--border) bg-(--surface-base) p-6 shadow-sm'>
               <div className='flex items-center gap-3'>
                 <div className='rounded-2xl bg-(--surface-muted) p-3 text-(--brand-accent)'>

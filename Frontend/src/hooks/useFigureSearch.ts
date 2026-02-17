@@ -90,7 +90,6 @@ export const useFigureIdentity = (
     enabled: isValidQuery(query),
     staleTime: STALE_TIME_MS,
     gcTime: CACHE_TIME_MS,
-    placeholderData: (previousData) => previousData,
     retry: 2,
     retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 10000),
   })
@@ -132,7 +131,6 @@ export const useFigureNews = (
     enabled: enabled && Boolean(params.name),
     staleTime: STALE_TIME_MS,
     gcTime: CACHE_TIME_MS,
-    placeholderData: (previousData) => previousData,
     retry: 2,
     retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 10000),
   })
@@ -162,7 +160,6 @@ export const useFigureVideos = (
     enabled: enabled && Boolean(name),
     staleTime: STALE_TIME_MS,
     gcTime: CACHE_TIME_MS,
-    placeholderData: (previousData) => previousData,
     retry: 2,
     retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 10000),
   })

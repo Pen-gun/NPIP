@@ -147,18 +147,34 @@ const filterRelevant = (articles, query, personName, aliases = []) => {
     const target = (personName || query || '').toLowerCase().trim();
     if (!target) return articles;
 
-    const baseTokens = normalizeTokens(target).filter((t) => t.length >= 3);
-    const aliasTokens = aliases.flatMap((alias) => normalizeTokens(alias)).filter((t) => t.length >= 3);
+    const baseTokens = normalizeTokens(target).filter((t) => t.length >= 3 && !STOPWORDS.has(t));
+    const aliasTokens = aliases
+        .flatMap((alias) => normalizeTokens(alias))
+        .filter((t) => t.length >= 3 && !STOPWORDS.has(t));
     const tokens = [...new Set([...baseTokens, ...aliasTokens])];
     const lastName = baseTokens.length > 1 ? baseTokens[baseTokens.length - 1] : baseTokens[0];
     const hasStrongLastName = lastName?.length >= 3;
-    const minMatches = Math.min(2, tokens.length || 1);
+    const phraseCandidates = [...new Set([personName, query, ...aliases])]
+        .map((value) => normalizeTitle(value || ''))
+        .filter(Boolean);
+    const supportingTokens = tokens.filter((token) => token !== lastName);
+    const fallbackMinMatches = Math.min(2, tokens.length || 1);
 
     return articles.filter((article) => {
-        const haystack = `${article.title || ''} ${article.description || ''}`.toLowerCase();
-        if (hasStrongLastName && !haystack.includes(lastName)) return false;
+        const haystack = normalizeTitle(`${article.title || ''} ${article.description || ''}`);
+        if (phraseCandidates.some((phrase) => haystack.includes(phrase))) return true;
+        if (hasStrongLastName) {
+            if (!haystack.includes(lastName)) return false;
+            if (!supportingTokens.length) return true;
+            const supportingHits = supportingTokens.reduce(
+                (count, token) => count + (haystack.includes(token) ? 1 : 0),
+                0
+            );
+            return supportingHits >= 1;
+        }
+
         const hits = tokens.reduce((count, token) => count + (haystack.includes(token) ? 1 : 0), 0);
-        return hits >= minMatches;
+        return hits >= fallbackMinMatches;
     });
 };
 
@@ -239,13 +255,13 @@ export const getFigureNews = async (req, res, next) => {
 
         if (!name) return res.status(400).json({ error: 'Name is required' });
 
-        const cacheKey = `news:${name.toLowerCase()}`;
+        const cacheKey = `news:${name.toLowerCase()}:${query.toLowerCase()}:${aliases.join(',').toLowerCase()}`;
         const cached = getCached(cacheKey);
         if (cached) return res.json(cached);
 
         const [newsResult, rssResult] = await Promise.allSettled([
             fetchNews(query),
-            fetchRssNews(query),
+            fetchRssNews(name, [query, ...aliases]),
         ]);
 
         const newsPayload = newsResult.status === 'fulfilled' ? newsResult.value : { articles: [], warning: null };
@@ -354,7 +370,7 @@ export const searchFigure = async (req, res, next) => {
 
         const [newsResult, rssResult, youtubeResult] = await Promise.allSettled([
             fetchNews(query),
-            fetchRssNews(query),
+            fetchRssNews(person?.name || query, person?.aliases || []),
             fetchYouTubeVideos(query),
         ]);
 

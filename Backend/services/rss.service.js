@@ -12,6 +12,29 @@ const RSS_FEEDS = [
 
 const parser = new XMLParser({ ignoreAttributes: false });
 
+const normalize = (value = '') =>
+    value
+        .toLowerCase()
+        .replace(/[^a-z0-9\s]+/g, ' ')
+        .replace(/\s+/g, ' ')
+        .trim();
+
+const buildTerms = (query, aliases = []) => {
+    const terms = new Set();
+    const push = (value) => {
+        const normalized = normalize(value);
+        if (normalized.length >= 3) terms.add(normalized);
+    };
+
+    push(query);
+    aliases.forEach(push);
+
+    const queryTokens = normalize(query).split(' ').filter((token) => token.length >= 3);
+    queryTokens.forEach((token) => terms.add(token));
+
+    return Array.from(terms);
+};
+
 const normalizeItems = (items, sourceName) => {
     if (!items) return [];
     const list = Array.isArray(items) ? items : [items];
@@ -42,14 +65,15 @@ const fetchFeed = async (feed) => {
     }
 };
 
-export const fetchRssNews = async (query) => {
+export const fetchRssNews = async (query, aliases = []) => {
     const results = await Promise.all(RSS_FEEDS.map(fetchFeed));
     const flattened = results.flat();
-    const loweredQuery = query.toLowerCase();
+    const terms = buildTerms(query, aliases);
+
+    if (!terms.length) return [];
 
     return flattened.filter((item) => {
-        const title = (item.title || '').toLowerCase();
-        const description = (item.description || '').toLowerCase();
-        return title.includes(loweredQuery) || description.includes(loweredQuery);
+        const haystack = normalize(`${item.title || ''} ${item.description || ''}`);
+        return terms.some((term) => haystack.includes(term));
     });
 };

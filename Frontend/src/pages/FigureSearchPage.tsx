@@ -117,7 +117,7 @@ export default function FigureSearchPage() {
 
   const news = newsData || EMPTY_NEWS_DATA
   const videos = videosData || EMPTY_VIDEOS_DATA
-  const isLoading = identityLoading || newsLoading || videosLoading
+  const isLoading = identityLoading || identityFetching || newsLoading || videosLoading
   const hasSearched = Boolean(searchedQuery)
 
   return (
@@ -170,7 +170,7 @@ export default function FigureSearchPage() {
         )}
 
         {/* Results */}
-        {hasValidPerson && identityData && !identityLoading && (
+        {hasValidPerson && identityData && !isLoading && (
           <div className='landing-reveal space-y-6'>
             {/* Profile */}
             <div className='landing-reveal-soft'>

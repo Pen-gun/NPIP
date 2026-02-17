@@ -37,7 +37,7 @@ export default function ConnectorHealthPanel({ health, loading }: ConnectorHealt
           Array.from({ length: SKELETON_COUNT }).map((_, index) => (
             <HealthSkeleton key={`health-skeleton-${index}`} />
           ))}
-        {!loading && health.length === 0 && <p>No connector checks yet.</p>}
+        {!loading && health.length === 0 && <p>No connector health data available yet.</p>}
         {!loading &&
           health.map((item) => (
             <div key={item._id} className='flex items-center justify-between'>

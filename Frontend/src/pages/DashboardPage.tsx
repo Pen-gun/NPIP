@@ -316,7 +316,6 @@ export default function DashboardPage() {
     })
   }, [alerts, filters.from, filters.to])
 
-
   const handleLoadMoreMentions = () => {
     if (loadingMore || loadingDashboard || !pagination?.hasNextPage) return
     setCurrentPage((prev) => prev + 1)
@@ -517,7 +516,7 @@ export default function DashboardPage() {
                 <DashboardRightPanel
                   dateRange={dateRange}
                   onDateRangeChange={handleDateRangeChange}
-                  mentionsCount={mentions.length}
+                  mentionsCount={pagination?.totalCount ?? mentions.length}
                   mentionsBySource={mentionsBySource}
                   sourceFilters={sourceFilters}
                   sourceLabels={SOURCE_LABELS}

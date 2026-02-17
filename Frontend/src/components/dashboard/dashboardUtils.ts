@@ -32,6 +32,14 @@ export const SOURCE_MAP: Record<string, string> = Object.freeze({
   tiktok: 'tiktok',
   youtube: 'youtube',
   videos: 'youtube',
+  wiki: 'wikipedia',
+  wikipedia: 'wikipedia',
+  gnews: 'gnews',
+  rss: 'rss',
+  chatgpt: 'chatgpt',
+  openai: 'chatgpt',
+  llm: 'ai',
+  ai: 'ai',
   local_news: 'local_news',
   news: 'local_news',
   reddit: 'reddit',
@@ -49,6 +57,11 @@ export const SOURCE_LABELS: Record<string, string> = Object.freeze({
   instagram: 'Instagram',
   tiktok: 'TikTok',
   local_news: 'Local News',
+  wikipedia: 'Wikipedia',
+  gnews: 'Google News',
+  rss: 'RSS',
+  chatgpt: 'ChatGPT',
+  ai: 'AI Insights',
   viber: 'Viber',
   podcasts: 'Podcasts',
   blogs: 'Blogs',
@@ -65,7 +78,8 @@ export const normalizeSentiment = (value?: string) => {
 
 export const normalizeSource = (value?: string) => {
   const normalized = value?.toLowerCase().trim() || ''
-  return SOURCE_MAP[normalized] || ''
+  if (!normalized) return ''
+  return SOURCE_MAP[normalized] || normalized
 }
 
 const formatDateInput = (value: Date) => value.toISOString().slice(0, 10)

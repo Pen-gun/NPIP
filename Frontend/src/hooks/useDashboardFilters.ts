@@ -17,9 +17,6 @@ export function useDashboardFilters({ activeProjectId, mentions }: UseDashboardF
   const [dateRange, setDateRange] = useState('last_30_days')
   const [sourceFilters, setSourceFilters] = useState<Record<string, boolean>>({})
   const [sentimentFilters, setSentimentFilters] = useState<Record<string, boolean>>({})
-  const [influenceScore, setInfluenceScore] = useState(6)
-  const [continentFilter, setContinentFilter] = useState('')
-  const [countryFilter, setCountryFilter] = useState('')
   const [sortOrder, setSortOrder] = useState<'recent' | 'oldest' | 'reach'>('recent')
   const [currentPage, setCurrentPage] = useState(1)
 
@@ -51,9 +48,6 @@ export function useDashboardFilters({ activeProjectId, mentions }: UseDashboardF
       dateRange,
       sourceFilters,
       sentimentFilters,
-      influenceScore,
-      continentFilter,
-      countryFilter,
     }
     localStorage.setItem(filtersStorageKey, JSON.stringify(savedFilters))
     alert('Filters saved!')
@@ -65,9 +59,6 @@ export function useDashboardFilters({ activeProjectId, mentions }: UseDashboardF
     setFilters((prev) => ({ ...prev, from: range.from, to: range.to }))
     setSourceFilters({})
     setSentimentFilters({})
-    setInfluenceScore(6)
-    setContinentFilter('')
-    setCountryFilter('')
     setMentionSearch('')
     setCurrentPage(1)
     if (activeProjectId) {
@@ -88,9 +79,6 @@ export function useDashboardFilters({ activeProjectId, mentions }: UseDashboardF
       }
       if (parsed.sourceFilters) setSourceFilters(parsed.sourceFilters)
       if (parsed.sentimentFilters) setSentimentFilters(parsed.sentimentFilters)
-      if (parsed.influenceScore) setInfluenceScore(parsed.influenceScore)
-      if (parsed.continentFilter) setContinentFilter(parsed.continentFilter)
-      if (parsed.countryFilter) setCountryFilter(parsed.countryFilter)
     } catch {
       // ignore invalid saved filters
     }
@@ -183,21 +171,8 @@ export function useDashboardFilters({ activeProjectId, mentions }: UseDashboardF
         chips.push({ id: `sentiment-${sentiment}`, label: `Sentiment: ${label}` })
       })
 
-    if (influenceScore !== 6) {
-      chips.push({ id: 'influence', label: `Influence score: ${influenceScore}+` })
-    }
-
-    if (continentFilter) {
-      const label = continentFilter.replace('_', ' ')
-      chips.push({ id: 'continent', label: `Continent: ${label}` })
-    }
-
-    if (countryFilter) {
-      chips.push({ id: 'country', label: `Country: ${countryFilter}` })
-    }
-
     return chips
-  }, [mentionSearch, dateRange, sourceFilters, sentimentFilters, influenceScore, continentFilter, countryFilter])
+  }, [mentionSearch, dateRange, sourceFilters, sentimentFilters])
 
   return {
     filters,
@@ -209,12 +184,6 @@ export function useDashboardFilters({ activeProjectId, mentions }: UseDashboardF
     dateRange,
     sourceFilters,
     sentimentFilters,
-    influenceScore,
-    setInfluenceScore,
-    continentFilter,
-    setContinentFilter,
-    countryFilter,
-    setCountryFilter,
     sortOrder,
     setSortOrder,
     currentPage,

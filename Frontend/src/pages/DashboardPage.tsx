@@ -68,12 +68,6 @@ export default function DashboardPage() {
     dateRange,
     sourceFilters,
     sentimentFilters,
-    influenceScore,
-    setInfluenceScore,
-    continentFilter,
-    setContinentFilter,
-    countryFilter,
-    setCountryFilter,
     sortOrder,
     setSortOrder,
     currentPage,
@@ -530,12 +524,6 @@ export default function DashboardPage() {
                   onSourceFilterToggle={handleSourceFilterToggle}
                   sentimentFilters={sentimentFilters}
                   onSentimentToggle={handleSentimentToggle}
-                  influenceScore={influenceScore}
-                  onInfluenceScoreChange={setInfluenceScore}
-                  continentFilter={continentFilter}
-                  onContinentFilterChange={setContinentFilter}
-                  countryFilter={countryFilter}
-                  onCountryFilterChange={setCountryFilter}
                   alerts={filteredAlerts}
                   health={health}
                   loading={loadingDashboard || loadingPanels}

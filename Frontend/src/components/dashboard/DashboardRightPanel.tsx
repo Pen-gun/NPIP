@@ -13,12 +13,6 @@ interface DashboardRightPanelProps {
   onSourceFilterToggle: (sourceId: string) => void
   sentimentFilters: Record<string, boolean>
   onSentimentToggle: (key: 'negative' | 'neutral' | 'positive') => void
-  influenceScore: number
-  onInfluenceScoreChange: (value: number) => void
-  continentFilter: string
-  onContinentFilterChange: (value: string) => void
-  countryFilter: string
-  onCountryFilterChange: (value: string) => void
   alerts: AlertItem[]
   health: ConnectorHealth[]
   loading: boolean
@@ -35,12 +29,6 @@ export default function DashboardRightPanel({
   onSourceFilterToggle,
   sentimentFilters,
   onSentimentToggle,
-  influenceScore,
-  onInfluenceScoreChange,
-  continentFilter,
-  onContinentFilterChange,
-  countryFilter,
-  onCountryFilterChange,
   alerts,
   health,
   loading,
@@ -123,53 +111,6 @@ export default function DashboardRightPanel({
               {item}
             </label>
           ))}
-        </div>
-      </div>
-
-      <div className='rounded-2xl border border-(--border) bg-(--surface-base) p-4 text-xs shadow-sm'>
-        <span className='font-semibold'>Influence score</span>
-        <div className='mt-3'>
-          <input
-            type='range'
-            min={1}
-            max={10}
-            value={influenceScore}
-            onChange={(event) => onInfluenceScoreChange(Number(event.target.value))}
-            className='w-full'
-          />
-          <div className='mt-1 flex items-center justify-between text-[10px] text-(--text-muted)'>
-            <span>1</span>
-            <span>10</span>
-          </div>
-        </div>
-      </div>
-
-      <div className='rounded-2xl border border-(--border) bg-(--surface-base) p-4 text-xs shadow-sm'>
-        <div className='flex items-center justify-between'>
-          <span className='font-semibold'>Geolocation</span>
-          <button className='text-[11px] text-(--text-muted)'>Exclude countries</button>
-        </div>
-        <div className='mt-3 grid gap-2'>
-          <select
-            value={continentFilter}
-            onChange={(event) => onContinentFilterChange(event.target.value)}
-            className='rounded-xl border border-(--border) bg-(--surface-muted) px-3 py-2 text-xs font-semibold'
-          >
-            <option value=''>Choose continents</option>
-            <option value='asia'>Asia</option>
-            <option value='europe'>Europe</option>
-            <option value='north_america'>North America</option>
-          </select>
-          <select
-            value={countryFilter}
-            onChange={(event) => onCountryFilterChange(event.target.value)}
-            className='rounded-xl border border-(--border) bg-(--surface-muted) px-3 py-2 text-xs font-semibold'
-          >
-            <option value=''>Choose countries</option>
-            <option value='nepal'>Nepal</option>
-            <option value='india'>India</option>
-            <option value='usa'>United States</option>
-          </select>
         </div>
       </div>
 

@@ -525,7 +525,7 @@ export default function DashboardPage() {
                   onSentimentToggle={handleSentimentToggle}
                   alerts={filteredAlerts}
                   health={health}
-                  loading={loadingDashboard || loadingPanels}
+                  loading={loadingPanels}
                   onMarkAlertRead={handleMarkAlertRead}
                 />
               </div>

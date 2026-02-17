@@ -4,7 +4,7 @@ const connectorHealthSchema = new Schema(
     {
         projectId: { type: Schema.Types.ObjectId, ref: 'Project', required: true, index: true },
         connectorId: { type: String, required: true, index: true },
-        status: { type: String, enum: ['ok', 'degraded', 'down'], default: 'ok' },
+        status: { type: String, enum: ['ok', 'no_data', 'degraded', 'down'], default: 'ok' },
         lastError: { type: String, default: '' },
         lastCheckedAt: { type: Date, default: null },
     },

@@ -14,10 +14,13 @@ const createSkeletonElement = (className: string) => (
 const getHealthStatusStyles = (status: string): string => {
   const styles: Record<string, string> = {
     ok: 'bg-emerald-100 text-emerald-700',
+    no_data: 'bg-slate-100 text-slate-700',
     degraded: 'bg-amber-100 text-amber-700',
   }
   return styles[status] || 'bg-rose-100 text-rose-700'
 }
+
+const formatStatusLabel = (status: string): string => status.replace('_', ' ')
 
 function HealthSkeleton() {
   return (
@@ -45,7 +48,7 @@ export default function ConnectorHealthPanel({ health, loading }: ConnectorHealt
               <span
                 className={`rounded-full px-3 py-1 text-xs font-semibold ${getHealthStatusStyles(item.status)}`}
               >
-                {item.status}
+                {formatStatusLabel(item.status)}
               </span>
             </div>
           ))}

@@ -44,7 +44,7 @@ export type AlertItem = {
 export type ConnectorHealth = {
   _id: string
   connectorId: string
-  status: 'ok' | 'degraded' | 'down'
+  status: 'ok' | 'no_data' | 'degraded' | 'down'
 }
 
 export type ProjectMetrics = {

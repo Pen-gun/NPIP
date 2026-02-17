@@ -152,7 +152,6 @@ export const ingestProject = async (project, options = {}) => {
     for (const connector of enabledConnectors) {
         try {
             const rawMentions = await runConnector(connector, project);
-            await upsertConnectorHealth(project._id, connector.id, 'ok');
 
             const prepared = [];
             for (const raw of rawMentions) {
@@ -165,6 +164,9 @@ export const ingestProject = async (project, options = {}) => {
 
                 prepared.push(await prepareMention(raw, project, matchedKeyword, runAt));
             }
+
+            const healthStatus = prepared.length > 0 ? 'ok' : 'no_data';
+            await upsertConnectorHealth(project._id, connector.id, healthStatus);
 
             inserted += await insertMentions(prepared);
         } catch (err) {

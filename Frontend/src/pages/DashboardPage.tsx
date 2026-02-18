@@ -1,21 +1,23 @@
 import { useNavigate } from 'react-router-dom'
-import { useAuth } from '../contexts/AuthContext'
-import MetricsCharts from '../components/dashboard/MetricsCharts'
-import MentionsList from '../components/dashboard/MentionsList'
-import AnalysisView from '../components/dashboard/AnalysisView'
-import DashboardTopBar from '../components/dashboard/DashboardTopBar'
-import DashboardSidebar from '../components/dashboard/DashboardSidebar'
-import DashboardRightPanel from '../components/dashboard/DashboardRightPanel'
-import ProjectDetailsPanel from '../components/dashboard/ProjectDetailsPanel'
-import ProjectModal from '../components/dashboard/ProjectModal'
-import DashboardFigureSourceProbe from '../components/dashboard/DashboardFigureSourceProbe'
-import DashboardOnboardingGuide from '../components/dashboard/DashboardOnboardingGuide'
-import { SOURCE_LABELS } from '../components/dashboard/dashboardUtils'
-import DashboardStatusBanners from '../components/dashboard/DashboardStatusBanners'
-import DashboardMobileControls from '../components/dashboard/DashboardMobileControls'
-import DashboardReportsSection from '../components/dashboard/DashboardReportsSection'
-import { useDashboardSocket } from '../hooks/useDashboardSocket'
-import { useDashboardData } from '../hooks/useDashboardData'
+import { useAuth } from '../features/auth'
+import {
+  AnalysisView,
+  DashboardFigureSourceProbe,
+  DashboardMobileControls,
+  DashboardOnboardingGuide,
+  DashboardReportsSection,
+  DashboardRightPanel,
+  DashboardSidebar,
+  DashboardStatusBanners,
+  DashboardTopBar,
+  MentionsList,
+  MetricsCharts,
+  ProjectDetailsPanel,
+  ProjectModal,
+  SOURCE_LABELS,
+  useDashboardData,
+  useDashboardSocket,
+} from '../features/dashboard'
 
 type DashboardMode = 'overview' | 'mentions' | 'analytics' | 'reports' | 'sources'
 

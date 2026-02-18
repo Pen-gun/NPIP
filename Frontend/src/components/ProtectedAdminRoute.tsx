@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react'
 import { Link, Navigate, useLocation } from 'react-router-dom'
-import { useAuth } from '../contexts/AuthContext'
+import { useAuth } from '../features/auth'
 
 interface ProtectedAdminRouteProps {
   children: ReactNode
@@ -52,3 +52,4 @@ export default function ProtectedAdminRoute({ children }: ProtectedAdminRoutePro
 
   return <>{children}</>
 }
+

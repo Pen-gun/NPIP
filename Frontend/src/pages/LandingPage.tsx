@@ -1,6 +1,4 @@
-import LandingContent from '../components/landing/LandingContent'
-import LandingErrorState from '../components/landing/LandingErrorState'
-import { useHomePageContent } from '../hooks/useHomePageContent'
+import { LandingContent, LandingErrorState, useHomePageContent } from '../features/cms'
 
 export default function LandingPage() {
   const { homeError, heroBlock, highlights, workflowSteps, constraints, dataSources, ctaBlock } =
@@ -26,3 +24,4 @@ export default function LandingPage() {
     />
   )
 }
+

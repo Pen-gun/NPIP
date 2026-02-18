@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react'
 import type { FormEvent } from 'react'
 import BrandLogo from '../components/BrandLogo'
 import PrimaryButton from '../components/PrimaryButton'
-import { resetPassword } from '../api/auth'
+import { resetPassword } from '../features/auth'
 
 export default function ResetPasswordPage() {
   const navigate = useNavigate()
@@ -142,3 +142,4 @@ export default function ResetPasswordPage() {
     </div>
   )
 }
+

@@ -5,7 +5,7 @@ import { BrowserRouter } from 'react-router-dom'
 import './index.css'
 import App from './App.tsx'
 import ErrorBoundary from './components/ErrorBoundary'
-import { AuthProvider } from './contexts/AuthContext'
+import { AuthProvider } from './features/auth'
 
 const queryClient = new QueryClient({
   defaultOptions: {

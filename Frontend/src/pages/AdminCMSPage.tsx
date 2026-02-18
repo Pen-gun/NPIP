@@ -1,4 +1,4 @@
-﻿
+
 import { useMemo, useState } from 'react'
 import type { CSSProperties } from 'react'
 import type { PageStatus, SeoFields } from '../features/adminCms/types'
@@ -11,7 +11,7 @@ import {
   useUpdateAdminPage,
   useUploadAdminMedia,
 } from '../features/adminCms/hooks'
-import { useAuth } from '../contexts/AuthContext'
+import { useAuth } from '../features/auth'
 import { useAdminSiteSettings, useUpdateAdminSiteSettings } from '../hooks/useSiteSettings'
 import AdminSidebar from '../features/adminCms/components/AdminSidebar'
 import AdminTopbar from '../features/adminCms/components/AdminTopbar'
@@ -293,3 +293,4 @@ export default function AdminCMSPage() {
     </div>
   )
 }
+

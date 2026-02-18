@@ -3,8 +3,8 @@ import { useState, useEffect } from 'react'
 import type { FormEvent, CSSProperties } from 'react'
 import BrandLogo from '../components/BrandLogo'
 import PrimaryButton from '../components/PrimaryButton'
-import { useAuth } from '../contexts/AuthContext'
-import { forgotPassword } from '../api/auth'
+import { useAuth } from '../features/auth'
+import { forgotPassword } from '../features/auth'
 import { usePublicSiteSettings } from '../hooks/useSiteSettings'
 import { EyeIcon, EyeClosed } from 'lucide-react'
 
@@ -273,3 +273,4 @@ export default function LoginPage() {
     </div>
   )
 }
+

@@ -1,8 +1,6 @@
 import type { ReactNode } from 'react'
 import { useNavigate } from 'react-router-dom'
-import CmsBlockRenderer from '../components/cms/CmsBlockRenderer'
-import CmsUnavailableState from '../components/cms/CmsUnavailableState'
-import { useCmsPage } from '../hooks/useCmsPage'
+import { CmsBlockRenderer, CmsUnavailableState, useCmsPage } from '../features/cms'
 
 interface CmsPageProps {
   slug?: string
@@ -49,3 +47,4 @@ export default function CmsPage({ slug: slugProp, fallback }: CmsPageProps) {
     </div>
   )
 }
+

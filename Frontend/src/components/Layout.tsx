@@ -1,7 +1,7 @@
 import type { ReactNode, CSSProperties } from 'react'
 import { useState } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
-import { useAuth } from '../contexts/AuthContext'
+import { useAuth } from '../features/auth'
 import BrandLogo from './BrandLogo'
 import AdminQuickAccess from './AdminQuickAccess'
 import { usePublicSiteSettings } from '../hooks/useSiteSettings'
@@ -195,3 +195,4 @@ export default function Layout({ children }: LayoutProps) {
     </div>
   )
 }
+

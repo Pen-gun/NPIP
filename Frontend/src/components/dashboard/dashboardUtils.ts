@@ -1,5 +1,5 @@
 import type { ProjectFormState } from './ProjectForm'
-import type { DashboardFilters } from './DashboardFiltersBar'
+import type { DashboardFilters } from '../../types/dashboard'
 
 export const INITIAL_PROJECT_FORM: ProjectFormState = Object.freeze({
   name: '',

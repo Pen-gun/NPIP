@@ -25,7 +25,7 @@ import {
   parseKeywords,
 } from '../components/dashboard/dashboardUtils'
 import type { ProjectFormState } from '../components/dashboard/ProjectForm'
-import type { DashboardFilters } from '../components/dashboard/DashboardFiltersBar'
+import type { DashboardFilters } from '../types/dashboard'
 
 const ALERTS_LIMIT = 100
 

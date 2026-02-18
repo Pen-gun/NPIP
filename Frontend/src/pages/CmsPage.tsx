@@ -341,6 +341,12 @@ export default function CmsPage({
         <div className='mx-auto w-full max-w-3xl rounded-3xl border border-(--border) bg-(--surface-base) p-8 text-center shadow-sm'>
           <p className='text-xs font-semibold uppercase tracking-[0.3em] text-(--text-muted)'>Not found</p>
           <h1 className='mt-3 text-2xl font-semibold'>This page is not published yet.</h1>
+          <button
+            onClick={() => window.location.assign('/')}
+            className='mt-6 inline-flex items-center justify-center rounded-full bg-(--brand-accent) px-5 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-white shadow-sm'
+          >
+            Homepage
+          </button>
         </div>
       </div>
     )

@@ -5,6 +5,7 @@ import { useParams } from 'react-router-dom'
 import type { ReactNode } from 'react'
 import { fetchPublishedPage } from '../api/pages'
 import type { ContentBlock } from '../features/adminCms/types'
+import { useNavigate } from 'react-router-dom'
 
 const blockTypeLabels: Record<ContentBlock['type'], string> = {
   hero: 'Hero',
@@ -304,6 +305,7 @@ export default function CmsPage({
   fallback?: ReactNode
 }) {
   const params = useParams()
+  const navigate = useNavigate()
   const slug = (slugProp || params.slug || '').toLowerCase()
   const { data, isLoading, isError } = useQuery({
     queryKey: ['public-page', slug],
@@ -342,7 +344,7 @@ export default function CmsPage({
           <p className='text-xs font-semibold uppercase tracking-[0.3em] text-(--text-muted)'>Not found</p>
           <h1 className='mt-3 text-2xl font-semibold'>This page is not published yet.</h1>
           <button
-            onClick={() => window.location.assign('/')}
+            onClick={() => navigate('/')}
             className='mt-6 inline-flex items-center justify-center rounded-full bg-(--brand-accent) px-5 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-white shadow-sm'
           >
             Homepage
